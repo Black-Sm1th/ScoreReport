@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35913.81 d17.13
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ScoreReport", "ScoreReport\ScoreReport.vcxproj", "{1E26D6BF-E103-4944-90B6-F62856F70E2E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1E26D6BF-E103-4944-90B6-F62856F70E2E}.Debug|x64.ActiveCfg = Debug|x64
+		{1E26D6BF-E103-4944-90B6-F62856F70E2E}.Debug|x64.Build.0 = Debug|x64
+		{1E26D6BF-E103-4944-90B6-F62856F70E2E}.Release|x64.ActiveCfg = Release|x64
+		{1E26D6BF-E103-4944-90B6-F62856F70E2E}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F3B07093-0B1B-481E-8FFC-4B6539375E11}
+	EndGlobalSection
+EndGlobal
