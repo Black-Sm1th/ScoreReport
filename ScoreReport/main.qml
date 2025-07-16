@@ -148,11 +148,11 @@ ApplicationWindow {
             }
             
             var floatingRect = Qt.rect(
-                mainWindow.x + (mainWindow.width - floatingWindow.width) / 2,
-                mainWindow.y + (mainWindow.height - floatingWindow.height) / 2,
-                floatingWindow.width,
-                floatingWindow.height
-            )
+                        mainWindow.x + (mainWindow.width - floatingWindow.width) / 2,
+                        mainWindow.y + (mainWindow.height - floatingWindow.height) / 2,
+                        floatingWindow.width,
+                        floatingWindow.height
+                        )
             
             var dialogHeight = contentRect.height
             var spaceAbove = floatingRect.y
@@ -201,11 +201,11 @@ ApplicationWindow {
         // 使用估计高度计算位置（用于首次显示）
         function updateDialogPositionWithEstimatedHeight() {
             var floatingRect = Qt.rect(
-                mainWindow.x + (mainWindow.width - floatingWindow.width) / 2,
-                mainWindow.y + (mainWindow.height - floatingWindow.height) / 2,
-                floatingWindow.width,
-                floatingWindow.height
-            )
+                        mainWindow.x + (mainWindow.width - floatingWindow.width) / 2,
+                        mainWindow.y + (mainWindow.height - floatingWindow.height) / 2,
+                        floatingWindow.width,
+                        floatingWindow.height
+                        )
             
             // 估计对话框高度：头部58px + 内容区域（标题40px + 间距20px + 网格2行*110px + 行间距20px + 边距40px + bottomPadding24px）
             var estimatedHeight = 58 + (40 + 20 + 220 + 20 + 40 + 24)
@@ -234,7 +234,7 @@ ApplicationWindow {
             height: contentColumn.height
             color: "white"
             radius: 20
-            
+            property int currentIndex: 2
             // 监听高度变化，当内容加载完成后更新位置
             onHeightChanged: {
                 if (scoreDialog.visible && height > 0) {
@@ -250,7 +250,6 @@ ApplicationWindow {
             Column {
                 id: contentColumn
                 width: parent.width
-                bottomPadding: 24
                 // 头部区域
                 Rectangle {
                     width: parent.width
@@ -275,6 +274,7 @@ ApplicationWindow {
                     CircleButtonGroup {
                         id: titleBtn
                         anchors.right: titleSplit.left
+                        selectedIndex: 2
                         anchors.verticalCenter: parent.verticalCenter
                         anchors.rightMargin: 12
                         buttonSize: 28        // 按钮大小
@@ -292,11 +292,7 @@ ApplicationWindow {
 
                         // 选择变化回调
                         onSelectionChanged: function(index) {
-                            if (index >= 0) {
-                                console.log("选中了按钮:", index)
-                            } else {
-                                console.log("取消了选择")
-                            }
+                            contentRect.currentIndex = index
                         }
                     }
 
@@ -330,10 +326,10 @@ ApplicationWindow {
                         MouseArea{
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
-                        }
-                        onClicked: {
-                            scoreDialog.visible = false
-                            scoreDialog.isFirstShow = true
+                            onClicked: {
+                                scoreDialog.visible = false
+                                scoreDialog.isFirstShow = true
+                            }
                         }
                     }
                 }
@@ -343,177 +339,22 @@ ApplicationWindow {
                     width: parent.width
                     height: 1
                     color: "#F0F0F0"
+                    anchors.bottomMargin: 16
                 }
-                
-                // 内容区域
+                HomeView {
+                    visible: contentRect.currentIndex === 0
+                }
+                UserView{
+                    visible: contentRect.currentIndex === 2
+                }
+
+                // 分隔线
                 Rectangle {
                     width: parent.width
-                    height: contentArea.height + 40  // 上下各20px边距
-                    color: "white"
-                    radius: 12
-                    
-                    Rectangle {
-                        anchors.top: parent.top
-                        width: parent.width
-                        height: 12
-                        color: parent.color
-                    }
-                    
-                    Column {
-                        id: contentArea
-                        width: parent.width - 40  // 左右各20px边距
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        anchors.top: parent.top
-                        anchors.topMargin: 20
-                        spacing: 0
-                        
-                        // 标题和标签
-                        Row {
-                            width: parent.width
-                            height: 40
-                            
-                            Text {
-                                text: "请选择评分方案"
-                                font.pixelSize: 16
-                                color: "#2C2C2C"
-                                anchors.verticalCenter: parent.verticalCenter
-                            }
-                            
-                            Row {
-                                anchors.right: parent.right
-                                anchors.verticalCenter: parent.verticalCenter
-                                spacing: 8
-                                
-                                Rectangle {
-                                    width: 44
-                                    height: 24
-                                    color: "#E8F4FD"
-                                    radius: 12
-                                    
-                                    Text {
-                                        anchors.centerIn: parent
-                                        text: "通用"
-                                        font.pixelSize: 12
-                                        color: "#1890FF"
-                                    }
-                                }
-                                
-                                Rectangle {
-                                    width: 32
-                                    height: 24
-                                    color: "#F5F5F5"
-                                    radius: 12
-                                    
-                                    Text {
-                                        anchors.centerIn: parent
-                                        text: "肾"
-                                        font.pixelSize: 12
-                                        color: "#999999"
-                                    }
-                                }
-                            }
-                        }
-                        
-                        // 间距
-                        Item { height: 20 }
-                        
-                        // 评分方案网格
-                        Grid {
-                            width: parent.width
-                            columns: 3
-                            columnSpacing: 20
-                            rowSpacing: 20
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            
-                            // 第一行
-                            ScoreOptionCard {
-                                iconColor: "#FFB800"
-                                title: "RENAL"
-                            }
-                            
-                            ScoreOptionCard {
-                                iconColor: "#8B7CFF"
-                                title: "CCLS"
-                            }
-                            
-                            ScoreOptionCard {
-                                iconColor: "#5DADE2"
-                                title: "TNM"
-                            }
-                            
-                            // 第二行
-                            ScoreOptionCard {
-                                iconColor: "#FFB800"
-                                title: "UCLS MRS"
-                            }
-                            
-                            ScoreOptionCard {
-                                iconColor: "#8B7CFF"
-                                title: "UCLS CTS"
-                            }
-                            
-                            ScoreOptionCard {
-                                iconColor: "#5DADE2"
-                                title: "BIOSNAK"
-                            }
-                        }
-                    }
+                    height: 24
+                    color: "transparent"
                 }
             }
         }
     }
-    
-    // 评分方案卡片组件
-    component ScoreOptionCard: Rectangle {
-        property string iconColor: "#FFB800"
-        property string title: ""
-        
-        width: 146
-        height: 110
-        color: mouseArea2.containsMouse ? "#F8F9FA" : "#FAFAFA"
-        radius: 8
-        border.color: "#F0F0F0"
-        border.width: 1
-        
-        Column {
-            anchors.centerIn: parent
-            spacing: 12
-            
-            Rectangle {
-                width: 48
-                height: 48
-                color: iconColor
-                radius: 12
-                anchors.horizontalCenter: parent.horizontalCenter
-                
-                // 图标占位符
-                Rectangle {
-                    width: 24
-                    height: 24
-                    color: "white"
-                    radius: 4
-                    anchors.centerIn: parent
-                }
-            }
-            
-            Text {
-                text: title
-                font.pixelSize: 14
-                color: "#2C2C2C"
-                anchors.horizontalCenter: parent.horizontalCenter
-            }
-        }
-        
-        MouseArea {
-            id: mouseArea2
-            anchors.fill: parent
-            hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-            
-            onClicked: {
-                console.log("选择了评分方案:", title)
-                scoreDialog.visible = false
-            }
-        }
-         }
- }
+}

@@ -38,8 +38,7 @@ Item {
                 
                 onClicked: {
                     if (root.selectedIndex === index) {
-                        // 如果点击的是已选中的按钮，取消选中
-                        root.selectedIndex = -1
+                        return
                     } else {
                         // 选中当前按钮
                         root.selectedIndex = index

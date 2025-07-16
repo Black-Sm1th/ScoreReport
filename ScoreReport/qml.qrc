@@ -12,5 +12,7 @@
         <file>image/user.png</file>
         <file>image/userSelected.png</file>
         <file>image/close.png</file>
+        <file>HomeView.qml</file>
+        <file>UserView.qml</file>
     </qresource>
 </RCC>
