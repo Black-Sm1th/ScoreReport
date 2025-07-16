@@ -1,6 +1,16 @@
 <RCC>
     <qresource prefix="/">
         <file>main.qml</file>
-        <file>image/Group.png</file>
+        <file>CircleButtonGroup.qml</file>
+        <file>image/floatIcon.png</file>
+        <file>image/titleIcon.png</file>
+        <file>image/titleName.png</file>
+        <file>image/history.png</file>
+        <file>image/historySelected.png</file>
+        <file>image/home.png</file>
+        <file>image/homeSelected.png</file>
+        <file>image/user.png</file>
+        <file>image/userSelected.png</file>
+        <file>image/close.png</file>
     </qresource>
 </RCC>

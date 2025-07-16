@@ -2,6 +2,7 @@ import QtQuick 2.9
 import QtQuick.Window 2.2
 import QtQuick.Controls 2.2
 import QtQuick.Dialogs 1.2
+import QtGraphicalEffects 1.0
 
 ApplicationWindow {
     id: mainWindow
@@ -36,7 +37,7 @@ ApplicationWindow {
         Image {
             id: floatingImage
             anchors.centerIn: parent
-            source: "qrc:/image/Group.png"
+            source: "qrc:/image/floatIcon.png"
         }
 
         // 鼠标悬停效果
@@ -104,85 +105,415 @@ ApplicationWindow {
             onClicked: {
                 // 只有在没有拖动的情况下才响应点击
                 if (!isDragging) {
-                    dialogWindow.visible = true
+                    if(!scoreDialog.visible){
+                        scoreDialog.showDialog()
+                    }else{
+                        scoreDialog.visible = false
+                        scoreDialog.isFirstShow = true
+                    }
                 }
             }
         }
     }
     
-    // 对话框窗口
-    Dialog {
-        id: dialogWindow
-        title: "悬浮助手"
-        width: 400
-        height: 300
+    // 评分方案选择对话框
+    Window {
+        id: scoreDialog
+        width: 520
+        height: contentRect.height
+        visible: false
+        flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
+        color: "transparent"
         
-        // 对话框位置 - 显示在屏幕上方
-        x: (Screen.width - width) / 2
-        y: 100
+        // 监听悬浮窗位置变化，自动更新对话框位置
+        Connections {
+            target: mainWindow
+            function onXChanged() {
+                if (scoreDialog.visible) {
+                    scoreDialog.updateDialogPosition()
+                }
+            }
+            function onYChanged() {
+                if (scoreDialog.visible) {
+                    scoreDialog.updateDialogPosition()
+                }
+            }
+        }
         
-        // 设置对话框也始终置顶
-        // flags: Qt.WindowStaysOnTopHint
-        
-        contentItem: Rectangle {
-            color: "white"
+        // 计算对话框位置的函数
+        function updateDialogPosition() {
+            // 如果内容高度还没有确定，跳过位置更新
+            if (contentRect.height <= 0) {
+                return
+            }
             
+            var floatingRect = Qt.rect(
+                mainWindow.x + (mainWindow.width - floatingWindow.width) / 2,
+                mainWindow.y + (mainWindow.height - floatingWindow.height) / 2,
+                floatingWindow.width,
+                floatingWindow.height
+            )
+            
+            var dialogHeight = contentRect.height
+            var spaceAbove = floatingRect.y
+            var spaceBelow = Screen.height - (floatingRect.y + floatingRect.height)
+            
+            // 检查上方是否有足够空间（对话框高度 + 8px间距）
+            if (spaceAbove >= dialogHeight + 8) {
+                // 显示在悬浮窗上方，右侧对齐
+                x = floatingRect.x + floatingRect.width - width
+                y = floatingRect.y - dialogHeight - 8
+            } else {
+                // 显示在悬浮窗下方，右侧对齐
+                x = floatingRect.x + floatingRect.width - width
+                y = floatingRect.y + floatingRect.height + 8
+            }
+            
+            // 确保对话框不超出屏幕边界
+            x = Math.max(0, Math.min(x, Screen.width - width))
+            y = Math.max(0, Math.min(y, Screen.height - height))
+        }
+        
+        property bool isFirstShow: true
+        
+        // 透明度动画
+        Behavior on opacity {
+            NumberAnimation {
+                duration: 150
+                easing.type: Easing.OutQuad
+            }
+        }
+        
+        function showDialog() {
+            if (contentRect.height <= 0 && isFirstShow) {
+                // 第一次显示且内容未渲染时，先隐藏显示进行预渲染
+                opacity = 0
+                visible = true
+                isFirstShow = false
+            } else {
+                // 后续显示或内容已渲染时，直接计算位置并显示
+                scoreDialog.updateDialogPosition()
+                opacity = 1
+                visible = true
+            }
+        }
+        
+        // 使用估计高度计算位置（用于首次显示）
+        function updateDialogPositionWithEstimatedHeight() {
+            var floatingRect = Qt.rect(
+                mainWindow.x + (mainWindow.width - floatingWindow.width) / 2,
+                mainWindow.y + (mainWindow.height - floatingWindow.height) / 2,
+                floatingWindow.width,
+                floatingWindow.height
+            )
+            
+            // 估计对话框高度：头部58px + 内容区域（标题40px + 间距20px + 网格2行*110px + 行间距20px + 边距40px + bottomPadding24px）
+            var estimatedHeight = 58 + (40 + 20 + 220 + 20 + 40 + 24)
+            var spaceAbove = floatingRect.y
+            var spaceBelow = Screen.height - (floatingRect.y + floatingRect.height)
+            
+            // 检查上方是否有足够空间（对话框高度 + 8px间距）
+            if (spaceAbove >= estimatedHeight + 8) {
+                // 显示在悬浮窗上方，右侧对齐
+                x = floatingRect.x + floatingRect.width - width
+                y = floatingRect.y - estimatedHeight - 8
+            } else {
+                // 显示在悬浮窗下方，右侧对齐
+                x = floatingRect.x + floatingRect.width - width
+                y = floatingRect.y + floatingRect.height + 8
+            }
+            
+            // 确保对话框不超出屏幕边界
+            x = Math.max(0, Math.min(x, Screen.width - width))
+            y = Math.max(0, Math.min(y, Screen.height - height))
+        }
+        
+        Rectangle {
+            id: contentRect
+            width: parent.width
+            height: contentColumn.height
+            color: "white"
+            radius: 20
+            
+            // 监听高度变化，当内容加载完成后更新位置
+            onHeightChanged: {
+                if (scoreDialog.visible && height > 0) {
+                    // 使用实际高度更新位置
+                    scoreDialog.updateDialogPosition()
+                    
+                    // 如果是隐藏状态（第一次渲染），现在显示出来
+                    if (scoreDialog.opacity === 0) {
+                        scoreDialog.opacity = 1
+                    }
+                }
+            }
             Column {
-                anchors.fill: parent
-                anchors.margins: 20
-                spacing: 15
-                
-                Text {
-                    text: "您点击了悬浮助手！"
-                    font.pixelSize: 18
-                    font.bold: true
-                    color: "#333333"
-                }
-                
-                Text {
-                    text: "这是一个屏幕悬浮助手，可以在整个屏幕范围内拖动。"
-                    font.pixelSize: 14
-                    color: "#666666"
-                    wrapMode: Text.WordWrap
-                    width: parent.width
-                }
-                
+                id: contentColumn
+                width: parent.width
+                bottomPadding: 24
+                // 头部区域
                 Rectangle {
                     width: parent.width
-                    height: 100
-                    color: "#f5f5f5"
-                    border.color: "#ddd"
-                    border.width: 1
-                    radius: 5
+                    height: 58
+                    color: "transparent"
+                    Row {
+                        id: title
+                        anchors.left: parent.left
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.leftMargin: 17
+                        spacing: 8
+                        Image {
+                            source: "qrc:/image/titleIcon.png"
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        Image {
+                            source: "qrc:/image/titleName.png"
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                    }
+
+                    CircleButtonGroup {
+                        id: titleBtn
+                        anchors.right: titleSplit.left
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.rightMargin: 12
+                        buttonSize: 28        // 按钮大小
+                        spacing: 12          // 按钮间距
+                        iconSources: [       // 图标数组
+                            "qrc:/image/home.png",
+                            "qrc:/image/history.png",
+                            "qrc:/image/user.png"
+                        ]
+                        iconSelectedSources: [       // 图标数组
+                            "qrc:/image/homeSelected.png",
+                            "qrc:/image/historySelected.png",
+                            "qrc:/image/userSelected.png"
+                        ]
+
+                        // 选择变化回调
+                        onSelectionChanged: function(index) {
+                            if (index >= 0) {
+                                console.log("选中了按钮:", index)
+                            } else {
+                                console.log("取消了选择")
+                            }
+                        }
+                    }
+
+                    // 分隔线
+                    Rectangle {
+                        id: titleSplit
+                        width: 1
+                        height: 12
+                        anchors.rightMargin: 12
+                        anchors.right: titleClose.left
+                        anchors.verticalCenter: parent.verticalCenter
+                        color: "#14000000"
+                    }
                     
-                    Text {
-                        anchors.centerIn: parent
-                        text: "功能区域\n您可以在这里添加各种功能"
-                        horizontalAlignment: Text.AlignHCenter
-                        color: "#888888"
+                    Button {
+                        id: titleClose
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.rightMargin: 15
+                        width: 28
+                        height: 28
+                        background: Rectangle {
+                            color: parent.hovered ? "#F5F5F5" : "transparent"
+                            radius: 1111
+                        }
+                        
+                        Image{
+                            source: "qrc:/image/close.png"
+                            anchors.centerIn: parent
+                        }
+                        MouseArea{
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                        }
+                        onClicked: {
+                            scoreDialog.visible = false
+                            scoreDialog.isFirstShow = true
+                        }
                     }
                 }
                 
-                Row {
-                    anchors.right: parent.right
-                    spacing: 10
+                // 分隔线
+                Rectangle {
+                    width: parent.width
+                    height: 1
+                    color: "#F0F0F0"
+                }
+                
+                // 内容区域
+                Rectangle {
+                    width: parent.width
+                    height: contentArea.height + 40  // 上下各20px边距
+                    color: "white"
+                    radius: 12
                     
-                    Button {
-                        text: "确定"
-                        onClicked: dialogWindow.visible = false
+                    Rectangle {
+                        anchors.top: parent.top
+                        width: parent.width
+                        height: 12
+                        color: parent.color
                     }
                     
-                    Button {
-                        text: "取消"
-                        onClicked: dialogWindow.visible = false
-                    }
-                    
-                    Button {
-                        text: "退出程序"
-                        onClicked: Qt.quit()
+                    Column {
+                        id: contentArea
+                        width: parent.width - 40  // 左右各20px边距
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        anchors.top: parent.top
+                        anchors.topMargin: 20
+                        spacing: 0
+                        
+                        // 标题和标签
+                        Row {
+                            width: parent.width
+                            height: 40
+                            
+                            Text {
+                                text: "请选择评分方案"
+                                font.pixelSize: 16
+                                color: "#2C2C2C"
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+                            
+                            Row {
+                                anchors.right: parent.right
+                                anchors.verticalCenter: parent.verticalCenter
+                                spacing: 8
+                                
+                                Rectangle {
+                                    width: 44
+                                    height: 24
+                                    color: "#E8F4FD"
+                                    radius: 12
+                                    
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "通用"
+                                        font.pixelSize: 12
+                                        color: "#1890FF"
+                                    }
+                                }
+                                
+                                Rectangle {
+                                    width: 32
+                                    height: 24
+                                    color: "#F5F5F5"
+                                    radius: 12
+                                    
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "肾"
+                                        font.pixelSize: 12
+                                        color: "#999999"
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // 间距
+                        Item { height: 20 }
+                        
+                        // 评分方案网格
+                        Grid {
+                            width: parent.width
+                            columns: 3
+                            columnSpacing: 20
+                            rowSpacing: 20
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            
+                            // 第一行
+                            ScoreOptionCard {
+                                iconColor: "#FFB800"
+                                title: "RENAL"
+                            }
+                            
+                            ScoreOptionCard {
+                                iconColor: "#8B7CFF"
+                                title: "CCLS"
+                            }
+                            
+                            ScoreOptionCard {
+                                iconColor: "#5DADE2"
+                                title: "TNM"
+                            }
+                            
+                            // 第二行
+                            ScoreOptionCard {
+                                iconColor: "#FFB800"
+                                title: "UCLS MRS"
+                            }
+                            
+                            ScoreOptionCard {
+                                iconColor: "#8B7CFF"
+                                title: "UCLS CTS"
+                            }
+                            
+                            ScoreOptionCard {
+                                iconColor: "#5DADE2"
+                                title: "BIOSNAK"
+                            }
+                        }
                     }
                 }
             }
         }
     }
-}
+    
+    // 评分方案卡片组件
+    component ScoreOptionCard: Rectangle {
+        property string iconColor: "#FFB800"
+        property string title: ""
+        
+        width: 146
+        height: 110
+        color: mouseArea2.containsMouse ? "#F8F9FA" : "#FAFAFA"
+        radius: 8
+        border.color: "#F0F0F0"
+        border.width: 1
+        
+        Column {
+            anchors.centerIn: parent
+            spacing: 12
+            
+            Rectangle {
+                width: 48
+                height: 48
+                color: iconColor
+                radius: 12
+                anchors.horizontalCenter: parent.horizontalCenter
+                
+                // 图标占位符
+                Rectangle {
+                    width: 24
+                    height: 24
+                    color: "white"
+                    radius: 4
+                    anchors.centerIn: parent
+                }
+            }
+            
+            Text {
+                text: title
+                font.pixelSize: 14
+                color: "#2C2C2C"
+                anchors.horizontalCenter: parent.horizontalCenter
+            }
+        }
+        
+        MouseArea {
+            id: mouseArea2
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            
+            onClicked: {
+                console.log("选择了评分方案:", title)
+                scoreDialog.visible = false
+            }
+        }
+         }
+ }
