@@ -84,12 +84,14 @@ void LoginManager::onNetworkReply(QNetworkReply* reply)
         }
         else {
             QJsonObject obj = doc.object();
-            bool success = obj.value("success").toBool();
+            int code = obj.value("code").toInt();
             QString msg = obj.value("message").toString();
-            qDebug() << "[LoginManager] success =" << success << ", message =" << msg;
+            bool success = (code == 0);
+            qDebug() << "[LoginManager] code =" << code << ", success =" << success << ", message =" << msg;
 
             if (success) {
-                QString respUser = obj.value("username").toString();
+                QJsonObject dataObj = obj.value("data").toObject();
+                QString respUser = dataObj.value("userName").toString();
                 qDebug() << "[LoginManager] received username:" << respUser;
                 setCurrentUserName(respUser);
                 setIsLoggedIn(true);
@@ -114,4 +116,5 @@ void LoginManager::logout()
 {
     setIsLoggedIn(false);
     setCurrentUserName("");
+    emit logoutSuccess();
 }

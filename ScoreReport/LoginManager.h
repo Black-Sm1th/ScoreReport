@@ -33,7 +33,7 @@ signals:
     void isLoggedInChanged();
     void currentUserNameChanged();
     void loginResult(bool success, const QString& message);
-
+    void logoutSuccess();
 private slots:
     void onNetworkReply(QNetworkReply* reply);
 

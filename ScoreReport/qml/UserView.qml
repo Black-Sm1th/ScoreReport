@@ -10,16 +10,33 @@ Rectangle {
     height: loginForm.height
     color: "transparent"
     property var messageManager: null
+
+    Connections{
+        target: $loginManager
+        function onLoginResult(success,message){
+            if(success){
+                messageManager.success("登录成功！", 2000)
+            }else{
+                messageManager.error(message, 2000)
+            }
+        }
+        function onLogoutSuccess(){
+            messageManager.success("已退出登录账号！", 2000)
+        }
+    }
+
     // 登录表单区域
     Rectangle {
         id: loginForm
         width: parent.width
-        height: 292
+        height: 292 + 24
+        color: "transparent"
         anchors.centerIn: parent
 
         Column {
             anchors.horizontalCenter: parent.horizontalCenter
             width: parent.width
+            visible: !$loginManager.isLoggedIn
             y:32
             // 账号输入框
             Rectangle {
@@ -31,11 +48,10 @@ Rectangle {
                 Text {
                     id: accountLabel
                     text: "账号"
-                    font.family: "Alibaba PuHuiTi"
+                    font.family: "Alibaba PuHuiTi 3.0"
                     font.pixelSize: 16
                     color: "#D9000000"
                     anchors.left: parent.left
-                    font.weight: Font.Bold
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.leftMargin: 12
                 }
@@ -47,7 +63,7 @@ Rectangle {
                     height: parent.height
                     width: 240 - accountLabel.width - 36
                     anchors.verticalCenter: parent.verticalCenter
-                    font.family: "Alibaba PuHuiTi"
+                    font.family: "Alibaba PuHuiTi 3.0"
                     font.pixelSize: 16
                     color: "#D9000000"
                     placeholderText: "请输入"
@@ -77,11 +93,10 @@ Rectangle {
                 Text {
                     id: passwordLabel
                     text: "密码"
-                    font.family: "Alibaba PuHuiTi"
+                    font.family: "Alibaba PuHuiTi 3.0"
                     font.pixelSize: 16
                     color: "#D9000000"
                     anchors.left: parent.left
-                    font.weight: Font.Bold
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.leftMargin: 12
                 }
@@ -93,7 +108,7 @@ Rectangle {
                     width: 240 - passwordLabel.width - 36 - 28
                     height: parent.height
                     anchors.verticalCenter: parent.verticalCenter
-                    font.family: "Alibaba PuHuiTi"
+                    font.family: "Alibaba PuHuiTi 3.0"
                     font.pixelSize: 16
                     echoMode: showPassword ? TextInput.Normal : TextInput.Password
                     color: "#D9000000"
@@ -122,7 +137,11 @@ Rectangle {
                         source: passwordInput.showPassword ? "qrc:/image/eyeSlash.png" : "qrc:/image/eye.png"
                         anchors.centerIn: parent
                     }
-                    onClicked: passwordInput.showPassword = !passwordInput.showPassword
+                    MouseArea{
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: passwordInput.showPassword = !passwordInput.showPassword
+                    }
                 }
             }
 
@@ -161,12 +180,11 @@ Rectangle {
                 }
 
                 Text {
-                    font.family: "Alibaba PuHuiTi"
+                    font.family: "Alibaba PuHuiTi 3.0"
                     font.pixelSize: 16
                     color: "#D9000000"
                     anchors.leftMargin: 4
                     anchors.left: rememberCheckBox.right
-                    font.weight: Font.Bold
                     text: "记住账号"
                     anchors.verticalCenter: parent.verticalCenter
                 }
@@ -191,22 +209,181 @@ Rectangle {
                 Text {
                     anchors.centerIn: parent
                     text: "登录"
-                    font.family: "Alibaba PuHuiTi"
+                    font.family: "Alibaba PuHuiTi 3.0"
                     font.pixelSize: 16
-                    font.bold: true
                     color: "#ffffff"
                 }
+                MouseArea{
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        if(accountInput.text === ""){
+                            messageManager.warning("账号不能为空",2000)
+                            return
+                        }
+                        if(passwordInput.text === ""){
+                            messageManager.warning("密码不能为空",2000)
+                            return
+                        }
+                        $loginManager.login(accountInput.text, passwordInput.text)
+                    }
+                }
+            }
+        }
+        Column {
+            anchors.horizontalCenter: parent.horizontalCenter
+            width: parent.width
+            visible: $loginManager.isLoggedIn
+            y:22.5
+            Rectangle {
+                width: 56
+                height: 56
+                anchors.horizontalCenter: parent.horizontalCenter
+                radius: 100
+                Image{
+                    anchors.fill: parent
+                    source: "qrc:/image/loginHead.png"
+                }
+            }
 
-                onClicked: {
-                    if(accountInput.text === ""){
-                        messageManager.warning("账号不能为空",2000)
-                        return
+            Rectangle{
+                height: 16
+                width: 240
+                color: "transparent"
+            }
+
+            // 账号输入框
+            Rectangle {
+                id: inputRec
+                width: 240
+                height: 37
+                anchors.horizontalCenter: parent.horizontalCenter
+                color: "#0A000000"
+                radius: 8
+                Text {
+                    id: accountText
+                    text: "账号"
+                    font.family: "Alibaba PuHuiTi 3.0"
+                    font.pixelSize: 16
+                    color: "#D9000000"
+                    anchors.left: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.leftMargin: 12
+                }
+                Text {
+                    id: accountName
+                    text: $loginManager.currentUserName
+                    anchors.leftMargin: 12
+                    anchors.rightMargin: 12
+                    anchors.left: accountText.right
+                    width: 240 - accountText.width - 36
+                    anchors.verticalCenter: parent.verticalCenter
+                    font.family: "Alibaba PuHuiTi 3.0"
+                    font.pixelSize: 16
+                    color: "#D9000000"
+                }
+            }
+
+            Rectangle{
+                height: 32
+                width: 240
+                color: "transparent"
+            }
+
+            // 记住账号复选框
+            Rectangle {
+                anchors.left: inputRec.left
+                height: 29
+                width: 240
+                color:"transparent"
+                CheckBox {
+                    id: clearCheckBox
+                    checked: true
+                    width:16
+                    height: 16
+                    anchors.verticalCenter: parent.verticalCenter
+                    indicator: Rectangle {
+                        implicitWidth: 16
+                        implicitHeight: 16
+                        radius: 4
+                        anchors.verticalCenter: parent.verticalCenter
+                        border.color: clearCheckBox.checked ? "#006BFF" : "#40000000"
+                        border.width: 1
+                        color: clearCheckBox.checked ? "#006BFF" : "#ffffffff"
+
+                        Image{
+                            source: "qrc:/image/vector.png"
+                            anchors.centerIn: parent
+                            visible: clearCheckBox.checked
+                        }
                     }
-                    if(passwordInput.text === ""){
-                        messageManager.warning("密码不能为空",2000)
-                        return
+                }
+
+                Text {
+                    font.family: "Alibaba PuHuiTi 3.0"
+                    font.pixelSize: 16
+                    color: "#D9000000"
+                    anchors.leftMargin: 4
+                    anchors.left: clearCheckBox.right
+                    text: "清除历史记录"
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+            }
+
+            Rectangle{
+                height: 12
+                width: 240
+                color: "transparent"
+            }
+
+            Row{
+                anchors.left: inputRec.left
+                spacing: 12
+                Button {
+                    width: 228 / 2
+                    height: 37
+
+                    background: Rectangle {
+                        color: parent.pressed ? "#F0FF5132" : (parent.hovered ? "#F0FF5132" : "#FF5132")
+                        radius: 8
                     }
-                    $loginManager.login(accountInput.text, passwordInput.text)
+                    Text {
+                        anchors.centerIn: parent
+                        text: "退出账号"
+                        font.family: "Alibaba PuHuiTi 3.0"
+                        font.pixelSize: 16
+                        color: "#ffffff"
+                    }
+                    MouseArea{
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            $loginManager.logout()
+                        }
+                    }
+                }
+                Button {
+                    width: 228 / 2
+                    height: 37
+
+                    background: Rectangle {
+                        color: parent.pressed ? "#F0006BFF" : (parent.hovered ? "#F0006BFF" : "#006BFF")
+                        radius: 8
+                    }
+                    Text {
+                        anchors.centerIn: parent
+                        text: "切换账号"
+                        font.family: "Alibaba PuHuiTi 3.0"
+                        font.pixelSize: 16
+                        color: "#ffffff"
+                    }
+                    MouseArea{
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+
+                        }
+                    }
                 }
             }
         }

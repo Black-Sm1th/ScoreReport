@@ -35,15 +35,12 @@ Item {
                 iconSource: index < root.iconSources.length ? root.iconSources[index] : ""
                 iconSelectedSource: index < root.iconSources.length ? root.iconSelectedSources[index] : ""
                 isSelected: root.selectedIndex === index
-                
+                login: index === 2 && $loginManager.isLoggedIn
                 onClicked: {
                     if (root.selectedIndex === index) {
                         return
-                    } else {
-                        // 选中当前按钮
-                        root.selectedIndex = index
                     }
-                    root.selectionChanged(root.selectedIndex)
+                    root.selectionChanged(index)
                 }
             }
         }
@@ -57,7 +54,7 @@ Item {
         property string iconSource: ""
         property string iconSelectedSource: ""
         property bool isSelected: false
-
+        property bool login: false
         signal clicked()
 
         width: size
@@ -90,14 +87,18 @@ Item {
             anchors.centerIn: parent
             width: 12
             height: 12
-
+            visible: !login
             Image {
                 id: icon
                 anchors.fill: parent
                 source: circleButton.isSelected? circleButton.iconSelectedSource :  circleButton.iconSource
             }
         }
-        // 鼠标交互
+        Image {
+            visible: login
+            anchors.fill: parent
+            source: "qrc:/image/loginHead.png"
+        }
         MouseArea {
             id: mouseArea
             anchors.fill: parent

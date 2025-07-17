@@ -280,7 +280,7 @@ ApplicationWindow {
                     CircleButtonGroup {
                         id: titleBtn
                         anchors.right: titleSplit.left
-                        selectedIndex: 2
+                        selectedIndex: contentRect.currentIndex
                         anchors.verticalCenter: parent.verticalCenter
                         anchors.rightMargin: 12
                         buttonSize: 28        // 按钮大小
@@ -298,6 +298,10 @@ ApplicationWindow {
 
                         // 选择变化回调
                         onSelectionChanged: function(index) {
+                            if($loginManager.currentUserName === ""){
+                                dialogMessageBox.warning("请先登录！", 2000)
+                                return
+                            }
                             contentRect.currentIndex = index
                         }
                     }
@@ -345,7 +349,11 @@ ApplicationWindow {
                     width: parent.width
                     height: 1
                     color: "#F0F0F0"
-                    anchors.bottomMargin: 16
+                }
+                Rectangle {
+                    width: parent.width
+                    height: 16
+                    color: "transparent"
                 }
                 HomeView {
                     visible: contentRect.currentIndex === 0
@@ -354,12 +362,6 @@ ApplicationWindow {
                 UserView{
                     visible: contentRect.currentIndex === 2
                     messageManager: dialogMessageBox
-                }
-                // 分隔线
-                Rectangle {
-                    width: parent.width
-                    height: 24
-                    color: "transparent"
                 }
             }
         }

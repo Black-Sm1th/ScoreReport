@@ -21,5 +21,14 @@
         <file>qml/UserView.qml</file>
         <file>qml/components/CircleButtonGroup.qml</file>
         <file>qml/components/MessageBox.qml</file>
+        <file>qml/components/TabSwitcher.qml</file>
+        <file>image/loginHead.png</file>
+        <file>image/BIOSNAK.png</file>
+        <file>image/CCLS.png</file>
+        <file>image/RENAL.png</file>
+        <file>image/TNM.png</file>
+        <file>image/UCLS-CTS.png</file>
+        <file>image/UCLS-MRS.png</file>
+        <file>qml/CCLS.qml</file>
     </qresource>
 </RCC>
