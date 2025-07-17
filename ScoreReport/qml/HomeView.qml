@@ -9,6 +9,9 @@ Rectangle {
     height: contentArea.height  // 上下各20px边距
     color: "transparent"
     radius: 12
+    
+    // 消息管理器引用属性
+    property var messageManager: null
 
     Column {
         id: contentArea

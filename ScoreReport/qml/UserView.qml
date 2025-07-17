@@ -9,7 +9,7 @@ Rectangle {
     width: parent.width
     height: loginForm.height
     color: "transparent"
-
+    property var messageManager: null
     // 登录表单区域
     Rectangle {
         id: loginForm
@@ -39,24 +39,25 @@ Rectangle {
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.leftMargin: 12
                 }
-                TextInput {
+                TextField {
                     id: accountInput
                     anchors.leftMargin: 12
                     anchors.rightMargin: 12
                     anchors.left: accountLabel.right
+                    height: parent.height
                     width: 240 - accountLabel.width - 36
                     anchors.verticalCenter: parent.verticalCenter
                     font.family: "Alibaba PuHuiTi"
                     font.pixelSize: 16
                     color: "#D9000000"
-                    clip: true
-                    Text {
-                        text: "请输入"
-                        color: "#40000000"
-                        font.family: accountInput.font.family
-                        font.pixelSize: accountInput.font.pixelSize
-                        visible: accountInput.text.length === 0 && !accountInput.activeFocus
-                        anchors.verticalCenter: parent.verticalCenter
+                    placeholderText: "请输入"
+                    placeholderTextColor: "#40000000"
+                    leftPadding: 0
+                    rightPadding: 0
+                    topPadding: 0
+                    bottomPadding: 0
+                    background: Rectangle {
+                        color: "transparent"
                     }
                 }
             }
@@ -84,26 +85,27 @@ Rectangle {
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.leftMargin: 12
                 }
-                TextInput {
+                TextField {
                     id: passwordInput
                     anchors.leftMargin: 12
                     anchors.rightMargin: 12
                     anchors.left: passwordLabel.right
                     width: 240 - passwordLabel.width - 36 - 28
+                    height: parent.height
                     anchors.verticalCenter: parent.verticalCenter
                     font.family: "Alibaba PuHuiTi"
                     font.pixelSize: 16
                     echoMode: showPassword ? TextInput.Normal : TextInput.Password
                     color: "#D9000000"
-                    clip: true
+                    placeholderText: "请输入"
+                    placeholderTextColor: "#40000000"
                     property bool showPassword: false
-                    Text {
-                        text: "请输入"
-                        color: "#40000000"
-                        font.family: passwordInput.font.family
-                        font.pixelSize: passwordInput.font.pixelSize
-                        visible: passwordInput.text.length === 0 && !passwordInput.activeFocus
-                        anchors.verticalCenter: parent.verticalCenter
+                    leftPadding: 0
+                    rightPadding: 0
+                    topPadding: 0
+                    bottomPadding: 0
+                    background: Rectangle {
+                        color: "transparent"
                     }
                 }
                 // 显示/隐藏密码按钮
@@ -196,6 +198,14 @@ Rectangle {
                 }
 
                 onClicked: {
+                    if(accountInput.text === ""){
+                        messageManager.warning("账号不能为空",2000)
+                        return
+                    }
+                    if(passwordInput.text === ""){
+                        messageManager.warning("密码不能为空",2000)
+                        return
+                    }
                     $loginManager.login(accountInput.text, passwordInput.text)
                 }
             }

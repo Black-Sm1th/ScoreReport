@@ -3,7 +3,7 @@ import QtQuick.Window 2.2
 import QtQuick.Controls 2.2
 import QtQuick.Dialogs 1.2
 import QtGraphicalEffects 1.0
-
+import "./components"
 ApplicationWindow {
     id: mainWindow
     visible: true
@@ -124,6 +124,12 @@ ApplicationWindow {
         visible: false
         flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
         color: "transparent"
+        
+        // 对话框消息组件
+        MessageBox {
+            id: dialogMessageBox
+            anchors.fill: parent
+        }
         
         // 监听悬浮窗位置变化，自动更新对话框位置
         Connections {
@@ -343,11 +349,12 @@ ApplicationWindow {
                 }
                 HomeView {
                     visible: contentRect.currentIndex === 0
+                    messageManager: dialogMessageBox
                 }
                 UserView{
                     visible: contentRect.currentIndex === 2
+                    messageManager: dialogMessageBox
                 }
-
                 // 分隔线
                 Rectangle {
                     width: parent.width
