@@ -1,6 +1,7 @@
-#include <QGuiApplication>
+﻿#include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
+#include <QFontDatabase>
 #include "LoginManager.h"
 
 int main(int argc, char *argv[])
@@ -19,6 +20,9 @@ int main(int argc, char *argv[])
     LoginManager loginManager;
     engine.rootContext()->setContextProperty("$loginManager", &loginManager);
 
+    QFontDatabase::addApplicationFont(":/fonts/AlibabaPuHuiTi-3-55-Regular.ttf");
+    QFontDatabase::addApplicationFont(":/fonts/AlibabaPuHuiTi-3-65-Medium.ttf");
+    QFontDatabase::addApplicationFont(":/fonts/AlibabaPuHuiTi-3-85-Bold.ttf");
 
     engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
     if (engine.rootObjects().isEmpty())

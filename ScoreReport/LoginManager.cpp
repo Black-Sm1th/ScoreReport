@@ -1,9 +1,9 @@
-#include "LoginManager.h"
+ï»¿#include "LoginManager.h"
 
 LoginManager::LoginManager(QObject* parent)
     : QObject(parent)
-    , m_isLoggedIn(true)  // Ä¬ÈÏÒÑµÇÂ¼
-    , m_username("²âÊÔÓÃ»§")
+    , m_isLoggedIn(true)  // é»˜è®¤å·²ç™»å½•
+    , m_username("æµ‹è¯•ç”¨æˆ·")
 {
 }
 
@@ -35,15 +35,15 @@ void LoginManager::setUsername(const QString& username)
 
 bool LoginManager::login(const QString& username, const QString& password)
 {
-    // ¼òµ¥µÄµÇÂ¼ÑéÖ¤Âß¼­
+    // ç®€å•çš„ç™»å½•éªŒè¯é€»è¾‘
     if (username.length() >= 3 && password.length() >= 3) {
         setUsername(username);
         setIsLoggedIn(true);
-        emit loginResult(true, "µÇÂ¼³É¹¦");
+        emit loginResult(true, "ç™»å½•æˆåŠŸ");
         return true;
     }
     else {
-        emit loginResult(false, "ÓÃ»§ÃûºÍÃÜÂëÖÁÉÙĞèÒª3¸ö×Ö·û");
+        emit loginResult(false, "ç”¨æˆ·åå’Œå¯†ç è‡³å°‘éœ€è¦3ä¸ªå­—ç¬¦");
         return false;
     }
 }
@@ -52,19 +52,4 @@ void LoginManager::logout()
 {
     setIsLoggedIn(false);
     setUsername("");
-}
-
-bool LoginManager::canAccessFeature(const QString& feature)
-{
-    // ÓÃ»§½çÃæÊ¼ÖÕ¿ÉÒÔ·ÃÎÊ
-    if (feature == "user") {
-        return true;
-    }
-
-    // homeºÍhistoryĞèÒªµÇÂ¼
-    if (feature == "home" || feature == "history") {
-        return m_isLoggedIn;
-    }
-
-    return false;
 }

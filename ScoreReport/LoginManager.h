@@ -1,9 +1,9 @@
-#ifndef LOGINMANAGER_H
+﻿#ifndef LOGINMANAGER_H
 #define LOGINMANAGER_H
 
 #include <QObject>
 #include <QString>
-
+#include <QDebug>
 class LoginManager : public QObject
 {
     Q_OBJECT
@@ -22,7 +22,6 @@ public:
 public slots:
     Q_INVOKABLE bool login(const QString& username, const QString& password);
     Q_INVOKABLE void logout();
-    Q_INVOKABLE bool canAccessFeature(const QString& feature);
 
 signals:
     void isLoggedInChanged();
