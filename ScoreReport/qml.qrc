@@ -30,5 +30,6 @@
         <file>image/UCLS-CTS.png</file>
         <file>image/UCLS-MRS.png</file>
         <file>qml/CCLS.qml</file>
+        <file>qml/components/CustomButton.qml</file>
     </qresource>
 </RCC>

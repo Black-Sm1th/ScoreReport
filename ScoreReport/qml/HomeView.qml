@@ -7,21 +7,14 @@ import "./components"
 // 内容区域
 Rectangle {
     width: parent.width
-    height: {
-        if(currentPage === -1){
-            return contentArea.height
-        }else if(currentPage === 1){
-            return ccls.height
-        }
-    }
+    height: contentArea.height
     color: "transparent"
     radius: 12
     // 消息管理器引用属性
+    signal currentPageChanged(int index)
     property var messageManager: null
-    property real currentPage: -1
     Column {
         id: contentArea
-        visible: currentPage === -1
         width: parent.width - 40  // 左右各20px边距
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
@@ -113,11 +106,6 @@ Rectangle {
             color: "transparent"
         }
     }
-    CCLS {
-        id: ccls
-        visible: currentPage === 1
-        color: "transparent"
-    }
     // 评分方案卡片组件
     component ScoreOptionCard: Rectangle {
         property string iconUrl: ""
@@ -155,9 +143,8 @@ Rectangle {
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
             onClicked: {
-                console.log("选择了评分方案:", title)
                 if(title === "CCLS"){
-                    currentPage = 1
+                    currentPageChanged(1)
                 }
             }
         }

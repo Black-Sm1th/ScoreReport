@@ -3,7 +3,7 @@ import QtQuick.Window 2.2
 import QtQuick.Controls 2.2
 import QtQuick.Dialogs 1.2
 import QtGraphicalEffects 1.0
-
+import "./components"
 // 内容区域
 Rectangle {
     width: parent.width
@@ -195,38 +195,24 @@ Rectangle {
                 width: 240
                 color: "transparent"
             }
-
-            // 登录按钮
-            Button {
+            CustomButton{
+                text: "登录"
                 width: 240
                 height: 37
+                borderWidth: 0
+                backgroundColor: "#006BFF"
+                textColor: "#ffffff"
                 anchors.left: passwordRec.left
-                background: Rectangle {
-                    color: parent.pressed ? "#0066cc" : (parent.hovered ? "#0080ff" : "#006BFF")
-                    radius: 8
-                }
-
-                Text {
-                    anchors.centerIn: parent
-                    text: "登录"
-                    font.family: "Alibaba PuHuiTi 3.0"
-                    font.pixelSize: 16
-                    color: "#ffffff"
-                }
-                MouseArea{
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                        if(accountInput.text === ""){
-                            messageManager.warning("账号不能为空",2000)
-                            return
-                        }
-                        if(passwordInput.text === ""){
-                            messageManager.warning("密码不能为空",2000)
-                            return
-                        }
-                        $loginManager.login(accountInput.text, passwordInput.text)
+                onClicked: {
+                    if(accountInput.text === ""){
+                        messageManager.warning("账号不能为空",2000)
+                        return
                     }
+                    if(passwordInput.text === ""){
+                        messageManager.warning("密码不能为空",2000)
+                        return
+                    }
+                    $loginManager.login(accountInput.text, passwordInput.text)
                 }
             }
         }
@@ -339,50 +325,27 @@ Rectangle {
             Row{
                 anchors.left: inputRec.left
                 spacing: 12
-                Button {
+
+                CustomButton{
+                    text: "退出账号"
                     width: 228 / 2
                     height: 37
-
-                    background: Rectangle {
-                        color: parent.pressed ? "#F0FF5132" : (parent.hovered ? "#F0FF5132" : "#FF5132")
-                        radius: 8
-                    }
-                    Text {
-                        anchors.centerIn: parent
-                        text: "退出账号"
-                        font.family: "Alibaba PuHuiTi 3.0"
-                        font.pixelSize: 16
-                        color: "#ffffff"
-                    }
-                    MouseArea{
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            $loginManager.logout()
-                        }
+                    borderWidth: 0
+                    backgroundColor: "#FF5132"
+                    textColor: "#ffffff"
+                    onClicked: {
+                        $loginManager.logout()
                     }
                 }
-                Button {
+                CustomButton{
+                    text: "切换账号"
                     width: 228 / 2
                     height: 37
+                    borderWidth: 0
+                    backgroundColor: "#006BFF"
+                    textColor: "#ffffff"
+                    onClicked: {
 
-                    background: Rectangle {
-                        color: parent.pressed ? "#F0006BFF" : (parent.hovered ? "#F0006BFF" : "#006BFF")
-                        radius: 8
-                    }
-                    Text {
-                        anchors.centerIn: parent
-                        text: "切换账号"
-                        font.family: "Alibaba PuHuiTi 3.0"
-                        font.pixelSize: 16
-                        color: "#ffffff"
-                    }
-                    MouseArea{
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-
-                        }
                     }
                 }
             }

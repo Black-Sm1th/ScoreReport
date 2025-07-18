@@ -204,36 +204,6 @@ ApplicationWindow {
             }
         }
         
-        // 使用估计高度计算位置（用于首次显示）
-        function updateDialogPositionWithEstimatedHeight() {
-            var floatingRect = Qt.rect(
-                        mainWindow.x + (mainWindow.width - floatingWindow.width) / 2,
-                        mainWindow.y + (mainWindow.height - floatingWindow.height) / 2,
-                        floatingWindow.width,
-                        floatingWindow.height
-                        )
-            
-            // 估计对话框高度：头部58px + 内容区域（标题40px + 间距20px + 网格2行*110px + 行间距20px + 边距40px + bottomPadding24px）
-            var estimatedHeight = 58 + (40 + 20 + 220 + 20 + 40 + 24)
-            var spaceAbove = floatingRect.y
-            var spaceBelow = Screen.height - (floatingRect.y + floatingRect.height)
-            
-            // 检查上方是否有足够空间（对话框高度 + 8px间距）
-            if (spaceAbove >= estimatedHeight + 8) {
-                // 显示在悬浮窗上方，右侧对齐
-                x = floatingRect.x + floatingRect.width - width
-                y = floatingRect.y - estimatedHeight - 8
-            } else {
-                // 显示在悬浮窗下方，右侧对齐
-                x = floatingRect.x + floatingRect.width - width
-                y = floatingRect.y + floatingRect.height + 8
-            }
-            
-            // 确保对话框不超出屏幕边界
-            x = Math.max(0, Math.min(x, Screen.width - width))
-            y = Math.max(0, Math.min(y, Screen.height - height))
-        }
-        
         Rectangle {
             id: contentRect
             width: parent.width
@@ -241,6 +211,7 @@ ApplicationWindow {
             color: "white"
             radius: 20
             property int currentIndex: 2
+            property int currentScore: -1
             // 监听高度变化，当内容加载完成后更新位置
             onHeightChanged: {
                 if (scoreDialog.visible && height > 0) {
@@ -356,12 +327,21 @@ ApplicationWindow {
                     color: "transparent"
                 }
                 HomeView {
-                    visible: contentRect.currentIndex === 0
+                    visible: contentRect.currentIndex === 0 && contentRect.currentScore === -1
                     messageManager: dialogMessageBox
+                    onCurrentPageChanged: {
+                        contentRect.currentScore = index
+                    }
                 }
                 UserView{
-                    visible: contentRect.currentIndex === 2
+                    visible: contentRect.currentIndex === 2 && contentRect.currentScore === -1
                     messageManager: dialogMessageBox
+                }
+                CCLS{
+                    visible: contentRect.currentIndex === 0 && contentRect.currentScore === 1
+                    onExitScore: {
+                        contentRect.currentScore = -1
+                    }
                 }
             }
         }
