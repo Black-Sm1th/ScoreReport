@@ -43,7 +43,30 @@ Rectangle{
                     text: qsTr("CCLS评分分析中，请填写以下信息")
                 }
             }
-
+            Column{
+                id:step1
+                height: 70
+                width: parent.width
+                leftPadding: 40
+                spacing: 10
+                Rectangle{
+                    height: 24
+                    width:parent.width-40
+                    Text{
+                        font.family: "Alibaba PuHuiTi 3.0"
+                        font.weight: Font.Medium
+                        font.pixelSize: 16
+                        color: "#D9000000"
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: qsTr("T2信号（相对肾皮质）")
+                    }
+                }
+                Row {
+                    height: 36
+                    width:parent.width-40
+                    spacing: 16
+                }
+            }
         }
 
         Rectangle {
@@ -69,6 +92,7 @@ Rectangle{
                 backgroundColor: "#1A006BFF"
                 textColor: "#006BFF"
                 onClicked: {
+                    cclsView.step = 1
                     cclsView.exitScore()
                 }
             }
