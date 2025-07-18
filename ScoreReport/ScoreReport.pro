@@ -12,5 +12,10 @@ MOC_DIR += .
 OBJECTS_DIR += debug
 UI_DIR += .
 RCC_DIR += .
-SOURCES += ./main.cpp
+SOURCES += ./main.cpp \
+    ./LoginManager.cpp \
+    ./CCLSScorer.cpp
+
+HEADERS += ./LoginManager.h \
+    ./CCLSScorer.h
 RESOURCES += qml.qrc

@@ -20,6 +20,7 @@
         <file>qml/main.qml</file>
         <file>qml/UserView.qml</file>
         <file>qml/components/CircleButtonGroup.qml</file>
+        <file>qml/components/TextButtonGroup.qml</file>
         <file>qml/components/MessageBox.qml</file>
         <file>qml/components/TabSwitcher.qml</file>
         <file>image/loginHead.png</file>
