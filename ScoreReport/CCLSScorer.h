@@ -32,14 +32,14 @@ public:
     explicit CCLSScorer(QObject* parent = nullptr);
 
     Q_INVOKABLE int calculateScore(int t2Signal, int enhancement, int microFat, int segmentalReversal, int arterialRatio, int diffusionRestriction);
-    Q_INVOKABLE QString getScoreDescription(int score);
-    Q_INVOKABLE QString getDiagnosis(int score);
+    Q_INVOKABLE QString getDetailedDiagnosis(int t2Signal, int enhancement, int microFat, int segmentalReversal, int arterialRatio, int diffusionRestriction);
     Q_INVOKABLE bool needsOption(int t2Signal, int enhancement, int optionIndex, int microFat = -1); // 检查是否需要显示某个选项
+    Q_INVOKABLE void copyToClipboard(const QString &text); // 复制文本到剪贴板
 
 private:
-    int calculatePath1(int enhancement, int microFat, int segmentalReversal, int arterialRatio, int diffusionRestriction); // ���ź�·��
-    int calculatePath2(int enhancement, int microFat, int segmentalReversal, int arterialRatio, int diffusionRestriction); // ���ź�·��  
-    int calculatePath3(int enhancement, int microFat, int segmentalReversal, int arterialRatio, int diffusionRestriction); // ���ź�·��
+    int calculatePath1(int enhancement, int microFat, int segmentalReversal, int arterialRatio, int diffusionRestriction);
+    int calculatePath2(int enhancement, int microFat, int segmentalReversal, int arterialRatio, int diffusionRestriction);
+    int calculatePath3(int enhancement, int microFat, int segmentalReversal, int arterialRatio, int diffusionRestriction);
 };
 
 #endif // CCLSSCORER_H 

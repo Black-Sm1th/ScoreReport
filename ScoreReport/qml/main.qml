@@ -270,7 +270,7 @@ ApplicationWindow {
                         // 选择变化回调
                         onSelectionChanged: function(index) {
                             if($loginManager.currentUserName === ""){
-                                dialogMessageBox.warning("请先登录！", 2000)
+                                dialogMessageBox.warning("请先登录！")
                                 return
                             }
                             contentRect.currentIndex = index
@@ -334,11 +334,12 @@ ApplicationWindow {
                     }
                 }
                 UserView{
-                    visible: contentRect.currentIndex === 2 && contentRect.currentScore === -1
+                    visible: contentRect.currentIndex === 2
                     messageManager: dialogMessageBox
                 }
                 CCLS{
                     visible: contentRect.currentIndex === 0 && contentRect.currentScore === 1
+                    messageManager: dialogMessageBox
                     onExitScore: {
                         contentRect.currentScore = -1
                     }

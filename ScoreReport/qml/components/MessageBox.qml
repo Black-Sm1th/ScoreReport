@@ -47,16 +47,16 @@ Item {
                     }
                 }
                 
-                border.width: 1
-                border.color: {
-                    switch(messageType) {
-                        case "success": return "#D1FAE5"
-                        case "error": return "#FECACA"
-                        case "warning": return "#FDE68A" 
-                        case "info":
-                        default: return "#E5E7EB"
-                    }
-                }
+                // border.width: 1
+                // border.color: {
+                //     switch(messageType) {
+                //         case "success": return "#D1FAE5"
+                //         case "error": return "#FECACA"
+                //         case "warning": return "#FDE68A"
+                //         case "info":
+                //         default: return "#E5E7EB"
+                //     }
+                // }
                 
                 // 出现动画
                 opacity: 0
@@ -191,7 +191,8 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                         text: messageText
                         font.pixelSize: 14
-                        color: "#2C2C2C"
+                        color: "#D9000000"
+                        font.family: "Alibaba PuHuiTi 3.0"
                         wrapMode: Text.WordWrap
                         
                         // 限制最大宽度
@@ -245,7 +246,7 @@ Item {
         messageModel.append({
             type: type || "info",
             text: text || "",
-            duration: duration || 3000
+            duration: duration || 1000
         })
     }
     

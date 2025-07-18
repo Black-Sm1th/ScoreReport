@@ -8,7 +8,7 @@ Rectangle {
     property int buttonWidth: 120
     property int buttonHeight: 40
     property color borderColor: "#E0E0E0"
-    property color textColor: "#333333"
+    property color textColor: "#FFFFFF"
     property color backgroundColor: "#FFFFFF"
     property int fontSize: 16
     property string text: "按钮"

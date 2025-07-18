@@ -15,13 +15,13 @@ Rectangle {
         target: $loginManager
         function onLoginResult(success,message){
             if(success){
-                messageManager.success("登录成功！", 2000)
+                messageManager.success("登录成功！")
             }else{
-                messageManager.error(message, 2000)
+                messageManager.error(message)
             }
         }
         function onLogoutSuccess(){
-            messageManager.success("已退出登录账号！", 2000)
+            messageManager.success("已退出登录账号！")
         }
     }
 
@@ -205,11 +205,11 @@ Rectangle {
                 anchors.left: passwordRec.left
                 onClicked: {
                     if(accountInput.text === ""){
-                        messageManager.warning("账号不能为空",2000)
+                        messageManager.warning("账号不能为空")
                         return
                     }
                     if(passwordInput.text === ""){
-                        messageManager.warning("密码不能为空",2000)
+                        messageManager.warning("密码不能为空")
                         return
                     }
                     $loginManager.login(accountInput.text, passwordInput.text)

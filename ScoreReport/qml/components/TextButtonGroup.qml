@@ -51,7 +51,7 @@ Item {
                         PropertyChanges {
                             target: optionButton
                             color: "#0A006BFF"
-                            border.color: "#006BFF"
+                            border.color: "#33006BFF"
                         }
                     }
                 ]

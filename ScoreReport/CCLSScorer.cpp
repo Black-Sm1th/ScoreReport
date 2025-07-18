@@ -1,4 +1,6 @@
 ﻿#include "CCLSScorer.h"
+#include <QGuiApplication>
+#include <QClipboard>
 
 CCLSScorer::CCLSScorer(QObject* parent)
     : QObject(parent)
@@ -169,36 +171,74 @@ int CCLSScorer::calculatePath3(int enhancement, int microFat, int segmentalRever
     }
 }
 
-QString CCLSScorer::getScoreDescription(int score)
+QString CCLSScorer::getDetailedDiagnosis(int t2Signal, int enhancement, int microFat, int segmentalReversal, int arterialRatio, int diffusionRestriction)
 {
-    switch (score) {
-    case 1:
-        return "透明细胞癌似然评分：1分";
-    case 2:
-        return "透明细胞癌似然评分：2分";
-    case 3:
-        return "透明细胞癌似然评分：3分";
-    case 4:
-        return "透明细胞癌似然评分：4分";
-    case 5:
-        return "透明细胞癌似然评分：5分";
-    default:
-        return "评分错误";
+    // 高信号路径
+    if (t2Signal == HighSignal) {
+        if (enhancement == Obvious) { // 明显强化
+            if (microFat == No && segmentalReversal == Yes) {
+                return QString::fromLocal8Bit("嗜酸细胞瘤");
+            }
+        }
+        else if (enhancement == Moderate) { // 中度强化
+            if (microFat == Yes) {
+                return QString::fromLocal8Bit("嫌色细胞癌");
+            }
+            else if (microFat == No) {
+                if (segmentalReversal == No) {
+                    return QString::fromLocal8Bit("嫌色细胞癌");
+                }
+                else if (segmentalReversal == Yes) {
+                    return QString::fromLocal8Bit("嗜酸细胞瘤");
+                }
+            }
+        }
     }
+    // 等信号路径
+    else if (t2Signal == EqualSignal) {
+        if (enhancement == Obvious) { // 明显强化
+            if (microFat == No) {
+                if (segmentalReversal == No) {
+                    return QString::fromLocal8Bit("嫌色细胞癌");
+                }
+                else if (segmentalReversal == Yes) {
+                    return QString::fromLocal8Bit("嗜酸细胞瘤");
+                }
+            }
+        }
+        else if (enhancement == Moderate) { // 中度强化
+            if (microFat == Yes) {
+                return QString::fromLocal8Bit("嫌色细胞癌");
+            }
+            else if (microFat == No && segmentalReversal == No) {
+                return QString::fromLocal8Bit("嗜酸细胞瘤");
+            }
+        }
+        else if (enhancement == Mild) { // 轻度强化
+            if (microFat == No) {
+                return QString::fromLocal8Bit("乳头状细胞癌");
+            }
+        }
+    }
+    // 低信号路径
+    else if (t2Signal == LowSignal) {
+        if (enhancement == Obvious) { // 明显强化
+            if (arterialRatio == Yes) {
+                return QString::fromLocal8Bit("AML");
+            }
+        }
+        else if (enhancement == Mild) { // 轻度强化
+            if (microFat == No) {
+                return QString::fromLocal8Bit("乳头状细胞癌 AML（少见）");
+            }
+        }
+    }
+    
+    return ""; // 无特定疑似病症
 }
 
-QString CCLSScorer::getDiagnosis(int score)
+void CCLSScorer::copyToClipboard(const QString &text)
 {
-    switch (score) {
-    case 1:
-    case 2:
-        return "低度可能为透明细胞癌";
-    case 3:
-        return "中度可能为透明细胞癌";
-    case 4:
-    case 5:
-        return "高度可能为透明细胞癌";
-    default:
-        return "诊断错误";
-    }
+    QClipboard *clipboard = QGuiApplication::clipboard();
+    clipboard->setText(text);
 }

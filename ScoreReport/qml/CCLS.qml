@@ -14,8 +14,8 @@ Rectangle {
     
     property int currentStep: 0      // 当前步骤 (0-5)
     property int currentScore: 0
-    property string currentDiagnosis: ""
-    
+    property string detailedDiagnosis: ""
+    property var messageManager: null
     // 评分参数
     property int t2Signal: -1        // 0:高信号 1:等信号 2:低信号
     property int enhancement: -1     // 0:明显强化 1:中度强化 2:轻度强化
@@ -66,7 +66,7 @@ Rectangle {
                         font.pixelSize: 16
                         color: "#D9000000"
                         anchors.verticalCenter: parent.verticalCenter
-                        text: qsTr("CCLS评分分析中，请填写以下信息")
+                        text: showResult ? qsTr("已完成CCLS评分！") : qsTr("CCLS评分分析中，请填写以下信息")
                     }
                 }
                 
@@ -75,7 +75,7 @@ Rectangle {
                     width: parent.width - 40
                     spacing: 10
                     leftPadding: 40
-                    visible: currentStep >= 0
+                    visible: currentStep >= 0 && !showResult
                     Rectangle{
                         height: 24
                         width:parent.width
@@ -108,14 +108,14 @@ Rectangle {
                     width: parent.width - 40
                     spacing: 10
                     leftPadding: 40
-                    visible: currentStep >= 1
+                    visible: currentStep >= 1 && !showResult
                     Rectangle{
                         height: 24
                         width:parent.width
                         Text {
                             font.family: "Alibaba PuHuiTi 3.0"
                             font.pixelSize: 16
-                            color: currentStep === 0 ? "#006BFF" : "#D9000000"
+                            color: currentStep === 1 ? "#006BFF" : "#D9000000"
                             text: "皮髓质期强化程度（相对肾皮质）"
                         }
                     }
@@ -140,7 +140,7 @@ Rectangle {
                     width: parent.width - 40
                     spacing: 10
                     leftPadding: 40
-                    visible: currentStep >= 2 && $cclsScorer.needsOption(t2Signal, enhancement, 2, microFat)
+                    visible: currentStep >= 2 && $cclsScorer.needsOption(t2Signal, enhancement, 2, microFat) && !showResult
                     Rectangle{
                         height: 24
                         width:parent.width
@@ -173,7 +173,7 @@ Rectangle {
                     width: parent.width - 40
                     spacing: 10
                     leftPadding: 40
-                    visible: currentStep >= 3 && $cclsScorer.needsOption(t2Signal, enhancement, 3, microFat)
+                    visible: currentStep >= 3 && $cclsScorer.needsOption(t2Signal, enhancement, 3, microFat) && !showResult
                     Rectangle{
                         height: 24
                         width:parent.width
@@ -206,7 +206,7 @@ Rectangle {
                     width: parent.width - 40
                     spacing: 10
                     leftPadding: 40
-                    visible: currentStep >= 4 && $cclsScorer.needsOption(t2Signal, enhancement, 4, microFat)
+                    visible: currentStep >= 4 && $cclsScorer.needsOption(t2Signal, enhancement, 4, microFat) && !showResult
                     Rectangle{
                         height: 24
                         width:parent.width
@@ -240,7 +240,7 @@ Rectangle {
                     width: parent.width - 40
                     spacing: 10
                     leftPadding: 40
-                    visible: currentStep >= 5 && $cclsScorer.needsOption(t2Signal, enhancement, 5, microFat)
+                    visible: currentStep >= 5 && $cclsScorer.needsOption(t2Signal, enhancement, 5, microFat) && !showResult
                     Rectangle{
                         height: 24
                         width:parent.width
@@ -272,33 +272,57 @@ Rectangle {
                 // 结果显示区域
                 Rectangle {
                     width: parent.width
-                    height: showResult ? 120 : 0
+                    height: resultColumn.height
                     visible: showResult
-                    color: "#F8F9FA"
+                    color: "#ECF3FF"
                     radius: 8
-                    border.color: "#E9ECEF"
-                    border.width: 1
-                    
                     Column {
+                        id: resultColumn
                         anchors.centerIn: parent
-                        spacing: 12
-                        
-                        Text {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            font.family: "Alibaba PuHuiTi 3.0"
-                            font.weight: Font.Bold
-                            font.pixelSize: 24
-                            color: "#006BFF"
-                            text: currentScore + "分"
+                        spacing: 4
+                        width: parent.width
+                        leftPadding: 18
+                        rightPadding: 18
+                        topPadding: 14
+                        bottomPadding: 14
+                        // 综合评分
+                        Row {
+                            height: 24
+                            width: parent.width
+                            Text {
+                                id: totalScore
+                                font.family: "Alibaba PuHuiTi 3.0"
+                                font.weight: Font.Medium
+                                font.pixelSize: 16
+                                color: "#D9000000"
+                                text: "综合评分："
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+                            
+                            Text {
+                                font.family: "Alibaba PuHuiTi 3.0"
+                                font.weight: Font.Bold
+                                font.pixelSize: 16
+                                color: "#D9000000"
+                                text: currentScore + "分"
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+                            // 疑似病症
+                            Text {
+                                anchors.bottom: totalScore.bottom
+                                font.family: "Alibaba PuHuiTi 3.0"
+                                font.pixelSize: 12
+                                visible: detailedDiagnosis !== ""
+                                color: "#73000000"
+                                text: " （高度提示" + detailedDiagnosis + ")"
+                            }
                         }
-                        
                         Text {
-                            anchors.horizontalCenter: parent.horizontalCenter
+                            anchors.bottom: totalScore.bottom
                             font.family: "Alibaba PuHuiTi 3.0"
-                            font.weight: Font.Medium
-                            font.pixelSize: 16
-                            color: "#333333"
-                            text: currentDiagnosis
+                            font.pixelSize: 12
+                            color: "#73000000"
+                            text: "评分依据：Mayo Clinic CCLS系统（整合cn-ccLS囊变特征）\n版本时间：第2版（2023年修订）"
                         }
                     }
                 }
@@ -326,6 +350,7 @@ Rectangle {
                 width: 44
                 height: 36
                 fontSize: 14
+                visible: !showResult
                 borderWidth: 1
                 borderColor: "#33006BFF"
                 backgroundColor: "#1A006BFF"
@@ -344,6 +369,7 @@ Rectangle {
                 text: "重置"
                 width: 72
                 height: 36
+                visible: !showResult
                 fontSize: 14
                 borderWidth: 1
                 borderColor: "#33006BFF"
@@ -353,6 +379,65 @@ Rectangle {
                     resetValues()
                 }
             }
+
+            CustomButton {
+                id: rescore
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.left: parent.left
+                anchors.leftMargin: 24
+                text: "再次评分"
+                width: 72
+                height: 36
+                visible: showResult
+                fontSize: 14
+                borderWidth: 1
+                borderColor: "#33006BFF"
+                backgroundColor: "#1A006BFF"
+                textColor: "#006BFF"
+                onClicked: {
+                    resetValues()
+                }
+            }
+
+            CustomButton {
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.left: rescore.right
+                anchors.leftMargin: 12
+                text: "重选方案"
+                width: 72
+                height: 36
+                visible: showResult
+                fontSize: 14
+                borderWidth: 1
+                borderColor: "#33006BFF"
+                backgroundColor: "#1A006BFF"
+                textColor: "#006BFF"
+                onClicked: {
+                    resetValues()
+                    cclsView.exitScore()
+                }
+            }
+
+            CustomButton {
+                 anchors.verticalCenter: parent.verticalCenter
+                 anchors.right: parent.right
+                 anchors.rightMargin: 24
+                 text: "复制"
+                 width: 72
+                 height: 36
+                 visible: showResult
+                 fontSize: 14
+                 borderWidth: 0
+                 backgroundColor: "#006BFF"
+                 onClicked: {
+                     var copyText = "综合评分：" + currentScore + "分"
+                     if (detailedDiagnosis !== "") {
+                         copyText += " （高度提示" + detailedDiagnosis + ")"
+                     }
+                     $cclsScorer.copyToClipboard(copyText)
+                     messageManager.success("已复制！")
+                 }
+             }
         }
     }
     
@@ -377,7 +462,14 @@ Rectangle {
             arterialRatio === -1 ? 1 : arterialRatio,          // 默认为"否"(1)
             diffusionRestriction === -1 ? 1 : diffusionRestriction  // 默认为"否"(1)
         )
-        currentDiagnosis = $cclsScorer.getDiagnosis(currentScore)
+        detailedDiagnosis = $cclsScorer.getDetailedDiagnosis(
+            t2Signal, 
+            enhancement, 
+            microFat === -1 ? 1 : microFat,
+            segmentalReversal === -1 ? 1 : segmentalReversal,
+            arterialRatio === -1 ? 1 : arterialRatio,
+            diffusionRestriction === -1 ? 1 : diffusionRestriction
+        )
         showResult = true
     }
     
@@ -389,7 +481,7 @@ Rectangle {
         arterialRatio = -1
         diffusionRestriction = -1
         currentScore = 0
-        currentDiagnosis = ""
+        detailedDiagnosis = ""
         currentStep = 0
         showResult = false
         
