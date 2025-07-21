@@ -8,6 +8,17 @@ ApplicationWindow {
     id: mainWindow
     visible: true
     
+    // 全局鼠标区域，用于隐藏右键菜单
+    MouseArea {
+        anchors.fill: parent
+        z: -1
+        onPressed: {
+            if (contextMenu.visible) {
+                contextMenu.hide()
+            }
+        }
+    }
+    
     // 设置窗口属性：无边框、始终置顶、工具窗口
     flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool
     
@@ -69,17 +80,27 @@ ApplicationWindow {
             id: mouseArea
             anchors.fill: parent
             hoverEnabled: true
+            acceptedButtons: Qt.LeftButton | Qt.RightButton
             
             property point lastMousePos
             property bool isDragging: false
             cursorShape: Qt.PointingHandCursor
             onPressed: {
-                lastMousePos = Qt.point(mouse.x, mouse.y)
-                isDragging = false
+                if (mouse.button === Qt.LeftButton) {
+                    lastMousePos = Qt.point(mouse.x, mouse.y)
+                    isDragging = false
+                } else if (mouse.button === Qt.RightButton) {
+                    // 右键点击，切换右键菜单显示状态
+                    if (contextMenu.visible) {
+                        contextMenu.hide()
+                    } else {
+                        contextMenu.showMenu(mouse.x, mouse.y)
+                    }
+                }
             }
             
             onPositionChanged: {
-                if (pressed) {
+                if (pressed && pressedButtons & Qt.LeftButton) {
                     var dx = mouse.x - lastMousePos.x
                     var dy = mouse.y - lastMousePos.y
                     
@@ -103,8 +124,8 @@ ApplicationWindow {
             }
             
             onClicked: {
-                // 只有在没有拖动的情况下才响应点击
-                if (!isDragging) {
+                // 只处理左键点击，并且在没有拖动的情况下才响应
+                if (mouse.button === Qt.LeftButton && !isDragging) {
                     if(!scoreDialog.visible){
                         scoreDialog.showDialog()
                     }else{
@@ -124,6 +145,18 @@ ApplicationWindow {
         visible: false
         flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
         color: "transparent"
+        
+        // // 位置更新定时器
+        // Timer {
+        //     id: positionUpdateTimer
+        //     interval: 50
+        //     repeat: false
+        //     onTriggered: {
+        //         if (scoreDialog.visible) {
+        //             scoreDialog.updateDialogPosition()
+        //         }
+        //     }
+        // }
         
         // 对话框消息组件
         MessageBox {
@@ -164,20 +197,25 @@ ApplicationWindow {
             var spaceAbove = floatingRect.y
             var spaceBelow = Screen.height - (floatingRect.y + floatingRect.height)
             
-            // 检查上方是否有足够空间（对话框高度 + 8px间距）
+            // 默认优先显示在上方，如果上方空间不够再考虑下方
             if (spaceAbove >= dialogHeight + 8) {
                 // 显示在悬浮窗上方，右侧对齐
                 x = floatingRect.x + floatingRect.width - width
                 y = floatingRect.y - dialogHeight - 8
-            } else {
+            } else if (spaceBelow >= dialogHeight + 8) {
                 // 显示在悬浮窗下方，右侧对齐
                 x = floatingRect.x + floatingRect.width - width
                 y = floatingRect.y + floatingRect.height + 8
+            } else {
+                // 如果上下空间都不够，优先选择上方（允许出屏幕）
+                x = floatingRect.x + floatingRect.width - width
+                y = floatingRect.y - dialogHeight - 8
             }
             
-            // 确保对话框不超出屏幕边界
-            x = Math.max(0, Math.min(x, Screen.width - width))
-            y = Math.max(0, Math.min(y, Screen.height - height))
+            // scoreDialog允许出屏幕，只确保X坐标在合理范围内
+            x = Math.max(-width + 100, Math.min(x, Screen.width - 100))
+            // Y坐标允许出屏幕上方，但不允许完全超出下方
+            y = Math.min(y, Screen.height - 50)
         }
         
         property bool isFirstShow: true
@@ -212,11 +250,20 @@ ApplicationWindow {
             radius: 20
             property int currentIndex: 2
             property int currentScore: -1
+            
+            // 监听页面切换，重新计算位置
+            onCurrentIndexChanged: {
+                if (scoreDialog.visible) {
+                    // 使用Timer延迟更新位置，确保新页面内容已渲染
+                    scoreDialog.updateDialogPosition()
+                }
+            }
+            
             // 监听高度变化，当内容加载完成后更新位置
             onHeightChanged: {
                 if (scoreDialog.visible && height > 0) {
-                    // 使用实际高度更新位置
-                    scoreDialog.updateDialogPosition()
+                    // 使用Timer确保位置更新的稳定性
+                     scoreDialog.updateDialogPosition()
                     
                     // 如果是隐藏状态（第一次渲染），现在显示出来
                     if (scoreDialog.opacity === 0) {
@@ -342,6 +389,150 @@ ApplicationWindow {
                     messageManager: dialogMessageBox
                     onExitScore: {
                         contentRect.currentScore = -1
+                    }
+                }
+            }
+        }
+    }
+    
+    // 右键菜单
+    Window {
+        id: contextMenu
+        width: 120
+        height: menuColumn.height
+        visible: false
+        flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Popup
+        color: "transparent"
+        
+        // 失去焦点时自动隐藏
+        onActiveFocusItemChanged: {
+            if (!activeFocusItem) {
+                hide()
+            }
+        }
+        
+        // 显示菜单的函数
+        function showMenu(mouseX, mouseY) {
+            // 计算菜单在屏幕上的位置
+            // 悬浮窗的全局位置 + 鼠标在悬浮窗内的位置
+            var globalX = mainWindow.x + mouseX
+            var globalY = mainWindow.y + mouseY
+            
+            // 确保菜单不超出屏幕右边界
+            var menuX = globalX
+            if (menuX + width > Screen.width) {
+                menuX = globalX - width
+            }
+            
+            // 确保菜单不超出屏幕下边界
+            var menuY = globalY
+            if (menuY + height > Screen.height) {
+                menuY = globalY - height
+            }
+            
+            // 确保菜单不超出屏幕上边界
+            menuY = Math.max(0, menuY)
+            menuX = Math.max(0, menuX)
+            
+            x = menuX
+            y = menuY
+            visible = true
+            requestActivate()
+        }
+        
+        // 隐藏菜单
+        function hide() {
+            visible = false
+        }
+        
+        Rectangle {
+            id: menuBackground
+            anchors.fill: parent
+            color: "#FFFFFF"
+            radius: 8
+            border.color: "#E0E0E0"
+            border.width: 1
+            
+            // 添加阴影效果
+            layer.enabled: true
+            layer.effect: DropShadow {
+                horizontalOffset: 0
+                verticalOffset: 2
+                radius: 8
+                samples: 16
+                color: "#20000000"
+            }
+            
+            Column {
+                id: menuColumn
+                width: parent.width
+                
+                Rectangle {
+                    width: parent.width
+                    height: 40
+                    color: exitMouseArea.containsMouse ? "#F5F5F5" : "transparent"
+                    radius: 6
+                    
+                    Row {
+                        anchors.left: parent.left
+                        anchors.leftMargin: 12
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 8
+                        
+                        // 退出图标
+                        Rectangle {
+                            width: 16
+                            height: 16
+                            anchors.verticalCenter: parent.verticalCenter
+                            color: "transparent"
+                            
+                            // 简单的退出图标 (X)
+                            Canvas {
+                                anchors.fill: parent
+                                onPaint: {
+                                    var ctx = getContext("2d")
+                                    ctx.clearRect(0, 0, width, height)
+                                    ctx.strokeStyle = "#FF4444"
+                                    ctx.lineWidth = 2
+                                    ctx.lineCap = "round"
+                                    
+                                    // 绘制X
+                                    ctx.beginPath()
+                                    ctx.moveTo(4, 4)
+                                    ctx.lineTo(12, 12)
+                                    ctx.moveTo(12, 4)
+                                    ctx.lineTo(4, 12)
+                                    ctx.stroke()
+                                }
+                            }
+                        }
+                        
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            font.family: "Alibaba PuHuiTi 3.0"
+                            font.pixelSize: 14
+                            color: exitMouseArea.containsMouse ? "#FF4444" : "#666666"
+                            text: "退出程序"
+                            
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: 150
+                                    easing.type: Easing.OutQuad
+                                }
+                            }
+                        }
+                    }
+                    
+                    MouseArea {
+                        id: exitMouseArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        
+                        onClicked: {
+                            contextMenu.hide()
+                            Qt.quit()
+                        }
                     }
                 }
             }

@@ -35,15 +35,6 @@ Rectangle {
                 id: tabSwitcher
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.right: parent.right
-                onTabChanged: function(index) {
-                    console.log("切换到tab:", index)
-                    // 根据选中的tab执行相应操作
-                    if (index === 0) {
-                        // 通用tab的逻辑
-                    } else if (index === 1) {
-                        // 肾tab的逻辑
-                    }
-                }
             }
         }
 
@@ -59,6 +50,7 @@ Rectangle {
             columns: 3
             columnSpacing: 12
             rowSpacing: 12
+            visible: tabSwitcher.currentIndex === 1
             anchors.horizontalCenter: parent.horizontalCenter
 
             // 第一行
@@ -97,6 +89,20 @@ Rectangle {
                 title: "BIOSNAK"
                 backgroundColor: "#F8FAFF"
                 iconUrl: "qrc:/image/BIOSNAK.png"
+            }
+        }
+
+        Grid {
+            width: parent.width
+            columns: 3
+            columnSpacing: 12
+            rowSpacing: 12
+            visible: tabSwitcher.currentIndex === 0
+            anchors.horizontalCenter: parent.horizontalCenter
+            ScoreOptionCard {
+                title: "TNM"
+                backgroundColor: "#FFFAF8"
+                iconUrl: "qrc:/image/TNM.png"
             }
         }
         // 分隔线

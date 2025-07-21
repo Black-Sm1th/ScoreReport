@@ -66,6 +66,7 @@ Rectangle {
                     font.family: "Alibaba PuHuiTi 3.0"
                     font.pixelSize: 16
                     color: "#D9000000"
+                    selectByMouse: true
                     placeholderText: "请输入"
                     placeholderTextColor: "#40000000"
                     leftPadding: 0
@@ -110,6 +111,7 @@ Rectangle {
                     anchors.verticalCenter: parent.verticalCenter
                     font.family: "Alibaba PuHuiTi 3.0"
                     font.pixelSize: 16
+                    selectByMouse: true
                     echoMode: showPassword ? TextInput.Normal : TextInput.Password
                     color: "#D9000000"
                     placeholderText: "请输入"
