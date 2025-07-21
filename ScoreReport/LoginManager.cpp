@@ -1,17 +1,17 @@
 ﻿#include "LoginManager.h"
+#include "ApiManager.h"
 
-LoginManager::LoginManager(QObject* parent)
+LoginManager::LoginManager(ApiManager* apiManager, QObject* parent)
     : QObject(parent)
     , m_isLoggedIn(false)
     , m_currentUserName("")
     , currentUserId(-1)
-    , m_networkMgr(new QNetworkAccessManager(this))
+    , m_apiManager(apiManager)
 {
-    // 接收来自网络请求的响应
-    connect(m_networkMgr, &QNetworkAccessManager::finished,
-        this, &LoginManager::onNetworkReply);
+    // 连接ApiManager的登录响应信号
+    connect(m_apiManager, &ApiManager::loginResponse,
+            this, &LoginManager::onLoginResponse);
 }
-
 
 bool LoginManager::isLoggedIn() const
 {
@@ -42,87 +42,46 @@ void LoginManager::setCurrentUserName(const QString& currentUserName)
 bool LoginManager::login(const QString& username, const QString& password)
 {
     qDebug() << "[LoginManager] Starting login for user:" << username;
-
-    QUrl url(usePublic
-        ? QStringLiteral("http://111.6.178.34:9205/api/admin/user/login")
-        : QStringLiteral("http://192.168.1.2:9898/api/admin/user/login"));
-
-    QNetworkRequest req(url);
-    req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-
-    QJsonObject json;
-    json["userAccount"] = username;
-    json["userPassword"] = password;
-    QByteArray body = QJsonDocument(json).toJson();
-
-    qDebug() << "[LoginManager] POST URL:" << url.toString();
-    qDebug() << "[LoginManager] Request body:" << body;
-
-    m_networkMgr->post(req, body);
-
+    
+    if (!m_apiManager) {
+        qWarning() << "[LoginManager] ApiManager is null!";
+        emit loginResult(false, "Internal error: ApiManager not available");
+        return false;
+    }
+    
+    // 使用ApiManager进行登录请求
+    m_apiManager->loginUser(username, password);
     return true;
 }
 
-void LoginManager::onNetworkReply(QNetworkReply* reply)
+void LoginManager::onLoginResponse(bool success, const QString& message, const QJsonObject& data)
 {
-    QUrl replyUrl = reply->url();
-    qDebug() << "[LoginManager] Reply received from:" << replyUrl.toString();
-
-    if (!replyUrl.path().endsWith("/login")) {
-        qDebug() << "[LoginManager] Ignored non-login reply";
-        reply->deleteLater();
-        return;
+    qDebug() << "[LoginManager] Login response - Success:" << success << "Message:" << message;
+    
+    if (success) {
+        QString respUser = data.value("userName").toString();
+        currentUserId = data.value("id").toString();
+        qDebug() << "[LoginManager] Login successful - Username:" << respUser << "UserID:" << currentUserId;
+        
+        setCurrentUserName(respUser);
+        setIsLoggedIn(true);
+    } else {
+        setIsLoggedIn(false);
     }
-
-    if (reply->error() == QNetworkReply::NoError) {
-        QByteArray respData = reply->readAll();
-        qDebug() << "[LoginManager] Response data:" << respData;
-
-        QJsonDocument doc = QJsonDocument::fromJson(respData);
-        if (!doc.isObject()) {
-            qWarning() << "[LoginManager] Invalid JSON response";
-            emit loginResult(false, "Invalid server response");
-        }
-        else {
-            QJsonObject obj = doc.object();
-            int code = obj.value("code").toInt();
-            QString msg = obj.value("message").toString();
-            bool success = (code == 0);
-            qDebug() << "[LoginManager] code =" << code << ", success =" << success << ", message =" << msg;
-
-            if (success) {
-                QJsonObject dataObj = obj.value("data").toObject();
-                QString respUser = dataObj.value("userName").toString();
-                currentUserId = dataObj.value("id").toInt();
-                qDebug() << "[LoginManager] received username:" << respUser;
-                setCurrentUserName(respUser);
-                setIsLoggedIn(true);
-            }
-            else {
-                setIsLoggedIn(false);
-            }
-
-            emit loginResult(success, msg);
-        }
-    }
-    else {
-        QString err = reply->errorString();
-        qWarning() << "[LoginManager] Network error:" << err;
-        emit loginResult(false, err);
-    }
-
-    reply->deleteLater();
+    
+    emit loginResult(success, message);
 }
 
 void LoginManager::logout()
 {
+    qDebug() << "[LoginManager] User logout";
     setIsLoggedIn(false);
     setCurrentUserName("");
     currentUserId = -1;
     emit logoutSuccess();
 }
 
-int LoginManager::getUserId()
+QString LoginManager::getUserId()
 {
-    return 0;
+    return currentUserId;
 }

@@ -6,6 +6,7 @@
 #include "LoginManager.h"
 #include "CCLSScorer.h"
 #include "TNMManager.h"
+#include "ApiManager.h"
 
 int main(int argc, char *argv[])
 {
@@ -20,7 +21,10 @@ int main(int argc, char *argv[])
 
     QQmlApplicationEngine engine;
 
-    LoginManager loginManager;
+    ApiManager apiManager;
+    engine.rootContext()->setContextProperty("$apiManager", &apiManager);
+
+    LoginManager loginManager(&apiManager);
     engine.rootContext()->setContextProperty("$loginManager", &loginManager);
     
     CCLSScorer cclsScorer;

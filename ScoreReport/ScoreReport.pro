@@ -14,8 +14,12 @@ UI_DIR += .
 RCC_DIR += .
 SOURCES += ./main.cpp \
     ./LoginManager.cpp \
-    ./CCLSScorer.cpp
+    ./CCLSScorer.cpp \
+    ./TNMManager.cpp \
+    ./ApiManager.cpp
 
 HEADERS += ./LoginManager.h \
-    ./CCLSScorer.h
+    ./CCLSScorer.h \
+    ./TNMManager.h \
+    ./ApiManager.h
 RESOURCES += qml.qrc
