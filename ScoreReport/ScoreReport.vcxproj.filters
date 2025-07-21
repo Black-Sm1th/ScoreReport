@@ -35,9 +35,21 @@
     <ClCompile Include="LoginManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="CCLSScorer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TNMManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="LoginManager.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="CCLSScorer.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="TNMManager.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

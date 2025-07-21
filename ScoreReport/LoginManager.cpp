@@ -4,6 +4,7 @@ LoginManager::LoginManager(QObject* parent)
     : QObject(parent)
     , m_isLoggedIn(false)
     , m_currentUserName("")
+    , currentUserId(-1)
     , m_networkMgr(new QNetworkAccessManager(this))
 {
     // 接收来自网络请求的响应
@@ -92,6 +93,7 @@ void LoginManager::onNetworkReply(QNetworkReply* reply)
             if (success) {
                 QJsonObject dataObj = obj.value("data").toObject();
                 QString respUser = dataObj.value("userName").toString();
+                currentUserId = dataObj.value("id").toInt();
                 qDebug() << "[LoginManager] received username:" << respUser;
                 setCurrentUserName(respUser);
                 setIsLoggedIn(true);
@@ -116,5 +118,11 @@ void LoginManager::logout()
 {
     setIsLoggedIn(false);
     setCurrentUserName("");
+    currentUserId = -1;
     emit logoutSuccess();
+}
+
+int LoginManager::getUserId()
+{
+    return 0;
 }

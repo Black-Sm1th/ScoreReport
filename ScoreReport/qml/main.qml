@@ -391,6 +391,13 @@ ApplicationWindow {
                         contentRect.currentScore = -1
                     }
                 }
+                TNM{
+                    visible: contentRect.currentIndex === 0 && contentRect.currentScore === 2
+                    messageManager: dialogMessageBox
+                    onExitScore: {
+                        contentRect.currentScore = -1
+                    }
+                }
             }
         }
     }

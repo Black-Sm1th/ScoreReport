@@ -5,6 +5,7 @@
 #include <QDebug>
 #include "LoginManager.h"
 #include "CCLSScorer.h"
+#include "TNMManager.h"
 
 int main(int argc, char *argv[])
 {
@@ -24,6 +25,9 @@ int main(int argc, char *argv[])
     
     CCLSScorer cclsScorer;
     engine.rootContext()->setContextProperty("$cclsScorer", &cclsScorer);
+    
+    TNMManager tnmManager;
+    engine.rootContext()->setContextProperty("$tnmManager", &tnmManager);
 
     // 加载字体并检查是否成功
     int fontId1 = QFontDatabase::addApplicationFont(":/fonts/AlibabaPuHuiTi-3-55-Regular.ttf");

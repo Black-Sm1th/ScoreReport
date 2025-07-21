@@ -13,6 +13,7 @@ Rectangle {
     // 消息管理器引用属性
     signal currentPageChanged(int index)
     property var messageManager: null
+
     Column {
         id: contentArea
         width: parent.width - 40  // 左右各20px边距
@@ -151,6 +152,12 @@ Rectangle {
             onClicked: {
                 if(title === "CCLS"){
                     currentPageChanged(1)
+                } else if(title === "TNM"){
+                    if($tnmManager.checkClipboard()){
+                        currentPageChanged(2) // TNM页面索引
+                    }else{
+                        messageManager.warning("剪贴板为空，请先复制内容")
+                    }
                 }
             }
         }

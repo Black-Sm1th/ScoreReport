@@ -29,6 +29,8 @@ public slots:
     Q_INVOKABLE bool login(const QString& username, const QString& password);
     Q_INVOKABLE void logout();
 
+    int getUserId();
+
 signals:
     void isLoggedInChanged();
     void currentUserNameChanged();
@@ -42,6 +44,7 @@ private:
     QString m_currentUserName;
     QNetworkAccessManager* m_networkMgr;
     bool usePublic = true; // 或者设置成构造参数
+    int currentUserId;
 };
 
 #endif // LOGINMANAGER_H 
