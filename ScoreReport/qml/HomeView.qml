@@ -155,6 +155,7 @@ Rectangle {
                 } else if(title === "TNM"){
                     if($tnmManager.checkClipboard()){
                         currentPageChanged(2) // TNM页面索引
+                        $tnmManager.startAnalysis()
                     }else{
                         messageManager.warning("剪贴板为空，请先复制内容")
                     }

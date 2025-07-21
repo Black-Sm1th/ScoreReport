@@ -41,8 +41,7 @@ void LoginManager::setCurrentUserName(const QString& currentUserName)
 
 bool LoginManager::login(const QString& username, const QString& password)
 {
-    qDebug() << "[LoginManager] Starting login for user:" << username;
-    
+
     if (!m_apiManager) {
         qWarning() << "[LoginManager] ApiManager is null!";
         emit loginResult(false, "Internal error: ApiManager not available");
@@ -55,14 +54,10 @@ bool LoginManager::login(const QString& username, const QString& password)
 }
 
 void LoginManager::onLoginResponse(bool success, const QString& message, const QJsonObject& data)
-{
-    qDebug() << "[LoginManager] Login response - Success:" << success << "Message:" << message;
-    
+{   
     if (success) {
         QString respUser = data.value("userName").toString();
         currentUserId = data.value("id").toString();
-        qDebug() << "[LoginManager] Login successful - Username:" << respUser << "UserID:" << currentUserId;
-        
         setCurrentUserName(respUser);
         setIsLoggedIn(true);
     } else {

@@ -31,6 +31,8 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("$cclsScorer", &cclsScorer);
     
     TNMManager tnmManager;
+    tnmManager.setApiManager(&apiManager);
+    tnmManager.setLoginManager(&loginManager);
     engine.rootContext()->setContextProperty("$tnmManager", &tnmManager);
 
     // 加载字体并检查是否成功

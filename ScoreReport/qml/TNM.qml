@@ -12,6 +12,38 @@ Rectangle {
     color: "transparent"
     property var messageManager: null
     signal exitScore()
+    
+    // 省略号动画状态
+    property int dotCount: 1
+    
+    // 省略号动画定时器
+    Timer {
+        id: dotTimer
+        interval: 500  // 每500ms切换一次
+        running: $tnmManager.isAnalyzing
+        repeat: true
+        onTriggered: {
+            dotCount = (dotCount % 3) + 1
+        }
+    }
+    
+    // 生成省略号文本的函数
+    function getDots() {
+        var dots = ""
+        for (var i = 0; i < dotCount; i++) {
+            dots += "."
+        }
+        return dots
+    }
+    
+    Connections {
+        target: $tnmManager
+        function onAnalysisCompleted(success, message) {
+            console.log("TNM analysis completed:", success, message)
+            // 这里可以添加分析完成后的处理逻辑
+        }
+    }
+    
     Column {
         id: tnmColumn
         spacing: 20
@@ -65,7 +97,7 @@ Rectangle {
                     font.pixelSize: 16
                     color: "#D9000000"
                     anchors.verticalCenter: parent.verticalCenter
-                    text: $tnmManager.isAnalyzing?"TNM分析中...":""
+                    text: $tnmManager.isAnalyzing ? "TNM分析中" + getDots() : ""
                 }
             }
         }

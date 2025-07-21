@@ -1,4 +1,4 @@
-#include "ApiManager.h"
+﻿#include "ApiManager.h"
 
 // 定义API地址常量
 const QString ApiManager::INTERNAL_BASE_URL = "http://192.168.1.2:9898/api";
@@ -71,13 +71,21 @@ void ApiManager::makeGetRequest(const QString& endpoint, const QString& requestT
 
 void ApiManager::loginUser(const QString& username, const QString& password)
 {
-    qDebug() << "[ApiManager] Starting login for user:" << username;
-    
     QJsonObject loginData;
     loginData["userAccount"] = username;
     loginData["userPassword"] = password;
     
     makePostRequest("/admin/user/login", loginData, "login");
+}
+
+void ApiManager::getTnmAiQualityScore(const QString& userId, const QString& content)
+{
+    QJsonObject requestData;
+    requestData["userId"] = userId;
+    requestData["type"] = "TNM";
+    requestData["content"] = content;
+    
+    makePostRequest("/admin/Ai/get/aiQualityScore", requestData, "tnm-ai-score");
 }
 
 void ApiManager::onNetworkReply(QNetworkReply* reply)
@@ -102,16 +110,14 @@ void ApiManager::onNetworkReply(QNetworkReply* reply)
             QString message = responseObj.value("message").toString();
             QJsonObject data = responseObj.value("data").toObject();
             bool success = (code == 0);
-            
-            qDebug() << "[ApiManager] Response - Code:" << code 
-                     << "Success:" << success 
-                     << "Message:" << message;
-            
+ 
             // 根据请求类型分发响应
             if (requestType == "login") {
                 emit loginResponse(success, message, data);
             } else if (requestType == "test-connection") {
                 emit connectionTestResult(success, message);
+            } else if (requestType == "tnm-ai-score") {
+                emit tnmAiQualityScoreResponse(success, message, data);
             }
         }
     } else {
@@ -122,6 +128,8 @@ void ApiManager::onNetworkReply(QNetworkReply* reply)
             emit loginResponse(false, errorString, QJsonObject());
         } else if (requestType == "test-connection") {
             emit connectionTestResult(false, errorString);
+        } else if (requestType == "tnm-ai-score") {
+            emit tnmAiQualityScoreResponse(false, errorString, QJsonObject());
         } else {
             emit networkError(errorString);
         }

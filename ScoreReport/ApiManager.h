@@ -1,4 +1,4 @@
-#ifndef APIMANAGER_H
+Ôªø#ifndef APIMANAGER_H
 #define APIMANAGER_H
 
 #include <QObject>
@@ -21,12 +21,13 @@ public:
     bool usePublicNetwork() const;
     void setUsePublicNetwork(bool usePublic);
 
-    // API∑Ω∑®
     void loginUser(const QString& username, const QString& password);
+    void getTnmAiQualityScore(const QString& userId, const QString& content);
 
 signals:
     void usePublicNetworkChanged();
     void loginResponse(bool success, const QString& message, const QJsonObject& data);
+    void tnmAiQualityScoreResponse(bool success, const QString& message, const QJsonObject& data);
     void networkError(const QString& error);
     void connectionTestResult(bool success, const QString& message);
 
@@ -42,7 +43,7 @@ private:
     QNetworkAccessManager* m_networkManager;
     bool m_usePublicNetwork;
 
-    // APIµÿ÷∑≥£¡ø
+    // APIÂú∞ÂùÄÂ∏∏Èáè
     static const QString INTERNAL_BASE_URL;
     static const QString PUBLIC_BASE_URL;
 };
