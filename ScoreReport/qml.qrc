@@ -32,5 +32,6 @@
         <file>image/UCLS-MRS.png</file>
         <file>qml/CCLS.qml</file>
         <file>qml/components/CustomButton.qml</file>
+        <file>qml/TNM.qml</file>
     </qresource>
 </RCC>

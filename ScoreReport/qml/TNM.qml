@@ -11,7 +11,7 @@ Rectangle {
     width: parent.width
     color: "transparent"
     signal exitScore()
-    
+
     property int currentStep: 0      // 当前步骤 (0-5)
     property int currentScore: 0
     property string detailedDiagnosis: ""
@@ -23,32 +23,32 @@ Rectangle {
     property int segmentalReversal: -1 // 0:是 1:否
     property int arterialRatio: -1   // 0:否 1:是 (动脉期/延迟期强化比≥1.5)
     property int diffusionRestriction: -1 // 0:否 1:是 (明显/均匀弥散受限)
-    
+
     property bool showResult: false
-    
+
     Column {
         id: cclsColumn
         spacing: 20
         width: parent.width
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
-        
+
         Rectangle {
             height: 674
             anchors.horizontalCenter: parent.horizontalCenter
             width: parent.width - 48
-            
+
             Column {
                 id: contentColumn
                 anchors.fill: parent
                 spacing: 12
-                
+
                 // 标题栏
                 Rectangle {
                     height: 32
                     width: parent.width
                     color: "transparent"
-                    
+
                     Image {
                         id: cclsImage
                         anchors.verticalCenter: parent.verticalCenter
@@ -56,7 +56,7 @@ Rectangle {
                         height: 32
                         source: "qrc:/image/CCLS.png"
                     }
-                    
+
                     Text {
                         id: cclsInfo
                         anchors.left: cclsImage.right
@@ -69,7 +69,7 @@ Rectangle {
                         text: showResult ? qsTr("已完成CCLS评分！") : qsTr("CCLS评分分析中，请填写以下信息")
                     }
                 }
-                
+
                 // 步骤1: T2信号选择
                 Column {
                     width: parent.width - 40
@@ -102,7 +102,7 @@ Rectangle {
                         }
                     }
                 }
-                
+
                 // 步骤2: 皮髓质期强化程度选择
                 Column {
                     width: parent.width - 40
@@ -134,7 +134,7 @@ Rectangle {
                         }
                     }
                 }
-                
+
                 // 步骤3: 微观脂肪选择
                 Column {
                     width: parent.width - 40
@@ -167,7 +167,7 @@ Rectangle {
                         }
                     }
                 }
-                
+
                 // 步骤4: 节段性强化反转选择
                 Column {
                     width: parent.width - 40
@@ -200,7 +200,7 @@ Rectangle {
                         }
                     }
                 }
-                
+
                 // 步骤5: 动脉期/延迟期强化比≥1.5
                 Column {
                     width: parent.width - 40
@@ -218,7 +218,7 @@ Rectangle {
                             text: "动脉期/延迟期强化比≥1.5"
                         }
                     }
-                    
+
                     TextButtonGroup {
                         id: arterialRatioGroup
                         width: parent.width
@@ -234,7 +234,7 @@ Rectangle {
                         }
                     }
                 }
-                
+
                 // 步骤6: 明显/均匀弥散受限
                 Column {
                     width: parent.width - 40
@@ -252,7 +252,7 @@ Rectangle {
                             text: "明显/均匀弥散受限"
                         }
                     }
-                    
+
                     TextButtonGroup {
                         id: diffusionRestrictionGroup
                         width: parent.width
@@ -298,7 +298,7 @@ Rectangle {
                                 text: "综合评分："
                                 anchors.verticalCenter: parent.verticalCenter
                             }
-                            
+
                             Text {
                                 font.family: "Alibaba PuHuiTi 3.0"
                                 font.weight: Font.Bold
@@ -328,20 +328,20 @@ Rectangle {
                 }
             }
         }
-        
+
         // 底部按钮栏
         Rectangle {
             height: 60
             width: parent.width
             anchors.horizontalCenter: parent.horizontalCenter
             color: "transparent"
-            
+
             Rectangle {
                 height: 1
                 width: parent.width
                 color: "#0F000000"
             }
-            
+
             CustomButton {
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.right: resetBtn.left
@@ -356,11 +356,9 @@ Rectangle {
                 backgroundColor: "#1A006BFF"
                 textColor: "#006BFF"
                 onClicked: {
-                    resetValues()
-                    cclsView.exitScore()
                 }
             }
-            
+
             CustomButton {
                 id: resetBtn
                 anchors.verticalCenter: parent.verticalCenter
@@ -439,58 +437,5 @@ Rectangle {
                 }
             }
         }
-    }
-    
-    function nextStep() {
-        // 跳过不需要的步骤
-        do {
-            currentStep++
-        } while (currentStep <= 5 && !$cclsScorer.needsOption(t2Signal, enhancement, currentStep, microFat))
-        
-        // 如果所有必要步骤都完成了，自动计算分数
-        if (currentStep > 5 || !$cclsScorer.needsOption(t2Signal, enhancement, currentStep, microFat)) {
-            calculateFinalScore()
-        }
-    }
-    
-    function calculateFinalScore() {
-        currentScore = $cclsScorer.calculateScore(
-                    t2Signal,
-                    enhancement,
-                    microFat === -1 ? 1 : microFat,         // 默认为"否"(1)
-                    segmentalReversal === -1 ? 1 : segmentalReversal,  // 默认为"否"(1)
-                    arterialRatio === -1 ? 1 : arterialRatio,          // 默认为"否"(1)
-                    diffusionRestriction === -1 ? 1 : diffusionRestriction  // 默认为"否"(1)
-                    )
-        detailedDiagnosis = $cclsScorer.getDetailedDiagnosis(
-                    t2Signal,
-                    enhancement,
-                    microFat === -1 ? 1 : microFat,
-                    segmentalReversal === -1 ? 1 : segmentalReversal,
-                    arterialRatio === -1 ? 1 : arterialRatio,
-                    diffusionRestriction === -1 ? 1 : diffusionRestriction
-                    )
-        showResult = true
-    }
-    
-    function resetValues() {
-        t2Signal = -1
-        enhancement = -1
-        microFat = -1
-        segmentalReversal = -1
-        arterialRatio = -1
-        diffusionRestriction = -1
-        currentScore = 0
-        detailedDiagnosis = ""
-        currentStep = 0
-        showResult = false
-        
-        // 重置所有按钮组
-        t2SignalGroup.selectedIndex = -1
-        enhancementGroup.selectedIndex = -1
-        microFatGroup.selectedIndex = -1
-        segmentalReversalGroup.selectedIndex = -1
-        arterialRatioGroup.selectedIndex = -1
-        diffusionRestrictionGroup.selectedIndex = -1
     }
 }

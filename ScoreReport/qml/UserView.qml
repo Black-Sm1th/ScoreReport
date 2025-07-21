@@ -11,6 +11,19 @@ Rectangle {
     color: "transparent"
     property var messageManager: null
 
+    // 添加键盘焦点支持
+    focus: true
+    Keys.onReturnPressed: {
+        if (!$loginManager.isLoggedIn) {
+            loginButton.clicked()
+        }
+    }
+    Keys.onEnterPressed: {
+        if (!$loginManager.isLoggedIn) {
+            loginButton.clicked()
+        }
+    }
+
     Connections{
         target: $loginManager
         function onLoginResult(success,message){
@@ -178,6 +191,12 @@ Rectangle {
                             anchors.centerIn: parent
                             visible: rememberCheckBox.checked
                         }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: rememberCheckBox.checked = !rememberCheckBox.checked
+                        }
                     }
                 }
 
@@ -189,6 +208,12 @@ Rectangle {
                     anchors.left: rememberCheckBox.right
                     text: "记住账号"
                     anchors.verticalCenter: parent.verticalCenter
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: rememberCheckBox.checked = !rememberCheckBox.checked
+                    }
                 }
             }
 
@@ -198,6 +223,7 @@ Rectangle {
                 color: "transparent"
             }
             CustomButton{
+                id: loginButton
                 text: "登录"
                 width: 240
                 height: 37
@@ -304,6 +330,12 @@ Rectangle {
                             anchors.centerIn: parent
                             visible: clearCheckBox.checked
                         }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: clearCheckBox.checked = !clearCheckBox.checked
+                        }
                     }
                 }
 
@@ -315,6 +347,12 @@ Rectangle {
                     anchors.left: clearCheckBox.right
                     text: "清除历史记录"
                     anchors.verticalCenter: parent.verticalCenter
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: clearCheckBox.checked = !clearCheckBox.checked
+                    }
                 }
             }
 

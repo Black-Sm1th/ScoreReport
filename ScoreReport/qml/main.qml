@@ -263,7 +263,7 @@ ApplicationWindow {
             onHeightChanged: {
                 if (scoreDialog.visible && height > 0) {
                     // 使用Timer确保位置更新的稳定性
-                     scoreDialog.updateDialogPosition()
+                    scoreDialog.updateDialogPosition()
                     
                     // 如果是隐藏状态（第一次渲染），现在显示出来
                     if (scoreDialog.opacity === 0) {
