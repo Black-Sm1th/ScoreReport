@@ -9,23 +9,19 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QDebug>
+#include "CommonFunc.h"
 
 class ApiManager : public QObject
 {
     Q_OBJECT
-        Q_PROPERTY(bool usePublicNetwork READ usePublicNetwork WRITE setUsePublicNetwork NOTIFY usePublicNetworkChanged)
+    QUICK_PROPERTY(bool, usePublicNetwork)
+    SINGLETON_CLASS(ApiManager)
 
 public:
-    explicit ApiManager(QObject* parent = nullptr);
-
-    bool usePublicNetwork() const;
-    void setUsePublicNetwork(bool usePublic);
-
     void loginUser(const QString& username, const QString& password);
     void getTnmAiQualityScore(const QString& userId, const QString& content);
 
 signals:
-    void usePublicNetworkChanged();
     void loginResponse(bool success, const QString& message, const QJsonObject& data);
     void tnmAiQualityScoreResponse(bool success, const QString& message, const QJsonObject& data);
     void networkError(const QString& error);
@@ -41,11 +37,10 @@ private:
     void makeGetRequest(const QString& endpoint, const QString& requestType = "");
 
     QNetworkAccessManager* m_networkManager;
-    bool m_usePublicNetwork;
 
     // API地址常量
-    static const QString INTERNAL_BASE_URL;
-    static const QString PUBLIC_BASE_URL;
+    const QString INTERNAL_BASE_URL = "http://192.168.1.2:9898/api";
+    const QString PUBLIC_BASE_URL = "http://111.6.178.34:9205/api";
 };
 
 #endif // APIMANAGER_H

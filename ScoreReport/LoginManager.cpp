@@ -1,47 +1,20 @@
 ﻿#include "LoginManager.h"
 #include "ApiManager.h"
 
-LoginManager::LoginManager(ApiManager* apiManager, QObject* parent)
+LoginManager::LoginManager(QObject* parent)
     : QObject(parent)
-    , m_isLoggedIn(false)
-    , m_currentUserName("")
-    , currentUserId(-1)
-    , m_apiManager(apiManager)
+    , currentUserId("")
+    , m_apiManager(nullptr)
 {
-    // 连接ApiManager的登录响应信号
+    setisLoggedIn(false);
+    setcurrentUserName("");
+    m_apiManager = GET_SINGLETON(ApiManager);
     connect(m_apiManager, &ApiManager::loginResponse,
-            this, &LoginManager::onLoginResponse);
-}
-
-bool LoginManager::isLoggedIn() const
-{
-    return m_isLoggedIn;
-}
-
-void LoginManager::setIsLoggedIn(bool loggedIn)
-{
-    if (m_isLoggedIn != loggedIn) {
-        m_isLoggedIn = loggedIn;
-        emit isLoggedInChanged();
-    }
-}
-
-QString LoginManager::currentUserName() const
-{
-    return m_currentUserName;
-}
-
-void LoginManager::setCurrentUserName(const QString& currentUserName)
-{
-    if (m_currentUserName != currentUserName) {
-        m_currentUserName = currentUserName;
-        emit currentUserNameChanged();
-    }
+        this, &LoginManager::onLoginResponse);
 }
 
 bool LoginManager::login(const QString& username, const QString& password)
 {
-
     if (!m_apiManager) {
         qWarning() << "[LoginManager] ApiManager is null!";
         emit loginResult(false, "Internal error: ApiManager not available");
@@ -58,10 +31,11 @@ void LoginManager::onLoginResponse(bool success, const QString& message, const Q
     if (success) {
         QString respUser = data.value("userName").toString();
         currentUserId = data.value("id").toString();
-        setCurrentUserName(respUser);
-        setIsLoggedIn(true);
+        setcurrentUserName(respUser);
+        setisLoggedIn(true);
     } else {
-        setIsLoggedIn(false);
+        setisLoggedIn(false);
+        setcurrentUserName("");
     }
     
     emit loginResult(success, message);
@@ -70,9 +44,9 @@ void LoginManager::onLoginResponse(bool success, const QString& message, const Q
 void LoginManager::logout()
 {
     qDebug() << "[LoginManager] User logout";
-    setIsLoggedIn(false);
-    setCurrentUserName("");
-    currentUserId = -1;
+    setisLoggedIn(false);
+    setcurrentUserName("");
+    currentUserId = "";
     emit logoutSuccess();
 }
 

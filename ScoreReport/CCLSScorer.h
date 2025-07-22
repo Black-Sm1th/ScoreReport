@@ -3,10 +3,12 @@
 
 #include <QObject>
 #include <QString>
+#include "CommonFunc.h"
 
 class CCLSScorer : public QObject
 {
     Q_OBJECT
+    SINGLETON_CLASS(CCLSScorer)
 
 public:
     enum T2Signal {
@@ -28,8 +30,6 @@ public:
         No = 1    // "否" 对应界面 index 1
     };
     Q_ENUM(YesNo)
-
-    explicit CCLSScorer(QObject* parent = nullptr);
 
     Q_INVOKABLE int calculateScore(int t2Signal, int enhancement, int microFat, int segmentalReversal, int arterialRatio, int diffusionRestriction);
     Q_INVOKABLE QString getDetailedDiagnosis(int t2Signal, int enhancement, int microFat, int segmentalReversal, int arterialRatio, int diffusionRestriction);

@@ -7,6 +7,7 @@
 #include "CCLSScorer.h"
 #include "TNMManager.h"
 #include "ApiManager.h"
+#include "CommonFunc.h"
 
 int main(int argc, char *argv[])
 {
@@ -21,19 +22,18 @@ int main(int argc, char *argv[])
 
     QQmlApplicationEngine engine;
 
-    ApiManager apiManager;
-    engine.rootContext()->setContextProperty("$apiManager", &apiManager);
+    // 使用单例模式获取实例
+    auto* apiManager = GET_SINGLETON(ApiManager);
+    engine.rootContext()->setContextProperty("$apiManager", apiManager);
 
-    LoginManager loginManager(&apiManager);
-    engine.rootContext()->setContextProperty("$loginManager", &loginManager);
+    auto* loginManager = GET_SINGLETON(LoginManager);
+    engine.rootContext()->setContextProperty("$loginManager", loginManager);
     
-    CCLSScorer cclsScorer;
-    engine.rootContext()->setContextProperty("$cclsScorer", &cclsScorer);
+    auto* cclsScorer = GET_SINGLETON(CCLSScorer);
+    engine.rootContext()->setContextProperty("$cclsScorer", cclsScorer);
     
-    TNMManager tnmManager;
-    tnmManager.setApiManager(&apiManager);
-    tnmManager.setLoginManager(&loginManager);
-    engine.rootContext()->setContextProperty("$tnmManager", &tnmManager);
+    auto* tnmManager = GET_SINGLETON(TNMManager);
+    engine.rootContext()->setContextProperty("$tnmManager", tnmManager);
 
     // 加载字体并检查是否成功
     int fontId1 = QFontDatabase::addApplicationFont(":/fonts/AlibabaPuHuiTi-3-55-Regular.ttf");

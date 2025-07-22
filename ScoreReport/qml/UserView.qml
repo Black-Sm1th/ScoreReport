@@ -45,7 +45,6 @@ Rectangle {
         height: 292 + 24
         color: "transparent"
         anchors.centerIn: parent
-
         Column {
             anchors.horizontalCenter: parent.horizontalCenter
             width: parent.width

@@ -1,48 +1,17 @@
 ﻿#include "TNMManager.h"
-#include "ApiManager.h"
-#include "LoginManager.h"
+
 #include <QDebug>
 
 TNMManager::TNMManager(QObject *parent)
     : QObject(parent)
     , m_clipboard(QGuiApplication::clipboard())
-    , m_isAnalyzing(false)
     , m_apiManager(nullptr)
     , m_loginManager(nullptr)
 {
-
-}
-
-void TNMManager::setApiManager(ApiManager* apiManager)
-{
-    m_apiManager = apiManager;
-    if (m_apiManager) {
-        connect(m_apiManager, &ApiManager::tnmAiQualityScoreResponse,
-                this, &TNMManager::onTnmAiQualityScoreResponse);
-    }
-}
-
-void TNMManager::setLoginManager(LoginManager* loginManager)
-{
-    m_loginManager = loginManager;
-}
-
-QString TNMManager::clipboardContent() const
-{
-    return m_clipboardContent;
-}
-
-bool TNMManager::isAnalyzing() const
-{
-    return m_isAnalyzing;
-}
-
-void TNMManager::setIsAnalyzing(bool analyzing)
-{
-    if (m_isAnalyzing != analyzing) {
-        m_isAnalyzing = analyzing;
-        emit isAnalyzingChanged();
-    }
+    m_apiManager = GET_SINGLETON(ApiManager);
+    m_loginManager = GET_SINGLETON(LoginManager);
+    setisAnalyzing(false);
+    setclipboardContent("");
 }
 
 bool TNMManager::checkClipboard()
@@ -52,8 +21,7 @@ bool TNMManager::checkClipboard()
     if (content.isEmpty()) {
         return false;
     }
-    m_clipboardContent = content;
-    emit clipboardContentChanged();
+    setclipboardContent(content);
     return true;
 }
 
@@ -66,15 +34,13 @@ void TNMManager::startAnalysis()
         return;
     }
     
-    qDebug() << "[TNMManager] Starting analysis for user:" << userId << "with content length:" << m_clipboardContent.length();
-    
-    setIsAnalyzing(true);
-    m_apiManager->getTnmAiQualityScore(userId, m_clipboardContent);
+    setisAnalyzing(true);
+    m_apiManager->getTnmAiQualityScore(userId, getclipboardContent());
 }
 
 void TNMManager::onTnmAiQualityScoreResponse(bool success, const QString& message, const QJsonObject& data)
 {
-    setIsAnalyzing(false);
+    setisAnalyzing(false);
     
     if (success) {
         qDebug() << "[TNMManager] TNM analysis completed successfully:" << message;
