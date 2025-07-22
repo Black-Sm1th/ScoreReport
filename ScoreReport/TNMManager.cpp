@@ -1,5 +1,4 @@
 ﻿#include "TNMManager.h"
-
 #include <QDebug>
 
 TNMManager::TNMManager(QObject *parent)
@@ -10,8 +9,12 @@ TNMManager::TNMManager(QObject *parent)
 {
     m_apiManager = GET_SINGLETON(ApiManager);
     m_loginManager = GET_SINGLETON(LoginManager);
+    QObject::connect(m_apiManager, &ApiManager::tnmAiQualityScoreResponse, this, &TNMManager::onTnmAiQualityScoreResponse);
     setisAnalyzing(false);
+    setisCompleted(false);
     setclipboardContent("");
+    setinCompleteInfo("");
+    settipList(QVariantList());
 }
 
 bool TNMManager::checkClipboard()
@@ -30,12 +33,25 @@ void TNMManager::startAnalysis()
     // 获取当前登录用户的ID
     QString userId = m_loginManager->getUserId();
     if (userId.isEmpty() || userId == "-1") {
-        emit analysisCompleted(false, "User not logged in");
         return;
     }
-    
     setisAnalyzing(true);
     m_apiManager->getTnmAiQualityScore(userId, getclipboardContent());
+}
+
+void TNMManager::endAnalysis()
+{
+    resetAllParams();
+    m_apiManager->abortRequestsByType("tnm-ai-score");
+}
+
+void TNMManager::resetAllParams()
+{
+    setisCompleted(false);
+    setisAnalyzing(false);
+    setclipboardContent("");
+    setinCompleteInfo("");
+    settipList(QVariantList());
 }
 
 void TNMManager::onTnmAiQualityScoreResponse(bool success, const QString& message, const QJsonObject& data)
@@ -43,11 +59,25 @@ void TNMManager::onTnmAiQualityScoreResponse(bool success, const QString& messag
     setisAnalyzing(false);
     
     if (success) {
-        qDebug() << "[TNMManager] TNM analysis completed successfully:" << message;
         qDebug() << "[TNMManager] Response data:" << data;
+        QJsonObject detailData = data.value("data").toObject();
+        QString status = detailData.value("status").toString();
+        if (status == "success") {
+            setisCompleted(true);
+            setinCompleteInfo("");
+        }
+        else{
+            QString info = detailData.value("message").toString();
+            QJsonArray tips = detailData.value("tips").toArray();
+            QVariantList list;
+            for (const QJsonValue& value : tips) {
+                list.append(value.toString());  // 转成 QVariantMap
+            }
+            settipList(list);
+            setinCompleteInfo(info);
+            setisCompleted(false);
+        }
     } else {
         qWarning() << "[TNMManager] TNM analysis failed:" << message;
     }
-    
-    emit analysisCompleted(success, message);
 }

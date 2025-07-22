@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QClipboard>
 #include <QGuiApplication>
+#include <QJsonArray>
 #include "CommonFunc.h"
 #include "ApiManager.h"
 #include "LoginManager.h"
@@ -13,14 +14,16 @@ class TNMManager : public QObject
     Q_OBJECT
     QUICK_PROPERTY(QString, clipboardContent)
     QUICK_PROPERTY(bool, isAnalyzing)
+    QUICK_PROPERTY(bool, isCompleted)
+        QUICK_PROPERTY(QString, inCompleteInfo)
+        QUICK_PROPERTY(QVariantList, tipList)
     SINGLETON_CLASS(TNMManager)
 
 public:
     Q_INVOKABLE bool checkClipboard();
     Q_INVOKABLE void startAnalysis();
-
-signals:
-    void analysisCompleted(bool success, const QString& message);
+    Q_INVOKABLE void endAnalysis();
+    void resetAllParams();
 
 private slots:
     void onTnmAiQualityScoreResponse(bool success, const QString& message, const QJsonObject& data);

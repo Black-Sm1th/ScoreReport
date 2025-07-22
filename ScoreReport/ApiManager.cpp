@@ -71,7 +71,8 @@ void ApiManager::makePostRequest(const QString& endpoint, const QJsonObject& dat
     QByteArray body = QJsonDocument(data).toJson();
     qDebug() << "[ApiManager] POST request body:" << body;
     
-    m_networkManager->post(request, body);
+    QNetworkReply* reply = m_networkManager->post(request, body);
+    m_activeReplies.insert(reply);  // 跟踪活跃的请求
 }
 
 /**
@@ -89,7 +90,8 @@ void ApiManager::makeGetRequest(const QString& endpoint, const QString& requestT
         request.setRawHeader("X-Request-Type", requestType.toUtf8());
     }
     
-    m_networkManager->get(request);
+    QNetworkReply* reply = m_networkManager->get(request);
+    m_activeReplies.insert(reply);  // 跟踪活跃的请求
 }
 
 /**
@@ -117,10 +119,11 @@ void ApiManager::loginUser(const QString& username, const QString& password)
  * 发送TNM内容到AI服务进行质量评分。
  * 请求类型标记为 "tnm-ai-score"，结果会通过 tnmAiQualityScoreResponse 信号返回。
  */
-void ApiManager::getTnmAiQualityScore(const QString& userId, const QString& content)
+void ApiManager::getTnmAiQualityScore(/*const QString& chatId, */const QString& userId, const QString& content)
 {
     QJsonObject requestData;
     requestData["userId"] = userId;
+    //requestData["chatId"] = chatId;
     requestData["type"] = "TNM";
     requestData["content"] = content;
     
@@ -153,6 +156,9 @@ void ApiManager::onNetworkReply(QNetworkReply* reply)
     qDebug() << "[ApiManager] Reply received from:" << replyUrl.toString() 
              << "Type:" << requestType;
     
+    // 从活跃请求集合中移除
+    m_activeReplies.remove(reply);
+    
     if (reply->error() == QNetworkReply::NoError) {
         // 网络请求成功，解析响应数据
         QByteArray responseData = reply->readAll();
@@ -183,18 +189,72 @@ void ApiManager::onNetworkReply(QNetworkReply* reply)
         QString errorString = reply->errorString();
         qWarning() << "[ApiManager] Network error:" << errorString;
         
-        // 根据请求类型发送错误响应
-        if (requestType == "login") {
-            emit loginResponse(false, errorString, QJsonObject());
-        } else if (requestType == "test-connection") {
-            emit connectionTestResult(false, errorString);
-        } else if (requestType == "tnm-ai-score") {
-            emit tnmAiQualityScoreResponse(false, errorString, QJsonObject());
+        // 检查是否是手动终止的请求
+        if (reply->error() == QNetworkReply::OperationCanceledError) {
+            qDebug() << "[ApiManager] Request was manually aborted:" << requestType;
+            // 被终止的请求不发送错误信号，直接清理即可
         } else {
-            emit networkError(errorString);
+            // 根据请求类型发送错误响应
+            if (requestType == "login") {
+                emit loginResponse(false, errorString, QJsonObject());
+            } else if (requestType == "test-connection") {
+                emit connectionTestResult(false, errorString);
+            } else if (requestType == "tnm-ai-score") {
+                emit tnmAiQualityScoreResponse(false, errorString, QJsonObject());
+            } else {
+                emit networkError(errorString);
+            }
         }
     }
     
     // 清理网络回复对象，防止内存泄漏
     reply->deleteLater();
+}
+
+/**
+ * @brief 终止所有正在进行的网络请求
+ * 
+ * 遍历所有活跃的请求并调用abort()方法终止它们。
+ * 被终止的请求会触发OperationCanceledError，但不会发送错误信号。
+ * 这个方法通常在用户取消操作或应用程序退出时调用。
+ */
+void ApiManager::abortAllRequests()
+{
+    qDebug() << "[ApiManager] Aborting all active requests, count:" << m_activeReplies.size();
+    
+    // 复制集合，因为abort()会触发finished信号，导致集合在遍历时被修改
+    QSet<QNetworkReply*> repliesToAbort = m_activeReplies;
+    
+    for (QNetworkReply* reply : repliesToAbort) {
+        if (reply && reply->isRunning()) {
+            qDebug() << "[ApiManager] Aborting request to:" << reply->url().toString();
+            reply->abort();
+        }
+    }
+}
+
+/**
+ * @brief 终止指定类型的网络请求
+ * @param requestType 要终止的请求类型（如 "login", "tnm-ai-score"）
+ * 
+ * 只终止匹配指定类型的活跃请求，允许对特定操作进行精确控制。
+ * 例如：abortRequestsByType("login") 只会终止登录请求，其他请求继续执行。
+ */
+void ApiManager::abortRequestsByType(const QString& requestType)
+{
+    qDebug() << "[ApiManager] Aborting requests of type:" << requestType;
+    
+    // 复制集合避免遍历时修改
+    QSet<QNetworkReply*> repliesToCheck = m_activeReplies;
+    
+    for (QNetworkReply* reply : repliesToCheck) {
+        if (reply && reply->isRunning()) {
+            QString replyType = QString::fromUtf8(reply->request().rawHeader("X-Request-Type"));
+            if (replyType == requestType) {
+                qDebug() << "[ApiManager] Aborting request:" << reply->url().toString() 
+                         << "Type:" << replyType;
+                reply->abort();
+            }
+        }
+    }
 }

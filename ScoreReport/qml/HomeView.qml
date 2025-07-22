@@ -142,6 +142,7 @@ Rectangle {
                 color: "#D9000000"
                 anchors.horizontalCenter: parent.horizontalCenter
             }
+
         }
 
         MouseArea {

@@ -36,14 +36,6 @@ Rectangle {
         return dots
     }
     
-    Connections {
-        target: $tnmManager
-        function onAnalysisCompleted(success, message) {
-            console.log("TNM analysis completed:", success, message)
-            // 这里可以添加分析完成后的处理逻辑
-        }
-    }
-    
     Column {
         id: tnmColumn
         spacing: 20
@@ -97,7 +89,45 @@ Rectangle {
                     font.pixelSize: 16
                     color: "#D9000000"
                     anchors.verticalCenter: parent.verticalCenter
-                    text: $tnmManager.isAnalyzing ? "TNM分析中" + getDots() : ""
+                    text: {
+                        if($tnmManager.isAnalyzing){
+                            return "TNM分析中" + getDots()
+                        }
+                        if($tnmManager.isCompleted){
+                            return "已完成TNM分析！"
+                        }else if(!$tnmManager.isCompleted && $tnmManager.inCompleteInfo){
+                            return $tnmManager.inCompleteInfo
+                        }else{
+                            return ""
+                        }
+                    }
+                }
+            }
+            Repeater {
+                model: $tnmManager.tipList.length  // 来自 C++
+                delegate: Rectangle {
+                    width:parent.width - 48
+                    height: 52 + 12 + 148
+                    Rectangle{
+                        color: "#ECF3FF"
+                        radius: 8
+                        width:parent.width
+                        height: 52
+                        Text{
+                            anchors.left: parent.left
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.leftMargin: 18
+                            font.family: "Alibaba PuHuiTi 3.0"
+                            font.pixelSize: 16
+                            color: "#D9000000"
+                            text: $tnmManager.tipList[index]
+                        }
+                    }
+                    MultiLineTextInput{
+                        width: parent.width
+                        height: 148
+                        y:64
+                    }
                 }
             }
         }
@@ -120,6 +150,7 @@ Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.right: parent.right
                 anchors.rightMargin: 24
+                visible: $tnmManager.isAnalyzing
                 text: "终止"
                 width: 88
                 height: 36
@@ -129,7 +160,62 @@ Rectangle {
                 backgroundColor: "#1A006BFF"
                 textColor: "#006BFF"
                 onClicked: {
+                    $tnmManager.endAnalysis()
                     exitScore()
+                }
+            }
+
+            CustomButton {
+                id: stopBtn
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.left: parent.left
+                anchors.leftMargin: 24
+                visible: !$tnmManager.isAnalyzing && !$tnmManager.isCompleted
+                text: "终止"
+                width: 88
+                height: 36
+                fontSize: 14
+                borderWidth: 1
+                borderColor: "#33006BFF"
+                backgroundColor: "#1A006BFF"
+                textColor: "#006BFF"
+                onClicked: {
+                    $tnmManager.endAnalysis()
+                    exitScore()
+                }
+            }
+
+            CustomButton {
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.left: stopBtn.right
+                anchors.leftMargin: 12
+                visible: !$tnmManager.isAnalyzing && !$tnmManager.isCompleted
+                text: "重置"
+                width: 88
+                height: 36
+                fontSize: 14
+                borderWidth: 1
+                borderColor: "#33006BFF"
+                backgroundColor: "#1A006BFF"
+                textColor: "#006BFF"
+                onClicked: {
+
+                }
+            }
+
+            CustomButton {
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.right: parent.right
+                anchors.rightMargin: 24
+                visible: !$tnmManager.isAnalyzing && !$tnmManager.isCompleted
+                text: "提交"
+                width: 88
+                height: 36
+                fontSize: 14
+                backgroundColor: "#006BFF"
+                textColor: "#FFFFFF"
+                onClicked: {
+
                 }
             }
         }
