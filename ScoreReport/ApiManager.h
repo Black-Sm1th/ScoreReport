@@ -53,12 +53,50 @@ public:
     void getTnmAiQualityScore(const QString& chatId, const QString& userId, const QString& content);
     
     /**
+     * @brief 获取RENAL AI质量评分
+     * @param userId 用户ID
+     * @param content 待评分的内容
+     * 
+     * 发送RENAL内容到AI服务进行质量评分，结果通过 renalAiQualityScoreResponse 信号返回
+     */
+    void getRenalAiQualityScore(const QString& chatId, const QString& userId, const QString& content);
+    
+    /**
      * @brief 删除指定的聊天记录
      * @param chatId 要删除的聊天ID
      * 
      * 发送删除聊天请求到服务器，结果通过 deleteChatResponse 信号返回
      */
     void deleteChatById(const QString& chatId);
+    
+    /**
+     * @brief 添加评测记录
+     * @param type 类型
+     * @param title 标题
+     * @param content 内容
+     * @param result 结果
+     * @param chatId 会话ID（可选）
+     * 
+     * 发送添加评测记录请求到服务器，结果通过 addQualityRecordResponse 信号返回
+     */
+    void addQualityRecord(const QString& type, const QString& title, const QString& content, 
+                         const QString& result, const QString& chatId = "");
+    
+    /**
+     * @brief 获取评测记录分页列表
+     * @param type 类型筛选（可选）
+     * @param title 标题筛选（可选）
+     * @param content 内容筛选（可选）
+     * @param result 结果筛选（可选）
+     * @param dateTime 日期筛选（可选）
+     * @param current 当前页码，默认1
+     * @param pageSize 页面大小，默认10
+     * 
+     * 发送获取评测记录列表请求到服务器，结果通过 getQualityListResponse 信号返回
+     */
+    void getQualityList(const QString& type = "", const QString& title = "", const QString& content = "",
+                       const QString& result = "", const QString& dateTime = "", 
+                       int current = 1, int pageSize = 10);
     
     /**
      * @brief 终止所有正在进行的网络请求
@@ -94,12 +132,36 @@ signals:
     void tnmAiQualityScoreResponse(bool success, const QString& message, const QJsonObject& data);
     
     /**
+     * @brief RENAL AI质量评分响应信号
+     * @param success 是否请求成功
+     * @param message 服务器返回的消息
+     * @param data 评分数据
+     */
+    void renalAiQualityScoreResponse(bool success, const QString& message, const QJsonObject& data);
+    
+    /**
      * @brief 删除聊天响应信号
      * @param success 是否删除成功
      * @param message 服务器返回的消息
      * @param data 响应数据
      */
     void deleteChatResponse(bool success, const QString& message, const QJsonObject& data);
+    
+    /**
+     * @brief 添加评测记录响应信号
+     * @param success 是否添加成功
+     * @param message 服务器返回的消息
+     * @param data 响应数据
+     */
+    void addQualityRecordResponse(bool success, const QString& message, const QJsonObject& data);
+    
+    /**
+     * @brief 获取评测记录列表响应信号
+     * @param success 是否请求成功
+     * @param message 服务器返回的消息
+     * @param data 列表数据
+     */
+    void getQualityListResponse(bool success, const QString& message, const QJsonObject& data);
     
     /**
      * @brief 网络错误信号

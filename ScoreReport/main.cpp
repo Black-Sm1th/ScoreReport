@@ -8,6 +8,7 @@
 #include "TNMManager.h"
 #include "ApiManager.h"
 #include "CommonFunc.h"
+#include "RenalManager.h"
 
 int main(int argc, char *argv[])
 {
@@ -34,6 +35,9 @@ int main(int argc, char *argv[])
     
     auto* tnmManager = GET_SINGLETON(TNMManager);
     engine.rootContext()->setContextProperty("$tnmManager", tnmManager);
+
+    auto* renalManager = GET_SINGLETON(RenalManager);
+    engine.rootContext()->setContextProperty("$renalManager", renalManager);
 
     // 加载字体并检查是否成功
     int fontId1 = QFontDatabase::addApplicationFont(":/fonts/AlibabaPuHuiTi-3-55-Regular.ttf");

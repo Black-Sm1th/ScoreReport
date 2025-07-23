@@ -131,6 +131,25 @@ void ApiManager::getTnmAiQualityScore(const QString& chatId, const QString& user
 }
 
 /**
+ * @brief RENAL AI质量评分接口实现
+ * @param userId 当前用户ID
+ * @param content 需要评分的RENAL内容
+ * 
+ * 发送RENAL内容到AI服务进行质量评分。
+ * 请求类型标记为 "renal-ai-score"，结果会通过 renalAiQualityScoreResponse 信号返回。
+ */
+void ApiManager::getRenalAiQualityScore(const QString& chatId, const QString& userId, const QString& content)
+{
+    QJsonObject requestData;
+    requestData["userId"] = userId;
+    requestData["chatId"] = chatId;
+    requestData["type"] = "RENAL";
+    requestData["content"] = content;
+    
+    makePostRequest("/admin/Ai/get/aiQualityScore", requestData, "renal-ai-score");
+}
+
+/**
  * @brief 删除聊天接口实现
  * @param chatId 要删除的聊天ID
  * 
@@ -143,6 +162,76 @@ void ApiManager::deleteChatById(const QString& chatId)
     requestData["chatId"] = chatId;
     
     makePostRequest("/admin/Ai/delete/chat", requestData, "delete-chat");
+}
+
+/**
+ * @brief 添加评测记录接口实现
+ * @param type 类型
+ * @param title 标题
+ * @param content 内容
+ * @param result 结果
+ * @param chatId 会话ID（可选）
+ * 
+ * 发送添加评测记录请求到服务器的 /quality/add 端点。
+ * 请求类型标记为 "add-quality-record"，结果会通过 addQualityRecordResponse 信号返回。
+ */
+void ApiManager::addQualityRecord(const QString& type, const QString& title, const QString& content, 
+                                 const QString& result, const QString& chatId)
+{
+    QJsonObject requestData;
+    requestData["type"] = type;
+    requestData["title"] = title;
+    requestData["content"] = content;
+    requestData["result"] = result;
+    
+    // chatId为可选参数，只有在不为空时才添加
+    if (!chatId.isEmpty()) {
+        requestData["chatId"] = chatId;
+    }
+    
+    makePostRequest("/quality/add", requestData, "add-quality-record");
+}
+
+/**
+ * @brief 获取评测记录分页列表接口实现
+ * @param type 类型筛选（可选）
+ * @param title 标题筛选（可选）
+ * @param content 内容筛选（可选）
+ * @param result 结果筛选（可选）
+ * @param dateTime 日期筛选（可选）
+ * @param current 当前页码，默认1
+ * @param pageSize 页面大小，默认10
+ * 
+ * 发送获取评测记录列表请求到服务器的 /quality/list 端点。
+ * 请求类型标记为 "get-quality-list"，结果会通过 getQualityListResponse 信号返回。
+ */
+void ApiManager::getQualityList(const QString& type, const QString& title, const QString& content,
+                               const QString& result, const QString& dateTime, 
+                               int current, int pageSize)
+{
+    QJsonObject requestData;
+    
+    // 只有非空的可选参数才添加到请求中
+    if (!type.isEmpty()) {
+        requestData["type"] = type;
+    }
+    if (!title.isEmpty()) {
+        requestData["title"] = title;
+    }
+    if (!content.isEmpty()) {
+        requestData["content"] = content;
+    }
+    if (!result.isEmpty()) {
+        requestData["result"] = result;
+    }
+    if (!dateTime.isEmpty()) {
+        requestData["dateTime"] = dateTime;
+    }
+    
+    requestData["current"] = current;
+    requestData["pageSize"] = pageSize;
+    
+    makePostRequest("/quality/list", requestData, "get-quality-list");
 }
 
 /**
@@ -197,8 +286,14 @@ void ApiManager::onNetworkReply(QNetworkReply* reply)
                 emit connectionTestResult(success, message);
             } else if (requestType == "tnm-ai-score") {
                 emit tnmAiQualityScoreResponse(success, message, data);
+            } else if (requestType == "renal-ai-score") {
+                emit renalAiQualityScoreResponse(success, message, data);
             } else if (requestType == "delete-chat") {
                 emit deleteChatResponse(success, message, data);
+            } else if (requestType == "add-quality-record") {
+                emit addQualityRecordResponse(success, message, data);
+            } else if (requestType == "get-quality-list") {
+                emit getQualityListResponse(success, message, data);
             }
         }
     } else {
@@ -218,8 +313,14 @@ void ApiManager::onNetworkReply(QNetworkReply* reply)
                 emit connectionTestResult(false, errorString);
             } else if (requestType == "tnm-ai-score") {
                 emit tnmAiQualityScoreResponse(false, errorString, QJsonObject());
+            } else if (requestType == "renal-ai-score") {
+                emit renalAiQualityScoreResponse(false, errorString, QJsonObject());
             } else if (requestType == "delete-chat") {
                 emit deleteChatResponse(false, errorString, QJsonObject());
+            } else if (requestType == "add-quality-record") {
+                emit addQualityRecordResponse(false, errorString, QJsonObject());
+            } else if (requestType == "get-quality-list") {
+                emit getQualityListResponse(false, errorString, QJsonObject());
             } else {
                 emit networkError(errorString);
             }

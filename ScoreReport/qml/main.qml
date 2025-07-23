@@ -384,6 +384,13 @@ ApplicationWindow {
                     visible: contentRect.currentIndex === 2
                     messageManager: dialogMessageBox
                 }
+                RENAL{
+                    visible: contentRect.currentIndex === 0 && contentRect.currentScore === 0
+                    messageManager: dialogMessageBox
+                    onExitScore: {
+                        contentRect.currentScore = -1
+                    }
+                }
                 CCLS{
                     visible: contentRect.currentIndex === 0 && contentRect.currentScore === 1
                     messageManager: dialogMessageBox

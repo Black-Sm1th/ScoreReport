@@ -1,7 +1,7 @@
-﻿#include "TNMManager.h"
+﻿#include "RenalManager.h"
 #include <QDebug>
 
-TNMManager::TNMManager(QObject *parent)
+RenalManager::RenalManager(QObject *parent)
     : QObject(parent)
     , m_clipboard(QGuiApplication::clipboard())
     , m_apiManager(nullptr)
@@ -9,23 +9,18 @@ TNMManager::TNMManager(QObject *parent)
 {
     m_apiManager = GET_SINGLETON(ApiManager);
     m_loginManager = GET_SINGLETON(LoginManager);
-    QObject::connect(m_apiManager, &ApiManager::tnmAiQualityScoreResponse, this, &TNMManager::onTnmAiQualityScoreResponse);
+    QObject::connect(m_apiManager, &ApiManager::renalAiQualityScoreResponse, this, &RenalManager::onRenalAiQualityScoreResponse);
     setisAnalyzing(false);
     setisCompleted(false);
     setclipboardContent("");
     setinCompleteInfo("");
     settipList(QVariantList());
-    setTNMConclusion("");
-    setStage("");
-    setTConclusion("");
-    setNConclusion("");
-    setMConclusion("");
     currentChatId = "";
     resultText = "";
-    setsourceText(QString::fromLocal8Bit("评分依据：AJCC/UICC联合制定\n版本时间：第八版（2021年发布，2025年适用）"));
+    setsourceText(QString::fromLocal8Bit("评分依据：Kutikov RENAL评分系统\n版本时间：原始版（2009年发布）"));
 }
 
-bool TNMManager::checkClipboard()
+bool RenalManager::checkClipboard()
 {
     QString content = m_clipboard->text().trimmed();
     
@@ -36,7 +31,7 @@ bool TNMManager::checkClipboard()
     return true;
 }
 
-void TNMManager::startAnalysis()
+void RenalManager::startAnalysis()
 {
     currentChatId = CommonFunc::generateNumericUUID();
     // 获取当前登录用户的ID
@@ -45,19 +40,19 @@ void TNMManager::startAnalysis()
         return;
     }
     setisAnalyzing(true);
-    m_apiManager->getTnmAiQualityScore(currentChatId, userId, getclipboardContent());
+    m_apiManager->getRenalAiQualityScore(currentChatId, userId, getclipboardContent());
 }
 
-void TNMManager::endAnalysis()
+void RenalManager::endAnalysis()
 {
     if (!getisCompleted()) {
         m_apiManager->deleteChatById(currentChatId);
     }
     resetAllParams();
-    m_apiManager->abortRequestsByType("tnm-ai-score");
+    m_apiManager->abortRequestsByType("renal-ai-score");
 }
 
-void TNMManager::submitContent(const QVariantList& inputContents)
+void RenalManager::submitContent(const QVariantList& inputContents)
 {
     // 获取当前登录用户的ID
     QString userId = m_loginManager->getUserId();
@@ -78,10 +73,10 @@ void TNMManager::submitContent(const QVariantList& inputContents)
     setclipboardContent(finalContent);
     // 设置分析状态并调用API
     setisAnalyzing(true);
-    m_apiManager->getTnmAiQualityScore(currentChatId, userId, finalContent);
+    m_apiManager->getRenalAiQualityScore(currentChatId, userId, finalContent);
 }
 
-void TNMManager::pasteAnalysis()
+void RenalManager::pasteAnalysis()
 {
     QString content = m_clipboard->text().trimmed();
     if (content.isEmpty()) {
@@ -93,55 +88,38 @@ void TNMManager::pasteAnalysis()
     startAnalysis();
 }
 
-void TNMManager::resetAllParams()
+void RenalManager::resetAllParams()
 {
     setisCompleted(false);
     setisAnalyzing(false);
     setclipboardContent("");
     setinCompleteInfo("");
     settipList(QVariantList());
-    setTNMConclusion("");
-    setStage("");
-    setTConclusion("");
-    setNConclusion("");
-    setMConclusion("");
     currentChatId = "";
     resultText = "";
 }
 
-void TNMManager::onTnmAiQualityScoreResponse(bool success, const QString& message, const QJsonObject& data)
+void RenalManager::onRenalAiQualityScoreResponse(bool success, const QString& message, const QJsonObject& data)
 {
     setisAnalyzing(false);
     
     if (success) {
-        qDebug() << "[TNMManager] Response data:" << data;
+        qDebug() << "[RenalManager] Response data:" << data;
         QJsonObject detailData = data.value("data").toObject();
         QString status = detailData.value("status").toString();
         if (status == "success") {
             setisCompleted(true);
             setinCompleteInfo("");
-            QString T = detailData.value("conclusion").toObject().value("T").toString();
-            QString N = detailData.value("conclusion").toObject().value("N").toString();
-            QString M = detailData.value("conclusion").toObject().value("M").toString();
-            QString stage = detailData.value("stage").toString();
-            setTNMConclusion(T + N + M);
-            setStage(stage);
-            QString TC = detailData.value("basis").toObject().value("T").toString();
-            QString NC = detailData.value("basis").toObject().value("N").toString();
-            QString MC = detailData.value("basis").toObject().value("M").toString();
-            setTConclusion(TC);
-            setNConclusion(NC);
-            setMConclusion(MC);
 
-            QString title = QString::fromLocal8Bit("TNM分期：") + getTNMConclusion();
-            QString result = QString::fromLocal8Bit("临床分期：") + getStage() + QString::fromLocal8Bit("\nT分期 （原发肿瘤）：\n") + getTConclusion() + QString::fromLocal8Bit("\nN分期 （区域淋巴结）：\n") + getNConclusion() + QString::fromLocal8Bit("\nM分期 （原发肿瘤）：\n") + getMConclusion();
+            QString title = "";
+            QString result = "";
             resultText = title;
             resultText += "\n";
             resultText += result;
             resultText += "\n";
             resultText += getsourceText();
 
-            m_apiManager->addQualityRecord("TNM", title, getclipboardContent(), result, currentChatId);
+            m_apiManager->addQualityRecord("RENAL", title, getclipboardContent(), result, currentChatId);
         }
         else{
             QString info = detailData.value("message").toString();
@@ -156,11 +134,11 @@ void TNMManager::onTnmAiQualityScoreResponse(bool success, const QString& messag
             setisCompleted(false);
         }
     } else {
-        qWarning() << "[TNMManager] TNM analysis failed:" << message;
+        qWarning() << "[RenalManager] Renal analysis failed:" << message;
     }
 }
 
-void TNMManager::copyToClipboard()
+void RenalManager::copyToClipboard()
 {
     QClipboard* clipboard = QGuiApplication::clipboard();
     clipboard->setText(resultText);

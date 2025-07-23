@@ -92,6 +92,7 @@
     </ClCompile>
     <ClCompile Include="LoginManager.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="RenalManager.cpp" />
     <ClCompile Include="TNMManager.cpp" />
     <QtRcc Include="qml.qrc" />
     <None Include="main.qml" />
@@ -110,6 +111,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CommonFunc.h" />
+    <QtMoc Include="RenalManager.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

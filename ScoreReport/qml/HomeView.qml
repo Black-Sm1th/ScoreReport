@@ -153,10 +153,17 @@ Rectangle {
             onClicked: {
                 if(title === "CCLS"){
                     currentPageChanged(1)
-                } else if(title === "TNM"){
+                }else if(title === "TNM"){
                     if($tnmManager.checkClipboard()){
                         currentPageChanged(2) // TNM页面索引
                         $tnmManager.startAnalysis()
+                    }else{
+                        messageManager.warning("剪贴板为空，请先复制内容")
+                    }
+                }else if(title === "RENAL"){
+                    if($renalManager.checkClipboard()){
+                        currentPageChanged(0) // TNM页面索引
+                        $renalManager.startAnalysis()
                     }else{
                         messageManager.warning("剪贴板为空，请先复制内容")
                     }

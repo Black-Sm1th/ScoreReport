@@ -255,7 +255,7 @@ Rectangle {
                 radius: 100
                 Image{
                     anchors.fill: parent
-                    source: "qrc:/image/loginHead.png"
+                    source: "https://hwq-1317946928.cos.ap-shanghai.myqcloud.com/user_avatar/1697633200786403330/68Wl983t-20191209062144363.jpg"
                 }
             }
 

@@ -34,5 +34,6 @@
         <file>qml/components/CustomButton.qml</file>
         <file>qml/components/MultiLineTextInput.qml</file>
         <file>qml/TNM.qml</file>
+        <file>qml/RENAL.qml</file>
     </qresource>
 </RCC>

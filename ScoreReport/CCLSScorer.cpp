@@ -89,7 +89,7 @@ void CCLSScorer::finishScore(int score, QString detailedDiagnosis)
     }
     resultText += "\n";
     resultText += getsourceText();
-    
+    GET_SINGLETON(ApiManager)->addQualityRecord("CCLS", title, "", result);
 }
 
 int CCLSScorer::calculatePath1(int enhancement, int microFat, int segmentalReversal, int arterialRatio, int diffusionRestriction)

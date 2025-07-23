@@ -44,6 +44,9 @@
     <ClCompile Include="ApiManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="RenalManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="LoginManager.h">
@@ -56,6 +59,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ApiManager.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="RenalManager.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

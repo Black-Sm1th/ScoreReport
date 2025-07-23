@@ -4,7 +4,7 @@
 #include <QObject>
 #include <QString>
 #include "CommonFunc.h"
-
+#include "ApiManager.h"
 class CCLSScorer : public QObject
 {
     Q_OBJECT
