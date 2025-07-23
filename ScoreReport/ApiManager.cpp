@@ -119,15 +119,30 @@ void ApiManager::loginUser(const QString& username, const QString& password)
  * 发送TNM内容到AI服务进行质量评分。
  * 请求类型标记为 "tnm-ai-score"，结果会通过 tnmAiQualityScoreResponse 信号返回。
  */
-void ApiManager::getTnmAiQualityScore(/*const QString& chatId, */const QString& userId, const QString& content)
+void ApiManager::getTnmAiQualityScore(const QString& chatId, const QString& userId, const QString& content)
 {
     QJsonObject requestData;
     requestData["userId"] = userId;
-    //requestData["chatId"] = chatId;
+    requestData["chatId"] = chatId;
     requestData["type"] = "TNM";
     requestData["content"] = content;
     
     makePostRequest("/admin/Ai/get/aiQualityScore", requestData, "tnm-ai-score");
+}
+
+/**
+ * @brief 删除聊天接口实现
+ * @param chatId 要删除的聊天ID
+ * 
+ * 发送删除聊天请求到服务器的 /admin/Ai/delete/chat 端点。
+ * 请求类型标记为 "delete-chat"，结果会通过 deleteChatResponse 信号返回。
+ */
+void ApiManager::deleteChatById(const QString& chatId)
+{
+    QJsonObject requestData;
+    requestData["chatId"] = chatId;
+    
+    makePostRequest("/admin/Ai/delete/chat", requestData, "delete-chat");
 }
 
 /**
@@ -182,6 +197,8 @@ void ApiManager::onNetworkReply(QNetworkReply* reply)
                 emit connectionTestResult(success, message);
             } else if (requestType == "tnm-ai-score") {
                 emit tnmAiQualityScoreResponse(success, message, data);
+            } else if (requestType == "delete-chat") {
+                emit deleteChatResponse(success, message, data);
             }
         }
     } else {
@@ -201,6 +218,8 @@ void ApiManager::onNetworkReply(QNetworkReply* reply)
                 emit connectionTestResult(false, errorString);
             } else if (requestType == "tnm-ai-score") {
                 emit tnmAiQualityScoreResponse(false, errorString, QJsonObject());
+            } else if (requestType == "delete-chat") {
+                emit deleteChatResponse(false, errorString, QJsonObject());
             } else {
                 emit networkError(errorString);
             }

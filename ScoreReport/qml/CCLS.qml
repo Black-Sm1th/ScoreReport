@@ -62,7 +62,7 @@ Rectangle {
                         anchors.left: cclsImage.right
                         anchors.leftMargin: 8
                         font.family: "Alibaba PuHuiTi 3.0"
-                        font.weight: Font.Medium
+                        font.weight: Font.Bold
                         font.pixelSize: 16
                         color: "#D9000000"
                         anchors.verticalCenter: parent.verticalCenter
@@ -146,7 +146,7 @@ Rectangle {
                         width:parent.width
                         Text {
                             font.family: "Alibaba PuHuiTi 3.0"
-                            font.weight: Font.Medium
+                            font.weight: Font.Bold
                             font.pixelSize: 16
                             color: currentStep === 2 ? "#006BFF" : "#666666"
                             text: "微观脂肪"
@@ -179,7 +179,7 @@ Rectangle {
                         width:parent.width
                         Text {
                             font.family: "Alibaba PuHuiTi 3.0"
-                            font.weight: Font.Medium
+                            font.weight: Font.Bold
                             font.pixelSize: 16
                             color: currentStep === 3 ? "#006BFF" : "#666666"
                             text: "节段性强化反转"
@@ -212,7 +212,7 @@ Rectangle {
                         width:parent.width
                         Text {
                             font.family: "Alibaba PuHuiTi 3.0"
-                            font.weight: Font.Medium
+                            font.weight: Font.Bold
                             font.pixelSize: 16
                             color: currentStep === 4 ? "#006BFF" : "#666666"
                             text: "动脉期/延迟期强化比≥1.5"
@@ -246,7 +246,7 @@ Rectangle {
                         width:parent.width
                         Text {
                             font.family: "Alibaba PuHuiTi 3.0"
-                            font.weight: Font.Medium
+                            font.weight: Font.Bold
                             font.pixelSize: 16
                             color: currentStep === 5 ? "#006BFF" : "#666666"
                             text: "明显/均匀弥散受限"
@@ -291,11 +291,11 @@ Rectangle {
                             width: parent.width
                             Text {
                                 id: totalScore
+                                font.weight: Font.Bold
                                 font.family: "Alibaba PuHuiTi 3.0"
-                                font.weight: Font.Medium
                                 font.pixelSize: 16
                                 color: "#D9000000"
-                                text: "综合评分："
+                                text: "CCLS评分："
                                 anchors.verticalCenter: parent.verticalCenter
                             }
                             
@@ -307,22 +307,30 @@ Rectangle {
                                 text: currentScore + "分"
                                 anchors.verticalCenter: parent.verticalCenter
                             }
-                            // 疑似病症
-                            Text {
-                                anchors.bottom: totalScore.bottom
-                                font.family: "Alibaba PuHuiTi 3.0"
-                                font.pixelSize: 12
-                                visible: detailedDiagnosis !== ""
-                                color: "#73000000"
-                                text: " （高度提示" + detailedDiagnosis + ")"
-                            }
                         }
+
+                        // 疑似病症
+                        Text {
+                            anchors.bottom: totalScore.bottom
+                            font.family: "Alibaba PuHuiTi 3.0"
+                            font.pixelSize: 16
+                            visible: detailedDiagnosis !== ""
+                            color: "#A6000000"
+                            text: "符合" + detailedDiagnosis + "典型特征"
+                        }
+
+                        Rectangle{
+                            height: 4
+                            width: parent.width - 36
+                            color:"transparent"
+                        }
+
                         Text {
                             anchors.bottom: totalScore.bottom
                             font.family: "Alibaba PuHuiTi 3.0"
                             font.pixelSize: 12
                             color: "#73000000"
-                            text: "评分依据：Mayo Clinic CCLS系统（整合cn-ccLS囊变特征）\n版本时间：第2版（2023年修订）"
+                            text: $cclsScorer.sourceText
                         }
                     }
                 }
@@ -430,11 +438,7 @@ Rectangle {
                 borderWidth: 0
                 backgroundColor: "#006BFF"
                 onClicked: {
-                    var copyText = "综合评分：" + currentScore + "分"
-                    if (detailedDiagnosis !== "") {
-                        copyText += " （高度提示" + detailedDiagnosis + ")"
-                    }
-                    $cclsScorer.copyToClipboard(copyText)
+                    $cclsScorer.copyToClipboard()
                     messageManager.success("已复制！")
                 }
             }
@@ -470,6 +474,7 @@ Rectangle {
                     arterialRatio === -1 ? 1 : arterialRatio,
                     diffusionRestriction === -1 ? 1 : diffusionRestriction
                     )
+        $cclsScorer.finishScore(currentScore, detailedDiagnosis)
         showResult = true
     }
     

@@ -50,7 +50,15 @@ public:
      * 
      * 发送TNM内容到AI服务进行质量评分，结果通过 tnmAiQualityScoreResponse 信号返回
      */
-    void getTnmAiQualityScore(/*const QString& chatId, */const QString& userId, const QString& content);
+    void getTnmAiQualityScore(const QString& chatId, const QString& userId, const QString& content);
+    
+    /**
+     * @brief 删除指定的聊天记录
+     * @param chatId 要删除的聊天ID
+     * 
+     * 发送删除聊天请求到服务器，结果通过 deleteChatResponse 信号返回
+     */
+    void deleteChatById(const QString& chatId);
     
     /**
      * @brief 终止所有正在进行的网络请求
@@ -84,6 +92,14 @@ signals:
      * @param data 评分数据
      */
     void tnmAiQualityScoreResponse(bool success, const QString& message, const QJsonObject& data);
+    
+    /**
+     * @brief 删除聊天响应信号
+     * @param success 是否删除成功
+     * @param message 服务器返回的消息
+     * @param data 响应数据
+     */
+    void deleteChatResponse(bool success, const QString& message, const QJsonObject& data);
     
     /**
      * @brief 网络错误信号
@@ -144,7 +160,7 @@ private:
 
     // API地址常量
     const QString INTERNAL_BASE_URL = "http://192.168.1.2:9898/api";  ///< 内网API基础地址
-    const QString PUBLIC_BASE_URL = "http://111.6.178.34:9205/api";   ///< 公网API基础地址
+    const QString PUBLIC_BASE_URL = "http://111.6.178.34:24603/api";   ///< 公网API基础地址
 };
 
 #endif // APIMANAGER_H

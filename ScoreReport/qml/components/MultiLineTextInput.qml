@@ -39,7 +39,7 @@ Rectangle {
         
         TextArea {
             id: textArea
-            
+            clip: true
             font.pixelSize: fontSize
             font.family: "Alibaba PuHuiTi 3.0"
             color: textColor

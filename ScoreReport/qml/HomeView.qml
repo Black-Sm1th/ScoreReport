@@ -27,7 +27,7 @@ Rectangle {
                 text: "请选择评分方案"
                 color: "#000000"
                 font.family: "Alibaba PuHuiTi 3.0"
-                font.weight: Font.Medium
+                font.weight: Font.Bold
                 font.pixelSize: 16
                 anchors.verticalCenter: parent.verticalCenter
             }
@@ -160,6 +160,8 @@ Rectangle {
                     }else{
                         messageManager.warning("剪贴板为空，请先复制内容")
                     }
+                }else{
+                    messageManager.warning("该功能暂未开放")
                 }
             }
         }

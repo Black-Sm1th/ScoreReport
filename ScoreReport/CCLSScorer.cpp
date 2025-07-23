@@ -4,7 +4,9 @@
 
 CCLSScorer::CCLSScorer(QObject* parent)
     : QObject(parent)
+    , resultText("")
 {
+    setsourceText(QString::fromLocal8Bit("评分依据：Mayo Clinic CCLS系统（整合cn-ccLS囊变特征）\n版本时间：第2版（2023年修订）"));
 }
 
 int CCLSScorer::calculateScore(int t2Signal, int enhancement, int microFat, int segmentalReversal, int arterialRatio, int diffusionRestriction)
@@ -73,6 +75,21 @@ bool CCLSScorer::needsOption(int t2Signal, int enhancement, int optionIndex, int
     default:
         return false;
     }
+}
+
+void CCLSScorer::finishScore(int score, QString detailedDiagnosis)
+{
+    QString title = QString::fromLocal8Bit("CCLS评分：") + QString::number(score) + QString::fromLocal8Bit("分");
+    QString result = "";
+    resultText = title;
+    if (detailedDiagnosis != "") {
+        result = QString::fromLocal8Bit("符合") + detailedDiagnosis + QString::fromLocal8Bit("典型特征");
+        resultText += "\n";
+        resultText += result;
+    }
+    resultText += "\n";
+    resultText += getsourceText();
+    
 }
 
 int CCLSScorer::calculatePath1(int enhancement, int microFat, int segmentalReversal, int arterialRatio, int diffusionRestriction)
@@ -237,8 +254,8 @@ QString CCLSScorer::getDetailedDiagnosis(int t2Signal, int enhancement, int micr
     return ""; // 无特定疑似病症
 }
 
-void CCLSScorer::copyToClipboard(const QString &text)
+void CCLSScorer::copyToClipboard()
 {
     QClipboard *clipboard = QGuiApplication::clipboard();
-    clipboard->setText(text);
+    clipboard->setText(resultText);
 }

@@ -8,6 +8,7 @@
 class CCLSScorer : public QObject
 {
     Q_OBJECT
+    QUICK_PROPERTY(QString, sourceText)
     SINGLETON_CLASS(CCLSScorer)
 
 public:
@@ -34,9 +35,11 @@ public:
     Q_INVOKABLE int calculateScore(int t2Signal, int enhancement, int microFat, int segmentalReversal, int arterialRatio, int diffusionRestriction);
     Q_INVOKABLE QString getDetailedDiagnosis(int t2Signal, int enhancement, int microFat, int segmentalReversal, int arterialRatio, int diffusionRestriction);
     Q_INVOKABLE bool needsOption(int t2Signal, int enhancement, int optionIndex, int microFat = -1); // 检查是否需要显示某个选项
-    Q_INVOKABLE void copyToClipboard(const QString &text); // 复制文本到剪贴板
+    Q_INVOKABLE void finishScore(int score, QString detailedDiagnosis);
+    Q_INVOKABLE void copyToClipboard(); // 复制文本到剪贴板
 
 private:
+    QString resultText;
     int calculatePath1(int enhancement, int microFat, int segmentalReversal, int arterialRatio, int diffusionRestriction);
     int calculatePath2(int enhancement, int microFat, int segmentalReversal, int arterialRatio, int diffusionRestriction);
     int calculatePath3(int enhancement, int microFat, int segmentalReversal, int arterialRatio, int diffusionRestriction);
