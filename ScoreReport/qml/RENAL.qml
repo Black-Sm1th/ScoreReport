@@ -63,6 +63,7 @@ Rectangle {
                 text: $renalManager.clipboardContent
                 font.family: "Alibaba PuHuiTi 3.0"
                 font.pixelSize: 16
+
                 color: "#D9000000"
                 readOnly: true
                 width: parent.width - 48
@@ -113,11 +114,141 @@ Rectangle {
 
             Rectangle {
                 width:parent.width - 48
-                height: 300
+                height: incompleteInfo.height
                 visible:!$renalManager.isAnalyzing && !$renalManager.isCompleted
-                color: "red"
+                color: "#ECF3FF"
+                radius: 8
+                Column{
+                    id: incompleteInfo
+                    width: parent.width
+                    leftPadding: 40
+                    rightPadding: 12
+                    topPadding: 14
+                    bottomPadding: 14
+                    Text {
+                        font.family: "Alibaba PuHuiTi 3.0"
+                        font.pixelSize: 16
+                        color: "#D9000000"
+                        text: $renalManager.inCompleteContent
+                    }
+                }
             }
+            Column {
+                width: parent.width - 48
+                spacing: 12
+                visible:!$renalManager.isAnalyzing && !$renalManager.isCompleted
+                Column {
+                    width: parent.width - 40
+                    spacing: 10
+                    leftPadding: 40
+                    visible: $renalManager.missingFieldsList.indexOf("R") !== -1
+                    Rectangle{
+                        height: 24
+                        width:parent.width
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            font.family: "Alibaba PuHuiTi 3.0"
+                            font.pixelSize: 16
+                            color: "#D9000000"
+                            text: "请选择肿瘤大小。"
+                        }
+                    }
+                    TextButtonGroup {
+                        id: arterialRatioGroup
+                        width: parent.width
+                        options: ["≤ 4mm", "4 ~ 7mm", "≥ 7mm"]
+                        selectedIndex: 1
+                        disabled: false
+                        onSelectionChanged: {
 
+                        }
+                    }
+                }
+
+                Column {
+                    width: parent.width - 40
+                    spacing: 10
+                    leftPadding: 40
+                    visible:$renalManager.missingFieldsList.indexOf("E") !== -1
+                    Rectangle{
+                        height: 24
+                        width:parent.width
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            font.family: "Alibaba PuHuiTi 3.0"
+                            font.pixelSize: 16
+                            color: "#D9000000"
+                            text: "请选择肿瘤的外凸率。"
+                        }
+                    }
+                    TextButtonGroup {
+                        id: arterialRatioGroup2
+                        width: parent.width
+                        options: ["0%", "＜ 50%", "≥ 50%"]
+                        selectedIndex: 1
+                        disabled: false
+                        onSelectionChanged: {
+
+                        }
+                    }
+                }
+
+                Column {
+                    width: parent.width - 40
+                    spacing: 10
+                    leftPadding: 40
+                    visible:$renalManager.missingFieldsList.indexOf("N") !== -1
+                    Rectangle{
+                        height: 24
+                        width:parent.width
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            font.family: "Alibaba PuHuiTi 3.0"
+                            font.pixelSize: 16
+                            color: "#D9000000"
+                            text: "请选择肿瘤与肾窦及肾脏集合系统之间的关系。"
+                        }
+                    }
+                    TextButtonGroup {
+                        id: arterialRatioGroup3
+                        width: parent.width
+                        options: ["≤ 4mm", "4 ~ 7mm", "≥ 7mm"]
+                        selectedIndex: 1
+                        disabled: false
+                        onSelectionChanged: {
+
+                        }
+                    }
+                }
+
+                Column {
+                    width: parent.width - 40
+                    spacing: 10
+                    leftPadding: 40
+                    visible:$renalManager.missingFieldsList.indexOf("L") !== -1
+                    Rectangle{
+                        height: 24
+                        width:parent.width
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            font.family: "Alibaba PuHuiTi 3.0"
+                            font.pixelSize: 16
+                            color: "#D9000000"
+                            text: "请选择肿瘤沿肾脏纵轴的位置。"
+                        }
+                    }
+                    TextButtonGroup {
+                        id: arterialRatioGroup4
+                        width: parent.width
+                        options: ["肾脏一极", "肾脏上或下极", "50%越过上或下极"]
+                        selectedIndex: 1
+                        disabled: false
+                        onSelectionChanged: {
+
+                        }
+                    }
+                }
+            }
             Rectangle {
                 width: parent.width - 48
                 height: resultColumn.height
@@ -206,7 +337,6 @@ Rectangle {
                 textColor: "#006BFF"
                 onClicked: {
                     $renalManager.endAnalysis()
-                    resetAllInputs()
                     exitScore()
                 }
             }
@@ -227,7 +357,6 @@ Rectangle {
                 textColor: "#006BFF"
                 onClicked: {
                     $renalManager.pasteAnalysis()
-                    resetAllInputs()
                 }
             }
 
@@ -246,7 +375,6 @@ Rectangle {
                 textColor: "#006BFF"
                 onClicked: {
                     $renalManager.endAnalysis()
-                    resetAllInputs()
                     exitScore()
                 }
             }

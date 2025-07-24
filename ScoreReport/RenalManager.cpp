@@ -14,7 +14,8 @@ RenalManager::RenalManager(QObject *parent)
     setisCompleted(false);
     setclipboardContent("");
     setinCompleteInfo("");
-    settipList(QVariantList());
+    setinCompleteContent("");
+    setmissingFieldsList(QVariantList());
     currentChatId = "";
     resultText = "";
     setsourceText(QString::fromLocal8Bit("评分依据：Kutikov RENAL评分系统\n版本时间：原始版（2009年发布）"));
@@ -94,7 +95,8 @@ void RenalManager::resetAllParams()
     setisAnalyzing(false);
     setclipboardContent("");
     setinCompleteInfo("");
-    settipList(QVariantList());
+    setinCompleteContent("");
+    setmissingFieldsList(QVariantList());
     currentChatId = "";
     resultText = "";
 }
@@ -123,13 +125,19 @@ void RenalManager::onRenalAiQualityScoreResponse(bool success, const QString& me
         }
         else{
             QString info = detailData.value("message").toString();
-            QJsonArray tips = detailData.value("tips").toArray();
+            QJsonArray missing_fields = detailData.value("missing_fields").toArray();
             QVariantList list;
-
-            for (const QJsonValue& value : tips) {
-                list.append(value.toString());  // 转成 QVariantMap
+            QString content = "";
+            for (const QJsonValue& value : missing_fields) {
+                content += value.toString() + QString::fromLocal8Bit("：");
+                content += detailData.value("basis").toObject().value(value.toString()).toString();
+                if (missing_fields.last() != value) {
+                    content += "\n";
+                }
+                list.append(value.toString());
             }
-            settipList(list);
+            setinCompleteContent(content);
+            setmissingFieldsList(list);
             setinCompleteInfo(info);
             setisCompleted(false);
         }

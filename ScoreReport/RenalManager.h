@@ -16,7 +16,8 @@ class RenalManager : public QObject
         QUICK_PROPERTY(bool, isAnalyzing)
         QUICK_PROPERTY(bool, isCompleted)
         QUICK_PROPERTY(QString, inCompleteInfo)
-        QUICK_PROPERTY(QVariantList, tipList)
+        QUICK_PROPERTY(QString, inCompleteContent)
+        QUICK_PROPERTY(QVariantList, missingFieldsList)
         QUICK_PROPERTY(QString, sourceText)
         SINGLETON_CLASS(RenalManager)
 

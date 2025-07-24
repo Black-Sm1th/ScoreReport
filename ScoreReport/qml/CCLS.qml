@@ -113,6 +113,7 @@ Rectangle {
                         height: 24
                         width:parent.width
                         Text {
+                            anchors.verticalCenter: parent.verticalCenter
                             font.family: "Alibaba PuHuiTi 3.0"
                             font.pixelSize: 16
                             color: currentStep === 1 ? "#006BFF" : "#D9000000"
@@ -145,10 +146,10 @@ Rectangle {
                         height: 24
                         width:parent.width
                         Text {
+                            anchors.verticalCenter: parent.verticalCenter
                             font.family: "Alibaba PuHuiTi 3.0"
-                            font.weight: Font.Bold
                             font.pixelSize: 16
-                            color: currentStep === 2 ? "#006BFF" : "#666666"
+                            color: currentStep === 2 ? "#006BFF" : "#D9000000"
                             text: "微观脂肪"
                         }
                     }
@@ -178,10 +179,10 @@ Rectangle {
                         height: 24
                         width:parent.width
                         Text {
+                            anchors.verticalCenter: parent.verticalCenter
                             font.family: "Alibaba PuHuiTi 3.0"
-                            font.weight: Font.Bold
                             font.pixelSize: 16
-                            color: currentStep === 3 ? "#006BFF" : "#666666"
+                            color: currentStep === 3 ? "#006BFF" : "#D9000000"
                             text: "节段性强化反转"
                         }
                     }
@@ -211,10 +212,10 @@ Rectangle {
                         height: 24
                         width:parent.width
                         Text {
+                            anchors.verticalCenter: parent.verticalCenter
                             font.family: "Alibaba PuHuiTi 3.0"
-                            font.weight: Font.Bold
                             font.pixelSize: 16
-                            color: currentStep === 4 ? "#006BFF" : "#666666"
+                            color: currentStep === 4 ? "#006BFF" : "#D9000000"
                             text: "动脉期/延迟期强化比≥1.5"
                         }
                     }
@@ -245,10 +246,10 @@ Rectangle {
                         height: 24
                         width:parent.width
                         Text {
+                            anchors.verticalCenter: parent.verticalCenter
                             font.family: "Alibaba PuHuiTi 3.0"
-                            font.weight: Font.Bold
                             font.pixelSize: 16
-                            color: currentStep === 5 ? "#006BFF" : "#666666"
+                            color: currentStep === 5 ? "#006BFF" : "#D9000000"
                             text: "明显/均匀弥散受限"
                         }
                     }
