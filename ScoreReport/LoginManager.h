@@ -14,6 +14,7 @@ class LoginManager : public QObject
     Q_OBJECT
     QUICK_PROPERTY(bool, isLoggedIn)
     QUICK_PROPERTY(QString, currentUserName)
+        QUICK_PROPERTY(QString, currentUserAvatar)
     SINGLETON_CLASS(LoginManager)
 
 public slots:

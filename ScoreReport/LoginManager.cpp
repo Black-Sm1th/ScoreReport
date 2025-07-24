@@ -8,6 +8,7 @@ LoginManager::LoginManager(QObject* parent)
 {
     setisLoggedIn(false);
     setcurrentUserName("");
+    setcurrentUserAvatar("");
     m_apiManager = GET_SINGLETON(ApiManager);
     connect(m_apiManager, &ApiManager::loginResponse,
         this, &LoginManager::onLoginResponse);
@@ -31,6 +32,7 @@ void LoginManager::onLoginResponse(bool success, const QString& message, const Q
     if (success) {
         QString respUser = data.value("userName").toString();
         currentUserId = data.value("id").toString();
+        setcurrentUserAvatar(data.value("userAvatar").toString());
         setcurrentUserName(respUser);
         setisLoggedIn(true);
     } else {
@@ -46,6 +48,7 @@ void LoginManager::logout()
     qDebug() << "[LoginManager] User logout";
     setisLoggedIn(false);
     setcurrentUserName("");
+    setcurrentUserAvatar("");
     currentUserId = "";
     emit logoutSuccess();
 }

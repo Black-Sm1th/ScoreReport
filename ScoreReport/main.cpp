@@ -22,7 +22,6 @@ int main(int argc, char *argv[])
     QGuiApplication app(argc, argv);
 
     QQmlApplicationEngine engine;
-
     // 使用单例模式获取实例
     auto* apiManager = GET_SINGLETON(ApiManager);
     engine.rootContext()->setContextProperty("$apiManager", apiManager);

@@ -252,10 +252,27 @@ Rectangle {
                 width: 56
                 height: 56
                 anchors.horizontalCenter: parent.horizontalCenter
-                radius: 100
-                Image{
+                color: "transparent"
+                
+                Image {
+                    id: avatarImage
                     anchors.fill: parent
-                    source: "https://hwq-1317946928.cos.ap-shanghai.myqcloud.com/user_avatar/1697633200786403330/68Wl983t-20191209062144363.jpg"
+                    source: $loginManager.currentUserAvatar ? $loginManager.currentUserAvatar : "qrc:/image/loginHead.png"
+                    fillMode: Image.PreserveAspectCrop
+                    visible: false
+                }
+                
+                Rectangle {
+                    id: maskRect
+                    anchors.fill: parent
+                    radius: 100
+                    visible: false
+                }
+                
+                OpacityMask {
+                    anchors.fill: parent
+                    source: avatarImage
+                    maskSource: maskRect
                 }
             }
 

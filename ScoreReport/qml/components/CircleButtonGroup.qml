@@ -60,7 +60,6 @@ Item {
         width: size
         height: size
         radius: size / 2
-
         // 背景色
         color: isSelected ? "#1A006BFF" : "#0A000000"
 
@@ -94,10 +93,41 @@ Item {
                 source: circleButton.isSelected? circleButton.iconSelectedSource :  circleButton.iconSource
             }
         }
-        Image {
+        Item {
             visible: login
             anchors.fill: parent
-            source: "qrc:/image/loginHead.png"
+            
+            Image {
+                id: loginAvatarImage
+                anchors.fill: parent
+                source: $loginManager.currentUserAvatar ? $loginManager.currentUserAvatar : "qrc:/image/loginHead.png"
+                fillMode: Image.PreserveAspectCrop
+                visible: false
+            }
+            
+            Rectangle {
+                id: loginMaskRect
+                anchors.fill: parent
+                radius: circleButton.size / 2
+                visible: false
+            }
+            
+            OpacityMask {
+                anchors.centerIn: parent
+                width: parent.width - 2
+                height: parent.height - 2
+                source: loginAvatarImage
+                maskSource: loginMaskRect
+            }
+            
+            // 选中状态的边框
+            Rectangle {
+                anchors.fill: parent
+                radius: circleButton.size / 2
+                color: "transparent"
+                border.color: isSelected && login ? "#CC006BFF" : "transparent"
+                border.width: 1
+            }
         }
         MouseArea {
             id: mouseArea
