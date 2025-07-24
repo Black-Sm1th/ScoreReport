@@ -15,11 +15,27 @@ Rectangle {
 
     // 省略号动画状态
     property int dotCount: 1
+    
+    // 缺失项选择状态跟踪
+    property var selectedOptions: ({})
+    property bool hasAllRequiredSelections: false
 
     Connections{
         target: $renalManager
         function onCheckFailed(){
             messageManager.warning("剪贴板为空，请先复制内容")
+        }
+        function onisAnalyzingChanged(){
+            // 当开始新的分析时，重置所有选择状态
+            if($renalManager.isAnalyzing){
+                resetAllSelections()
+            }
+        }
+        function onisCompletedChanged(){
+            // 当分析完成时，重置所有选择状态以准备下次分析
+            if($renalManager.isCompleted){
+                resetAllSelections()
+            }
         }
     }
 
@@ -41,6 +57,80 @@ Rectangle {
             dots += "."
         }
         return dots
+    }
+    
+    // 检查是否所有必需项都已选择
+    function checkAllSelections() {
+        var missingFields = $renalManager.missingFieldsList
+        var allSelected = true
+        
+        for (var i = 0; i < missingFields.length; i++) {
+            if (!selectedOptions[missingFields[i]]) {
+                allSelected = false
+                break
+            }
+        }
+        
+        hasAllRequiredSelections = allSelected
+        
+        // 如果所有选项都已选择，自动提交
+        if (allSelected && missingFields.length > 0) {
+            submitSelections()
+        }
+    }
+    
+    // 提交选择结果
+    function submitSelections() {
+        var missingFields = $renalManager.missingFieldsList
+        var appendContent = ""
+        
+        // 根据选择的字段生成拼接字符串
+        for (var i = 0; i < missingFields.length; i++) {
+            var field = missingFields[i]
+            var selection = selectedOptions[field]
+            
+            if (selection) {
+                if (field === "R") {
+                    appendContent += "肿瘤大小：" + selection.option
+                } else if (field === "E") {
+                    appendContent += "肿瘤外凸率：" + selection.option
+                } else if (field === "N") {
+                    appendContent += "肿瘤与肾窦及肾脏集合系统关系：" + selection.option
+                } else if (field === "L") {
+                    appendContent += "肿瘤沿肾脏纵轴位置：" + selection.option
+                }
+                
+                if (i < missingFields.length - 1) {
+                    appendContent += "\n"
+                }
+            }
+        }
+        
+        $renalManager.submitContent(appendContent)
+    }
+    
+    // 重置所有选择和UI状态
+    function resetAllSelections() {
+        selectedOptions = {}
+        hasAllRequiredSelections = false
+        
+        // 重置所有选择组件的状态
+        if (arterialRatioGroup) {
+            arterialRatioGroup.selectedIndex = -1
+            arterialRatioGroup.disabled = false
+        }
+        if (arterialRatioGroup2) {
+            arterialRatioGroup2.selectedIndex = -1
+            arterialRatioGroup2.disabled = false
+        }
+        if (arterialRatioGroup3) {
+            arterialRatioGroup3.selectedIndex = -1
+            arterialRatioGroup3.disabled = false
+        }
+        if (arterialRatioGroup4) {
+            arterialRatioGroup4.selectedIndex = -1
+            arterialRatioGroup4.disabled = false
+        }
     }
 
     Column {
@@ -128,6 +218,8 @@ Rectangle {
                     Text {
                         font.family: "Alibaba PuHuiTi 3.0"
                         font.pixelSize: 16
+                        width: parent.width - 52
+                        wrapMode: Text.Wrap
                         color: "#D9000000"
                         text: $renalManager.inCompleteContent
                     }
@@ -157,10 +249,15 @@ Rectangle {
                         id: arterialRatioGroup
                         width: parent.width
                         options: ["≤ 4mm", "4 ~ 7mm", "≥ 7mm"]
-                        selectedIndex: 1
-                        disabled: false
+                        selectedIndex: -1
+                        disabled: selectedOptions["R"] ? true : false
                         onSelectionChanged: {
-
+                            if (index >= 0 && !selectedOptions["R"]) {
+                                selectedOptions["R"] = { option: options[index], index: index }
+                                selectedIndex = index
+                                disabled = true
+                                checkAllSelections()
+                            }
                         }
                     }
                 }
@@ -185,10 +282,15 @@ Rectangle {
                         id: arterialRatioGroup2
                         width: parent.width
                         options: ["0%", "＜ 50%", "≥ 50%"]
-                        selectedIndex: 1
-                        disabled: false
+                        selectedIndex: -1
+                        disabled: selectedOptions["E"] ? true : false
                         onSelectionChanged: {
-
+                            if (index >= 0 && !selectedOptions["E"]) {
+                                selectedOptions["E"] = { option: options[index], index: index }
+                                selectedIndex = index
+                                disabled = true
+                                checkAllSelections()
+                            }
                         }
                     }
                 }
@@ -213,10 +315,15 @@ Rectangle {
                         id: arterialRatioGroup3
                         width: parent.width
                         options: ["≤ 4mm", "4 ~ 7mm", "≥ 7mm"]
-                        selectedIndex: 1
-                        disabled: false
+                        selectedIndex: -1
+                        disabled: selectedOptions["N"] ? true : false
                         onSelectionChanged: {
-
+                            if (index >= 0 && !selectedOptions["N"]) {
+                                selectedOptions["N"] = { option: options[index], index: index }
+                                selectedIndex = index
+                                disabled = true
+                                checkAllSelections()
+                            }
                         }
                     }
                 }
@@ -241,10 +348,15 @@ Rectangle {
                         id: arterialRatioGroup4
                         width: parent.width
                         options: ["肾脏一极", "肾脏上或下极", "50%越过上或下极"]
-                        selectedIndex: 1
-                        disabled: false
+                        selectedIndex: -1
+                        disabled: selectedOptions["L"] ? true : false
                         onSelectionChanged: {
-
+                            if (index >= 0 && !selectedOptions["L"]) {
+                                selectedOptions["L"] = { option: options[index], index: index }
+                                selectedIndex = index
+                                disabled = true
+                                checkAllSelections()
+                            }
                         }
                     }
                 }
@@ -282,15 +394,18 @@ Rectangle {
                             font.weight: Font.Bold
                             font.pixelSize: 16
                             color: "#D9000000"
-                            text: "" + "分"
+                            text: $renalManager.renalScorer + "分"
                             anchors.verticalCenter: parent.verticalCenter
                         }
                     }
 
-                    Column {
-                        id: resultText
-                        width: parent.width -36
-
+                    Text {
+                        font.family: "Alibaba PuHuiTi 3.0"
+                        font.pixelSize: 16
+                        wrapMode: Text.Wrap
+                        width: parent.width - 36
+                        text: $renalManager.renalResult
+                        color: "#A6000000"
                     }
                     Rectangle{
                         height: 4
@@ -322,7 +437,27 @@ Rectangle {
                 color: "#0F000000"
             }
 
+            // 重置按钮 - 在有缺失项时显示
             CustomButton {
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.right: stopBtn.left
+                anchors.rightMargin: 12
+                visible: !$renalManager.isAnalyzing && !$renalManager.isCompleted && $renalManager.missingFieldsList.length > 0
+                text: "重置"
+                width: 88
+                height: 36
+                fontSize: 14
+                borderWidth: 1
+                borderColor: "#33006BFF"
+                backgroundColor: "#1A006BFF"
+                textColor: "#006BFF"
+                onClicked: {
+                    resetAllSelections()
+                }
+            }
+
+            CustomButton {
+                id:stopBtn
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.right: parent.right
                 anchors.rightMargin: 24
@@ -336,6 +471,7 @@ Rectangle {
                 backgroundColor: "#1A006BFF"
                 textColor: "#006BFF"
                 onClicked: {
+                    resetAllSelections()
                     $renalManager.endAnalysis()
                     exitScore()
                 }
@@ -356,6 +492,7 @@ Rectangle {
                 backgroundColor: "#1A006BFF"
                 textColor: "#006BFF"
                 onClicked: {
+                    resetAllSelections()
                     $renalManager.pasteAnalysis()
                 }
             }
@@ -374,6 +511,7 @@ Rectangle {
                 backgroundColor: "#1A006BFF"
                 textColor: "#006BFF"
                 onClicked: {
+                    resetAllSelections()
                     $renalManager.endAnalysis()
                     exitScore()
                 }

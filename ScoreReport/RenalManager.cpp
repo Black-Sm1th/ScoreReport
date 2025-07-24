@@ -15,6 +15,8 @@ RenalManager::RenalManager(QObject *parent)
     setclipboardContent("");
     setinCompleteInfo("");
     setinCompleteContent("");
+    setrenalResult("");
+    setrenalScorer("");
     setmissingFieldsList(QVariantList());
     currentChatId = "";
     resultText = "";
@@ -53,24 +55,19 @@ void RenalManager::endAnalysis()
     m_apiManager->abortRequestsByType("renal-ai-score");
 }
 
-void RenalManager::submitContent(const QVariantList& inputContents)
+void RenalManager::submitContent(const QString& inputContents)
 {
     // 获取当前登录用户的ID
     QString userId = m_loginManager->getUserId();
     if (userId.isEmpty() || userId == "-1") {
         return;
     }
-    
-    // 拼接原始剪贴板内容和所有输入框内容
+
+    // 拼接原始剪贴板内容和选择的缺失项内容
     QString finalContent = getclipboardContent();
-    
-    for (const QVariant& content : inputContents) {
-        QString inputText = content.toString().trimmed();
-        if (!inputText.isEmpty()) {
-            finalContent += "\n" + inputText;
-        }
+    if (!inputContents.isEmpty()) {
+        finalContent += "\n" + inputContents;
     }
-    
     setclipboardContent(finalContent);
     // 设置分析状态并调用API
     setisAnalyzing(true);
@@ -94,6 +91,8 @@ void RenalManager::resetAllParams()
     setisCompleted(false);
     setisAnalyzing(false);
     setclipboardContent("");
+    setrenalResult("");
+    setrenalScorer("");
     setinCompleteInfo("");
     setinCompleteContent("");
     setmissingFieldsList(QVariantList());
@@ -112,15 +111,20 @@ void RenalManager::onRenalAiQualityScoreResponse(bool success, const QString& me
         if (status == "success") {
             setisCompleted(true);
             setinCompleteInfo("");
-
-            QString title = "";
-            QString result = "";
+            setrenalScorer(QString::number(detailData.value("total_score").toInt()));
+            QString title = QString::fromLocal8Bit("RENAL评分：") + getrenalScorer() + QString::fromLocal8Bit("分");
+            QString result = detailData.value("complexity").toString() + QString::fromLocal8Bit("。") + detailData.value("recommendation").toString() + QString::fromLocal8Bit("\n");
+            result += QString::fromLocal8Bit("R：") + detailData.value("basis").toObject().value("R").toString() + QString::fromLocal8Bit("\n");
+            result += QString::fromLocal8Bit("E：") + detailData.value("basis").toObject().value("E").toString() + QString::fromLocal8Bit("\n");
+            result += QString::fromLocal8Bit("N：") + detailData.value("basis").toObject().value("N").toString() + QString::fromLocal8Bit("\n");
+            result += QString::fromLocal8Bit("A：") + detailData.value("basis").toObject().value("A").toString() + QString::fromLocal8Bit("\n");
+            result += QString::fromLocal8Bit("L：") + detailData.value("basis").toObject().value("L").toString();
+            setrenalResult(result);
             resultText = title;
             resultText += "\n";
             resultText += result;
             resultText += "\n";
             resultText += getsourceText();
-
             m_apiManager->addQualityRecord("RENAL", title, getclipboardContent(), result, currentChatId);
         }
         else{
