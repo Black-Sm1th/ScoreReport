@@ -78,6 +78,7 @@ public slots:
     Q_INVOKABLE void loadMore();
     Q_INVOKABLE void refresh();
     Q_INVOKABLE void clearHistory();
+    Q_INVOKABLE void copyToClipboard(const QString& content);
     Q_INVOKABLE HistoryRecord* getRecordById(const QString& id);
 
 signals:

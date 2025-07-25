@@ -172,6 +172,18 @@ ApplicationWindow {
                     contentRect.currentScore = -1
                 }
             }
+            function onLogoutSuccess(){
+                if(contentRect.currentScore !== -1){
+                    if(contentRect.currentScore == 0){
+                        renalView.resetValues()
+                    }else if(contentRect.currentScore == 1){
+                        cclsView.resetValues()
+                    }else if(contentRect.currentScore == 2){
+                        tnmView.resetValues()
+                    }
+                    contentRect.currentScore = -1
+                }
+            }
         }
         
         // // 位置更新定时器
@@ -471,6 +483,7 @@ ApplicationWindow {
                     }
                 }
                 HistoryView{
+                    id:historyView
                     visible: contentRect.currentIndex === 1
                     messageManager: dialogMessageBox
                     onToScorer: {
@@ -482,6 +495,7 @@ ApplicationWindow {
                     messageManager: dialogMessageBox
                 }
                 RENAL{
+                    id:renalView
                     visible: contentRect.currentIndex === 0 && contentRect.currentScore === 0
                     messageManager: dialogMessageBox
                     onExitScore: {
@@ -489,6 +503,7 @@ ApplicationWindow {
                     }
                 }
                 CCLS{
+                    id:cclsView
                     visible: contentRect.currentIndex === 0 && contentRect.currentScore === 1
                     messageManager: dialogMessageBox
                     onExitScore: {
@@ -496,6 +511,7 @@ ApplicationWindow {
                     }
                 }
                 TNM{
+                    id:tnmView
                     visible: contentRect.currentIndex === 0 && contentRect.currentScore === 2
                     messageManager: dialogMessageBox
                     onExitScore: {

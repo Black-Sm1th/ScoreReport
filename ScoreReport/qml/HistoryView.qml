@@ -48,7 +48,7 @@ Rectangle {
         // 历史记录列表
         Rectangle {
             width: parent.width - 24
-            height: Math.min(scrollView.contentHeight + 32, 700)
+            height: Math.min(scrollView.contentHeight, 700)
             color: "transparent"
             
             ScrollView {
@@ -68,16 +68,11 @@ Rectangle {
                     Column {
                         width: parent.width - 24
                         spacing: 16
-                        topPadding: 40
-                        bottomPadding: 40
+                        height: 255
                         visible: historyData.length === 0
-                        
-                        Rectangle {
-                            height: 111
-                            width: 111
-                            color: "#D9D9D9"
+                        Image {
+                            source: "qrc:/image/nodata.png"
                             anchors.horizontalCenter: parent.horizontalCenter
-                            radius: 8
                         }
                         
                         Text {
@@ -124,7 +119,7 @@ Rectangle {
                                 model: modelData.records
                                 delegate: Rectangle {
                                     width: parent.width
-                                    height: contentMouseArea.containsMouse ? Math.max(80, contentRow.implicitHeight) : 80
+                                    height: contentMouseArea.containsMouse || copyArea.containsMouse ? Math.max(80, contentRow.implicitHeight) : 80
                                     color: getTypeColor(modelData.type)
                                     border.color: "#E6EAF2"
                                     radius: 8
@@ -171,26 +166,51 @@ Rectangle {
                                             spacing: 4
                                             
                                             Text {
+                                                id:titleText
                                                 text: modelData.title || ""
                                                 color: "#D9000000"
                                                 font.family: "Alibaba PuHuiTi 3.0"
-                                                font.weight: Font.Medium
-                                                font.pixelSize: 14
+                                                font.weight: Font.Bold
+                                                font.pixelSize: 16
                                                 elide: Text.ElideRight
                                                 width: parent.width
                                             }
                                             
                                             Text {
                                                 id: resultText
-                                                text: modelData.result || "暂无结果"
+                                                text: modelData.result || ""
                                                 color: "#73000000"
+                                                font.family: "Alibaba PuHuiTi 3.0"
+                                                font.pixelSize: 14
+                                                width: parent.width
+                                                elide: Text.ElideRight
+                                                visible: modelData.result
+                                                maximumLineCount: contentMouseArea.containsMouse || copyArea.containsMouse ? -1 : 1
+                                                wrapMode: Text.Wrap
+                                                
+                                                Behavior on maximumLineCount {
+                                                    NumberAnimation {
+                                                        duration: 200
+                                                        easing.type: Easing.OutQuad
+                                                    }
+                                                }
+                                            }
+                                            
+                                            Item {
+                                                width: parent.width
+                                                height: 8
+                                            }
+                                            
+                                            Text {
+                                                id: sourceText
+                                                text: getSourceText(modelData.type)
+                                                color: "#40000000"
                                                 font.family: "Alibaba PuHuiTi 3.0"
                                                 font.pixelSize: 12
                                                 width: parent.width
                                                 elide: Text.ElideRight
-                                                maximumLineCount: contentMouseArea.containsMouse ? -1 : 1
-                                                wrapMode: Text.Wrap
-                                                
+                                                visible: contentMouseArea.containsMouse || copyArea.containsMouse
+                                                wrapMode: Text.Wrap        
                                                 Behavior on maximumLineCount {
                                                     NumberAnimation {
                                                         duration: 200
@@ -202,16 +222,38 @@ Rectangle {
                                         
                                         // 操作按钮
                                         Rectangle {
+                                            id: copyBtn
                                             width: 28
                                             height: 28
-                                            color: "#006BFF"
-                                            radius: 12
-                                            
-                                            Text {
-                                                text: "•"
-                                                color: "white"
-                                                font.pixelSize: 16
+                                            visible: contentMouseArea.containsMouse || copyArea.containsMouse
+                                            color: copyArea.containsMouse ? "#1A006BFF" : "transparent"
+                                            radius: 8
+                                            Image{
                                                 anchors.centerIn: parent
+                                                source: "qrc:/image/copy.png"
+                                            }
+                                            MouseArea{
+                                                id: copyArea
+                                                anchors.fill: parent
+                                                hoverEnabled: true
+                                                cursorShape: Qt.PointingHandCursor
+                                                onClicked: {
+                                                    var text = titleText.text
+                                                    if(resultText.text !== ""){
+                                                        text += "\n"
+                                                        text += resultText.text
+                                                    }
+                                                    text += "\n"
+                                                    text += sourceText.text
+                                                    $historyManager.copyToClipboard(text)
+                                                    messageManager.success("已复制！")
+                                                }
+                                                onPressed: {
+                                                    copyBtn.opacity = 0.8
+                                                }
+                                                onReleased: {
+                                                    copyBtn.opacity = 1
+                                                }
                                             }
                                         }
                                     }
@@ -239,20 +281,31 @@ Rectangle {
         
         for (var i = 0; i < historyData.length; i++) {
             var record = historyData[i]
-            var createTime = new Date(record.createTime)
-            var daysDiff = Math.floor((today - createTime) / (1000 * 60 * 60 * 24))
+            // 使用updateTime而不是createTime，并正确解析ISO时间格式
+            var updateTime = parseISODateTime(record.updateTime)
             
+            // 获取今天的开始时间（00:00:00）
+            var todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+            var updateTimeStart = new Date(updateTime.getFullYear(), updateTime.getMonth(), updateTime.getDate())
+            
+            // 计算日期差（按天计算，不考虑具体时间）
+            var daysDiff = Math.floor((todayStart - updateTimeStart) / (1000 * 60 * 60 * 24))
+
             var dateKey
             if (daysDiff === 0) {
-                dateKey = "今天 " + Qt.formatDateTime(createTime, "hh:mm")
+                dateKey = "今天 " + Qt.formatDateTime(updateTime, "hh:mm")
             } else if (daysDiff === 1) {
-                dateKey = "1天前"
+                dateKey = "昨天 " + Qt.formatDateTime(updateTime, "hh:mm")
+            } else if (daysDiff === 2) {
+                dateKey = "前天 " + Qt.formatDateTime(updateTime, "hh:mm")
             } else if (daysDiff < 7) {
                 dateKey = daysDiff + "天前"
             } else if (daysDiff < 30) {
-                dateKey = Math.floor(daysDiff / 7) + "周前"
+                var weeks = Math.floor(daysDiff / 7)
+                dateKey = weeks + "周前"
             } else {
-                dateKey = Math.floor(daysDiff / 30) + "个月前"
+                var months = Math.floor(daysDiff / 30)
+                dateKey = months + "个月前"
             }
             
             if (!groups[dateKey]) {
@@ -273,6 +326,32 @@ Rectangle {
         }
         
         return result
+    }
+    
+    // 解析ISO时间格式
+    function parseISODateTime(isoString) {
+        if (!isoString) return new Date()
+        
+        try {
+            // 处理ISO 8601格式：2025-07-25T01:38:49.000+00:00
+            // 直接使用Date构造函数解析，会自动处理时区转换为本地时间
+            var date = new Date(isoString)
+            
+            // 如果解析失败，尝试其他格式
+            if (isNaN(date.getTime())) {
+                // 尝试移除毫秒部分
+                var withoutMs = isoString.replace(/\.\d{3}/, '')
+                date = new Date(withoutMs)
+            }
+            
+            if (isNaN(date.getTime())) {
+                return new Date()
+            }
+            
+            return date
+        } catch (e) {
+            return new Date()
+        }
     }
     
     // 获取类型颜色
@@ -298,6 +377,27 @@ Rectangle {
         case "UCLS CTS": return "qrc:/image/UCLS-CTS.png"
         case "BIOSNAK": return "qrc:/image/BIOSNAK.png"
         default: return ""
+        }
+    }
+    
+    // 获取源文本内容
+    function getSourceText(type) {
+        // 根据不同类型处理content内容
+        switch(type) {
+            case "CCLS":
+                return $cclsScorer.sourceText
+            case "RENAL":
+                return $renalManager.sourceText
+            case "TNM":
+                return $tnmManager.sourceText
+            case "UCLS MRS":
+                return ""
+            case "UCLS CTS":
+                return ""
+            case "BIOSNAK":
+                return ""
+            default:
+                return ""
         }
     }
 }

@@ -133,6 +133,11 @@ Rectangle {
         }
     }
 
+    function resetValues(){
+        resetAllSelections()
+        $renalManager.endAnalysis()
+    }
+
     Column {
         id: renalColumn
         spacing: 20

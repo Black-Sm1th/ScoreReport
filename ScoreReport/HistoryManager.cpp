@@ -2,7 +2,8 @@
 #include "ApiManager.h"
 #include <QJsonDocument>
 #include <QVariantMap>
-
+#include <QClipboard>
+#include <QGuiApplication>
 // HistoryRecord实现
 HistoryRecord::HistoryRecord(QObject* parent)
     : QObject(parent)
@@ -60,7 +61,7 @@ HistoryManager::HistoryManager(QObject* parent)
     setisLoading(false);
     settotalCount(0);
     setcurrentPage(1);
-    setpageSize(10);
+    setpageSize(500);
     sethistoryList(QVariantList());
 
     // 获取ApiManager单例并连接信号
@@ -134,6 +135,12 @@ void HistoryManager::clearHistory()
     setcurrentPage(1);
     updateHistoryList();
     emit historyCleared();
+}
+
+void HistoryManager::copyToClipboard(const QString& content)
+{
+    QClipboard* clipboard = QGuiApplication::clipboard();
+    clipboard->setText(content);
 }
 
 HistoryRecord* HistoryManager::getRecordById(const QString& id)

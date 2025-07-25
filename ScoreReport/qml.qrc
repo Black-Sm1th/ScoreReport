@@ -36,5 +36,7 @@
         <file>qml/TNM.qml</file>
         <file>qml/RENAL.qml</file>
         <file>qml/HistoryView.qml</file>
+        <file>image/copy.png</file>
+        <file>image/nodata.png</file>
     </qresource>
 </RCC>

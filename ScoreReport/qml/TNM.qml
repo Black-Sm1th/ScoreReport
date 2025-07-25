@@ -16,6 +16,12 @@ Rectangle {
     // 存储所有多行输入框的内容
     property var inputTexts: []
     
+    function resetValues(){
+        $tnmManager.endAnalysis()
+        resetAllInputs()
+    }
+
+
     // 重置所有输入框
     function resetAllInputs() {
         inputTexts = []
