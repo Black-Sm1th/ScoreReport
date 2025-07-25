@@ -26,14 +26,26 @@ ApplicationWindow {
     color: "transparent"
     
     // 窗口大小只包含悬浮窗本身
-    width: 62
-    height: 62
+    width: 76
+    height: 76
     
     // 初始位置设置在屏幕右下角
     x: Screen.width - width - 50
     y: Screen.height - height - 50
     
     title: qsTr("悬浮助手")
+
+
+    DropShadow {
+        id:floatingShaow
+        anchors.fill: floatingWindow
+        source: floatingWindow
+        horizontalOffset: 0
+        verticalOffset: 0
+        radius: 12
+        color: "#1F1A1A1A"
+        samples: 32
+    }
 
     // 悬浮窗
     Rectangle {
@@ -58,6 +70,10 @@ ApplicationWindow {
                 when: mouseArea.containsMouse
                 PropertyChanges {
                     target: floatingWindow
+                    scale: 1.1
+                }
+                PropertyChanges {
+                    target: floatingShaow
                     scale: 1.1
                 }
                 PropertyChanges {
@@ -140,11 +156,23 @@ ApplicationWindow {
     // 评分方案选择对话框
     Window {
         id: scoreDialog
-        width: 520
-        height: contentRect.height
+        width: contentRect.width + 20  // 增加宽度为阴影留出空间
+        height: contentRect.height + 20  // 增加高度为阴影留出空间
         visible: false
         flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
         color: "transparent"
+        
+        // 监听登录状态变化，自动切换到HomeView
+        Connections {
+            target: $loginManager
+            function onLoginResult(success, message) {
+                if (success) {
+                    // 登录成功后自动切换到HomeView，并重置评分页面
+                    contentRect.currentIndex = 0
+                    contentRect.currentScore = -1
+                }
+            }
+        }
         
         // // 位置更新定时器
         // Timer {
@@ -193,23 +221,24 @@ ApplicationWindow {
                         floatingWindow.height
                         )
             
-            var dialogHeight = contentRect.height
+            var dialogHeight = height  // 使用实际窗口高度而不是contentRect高度
+            var contentHeight = contentRect.height  // 内容区域的实际高度
             var spaceAbove = floatingRect.y
             var spaceBelow = Screen.height - (floatingRect.y + floatingRect.height)
             
             // 默认优先显示在上方，如果上方空间不够再考虑下方
-            if (spaceAbove >= dialogHeight + 8) {
-                // 显示在悬浮窗上方，右侧对齐
-                x = floatingRect.x + floatingRect.width - width
-                y = floatingRect.y - dialogHeight - 8
-            } else if (spaceBelow >= dialogHeight + 8) {
-                // 显示在悬浮窗下方，右侧对齐
-                x = floatingRect.x + floatingRect.width - width
-                y = floatingRect.y + floatingRect.height + 8
+            if (spaceAbove >= contentHeight + 20) {  // 内容高度 + 间距 + 阴影空间
+                // 显示在悬浮窗上方，内容区域右侧对齐（考虑阴影边距）
+                x = floatingRect.x + floatingRect.width - (width - 10)
+                y = floatingRect.y - contentHeight - 20  // 使用内容高度 + 间距 + 阴影空间
+            } else if (spaceBelow >= contentHeight + 20) {
+                // 显示在悬浮窗下方，内容区域右侧对齐（考虑阴影边距）
+                x = floatingRect.x + floatingRect.width - (width - 10)
+                y = floatingRect.y + floatingRect.height  // 窗口顶部紧贴悬浮窗，内容区域会自然距离10px（因为有10px上方阴影空间）
             } else {
                 // 如果上下空间都不够，优先选择上方（允许出屏幕）
-                x = floatingRect.x + floatingRect.width - width
-                y = floatingRect.y - dialogHeight - 8
+                x = floatingRect.x + floatingRect.width - (width - 10)
+                y = floatingRect.y - contentHeight - 20
             }
             
             // scoreDialog允许出屏幕，只确保X坐标在合理范围内
@@ -241,16 +270,27 @@ ApplicationWindow {
                 visible = true
             }
         }
-        
+
         Rectangle {
             id: contentRect
-            width: parent.width
+            width: 520
             height: contentColumn.height
+            anchors.centerIn: parent
             color: "white"
             radius: 20
             property int currentIndex: 2
             property int currentScore: -1
-            
+            layer.enabled: true
+            layer.smooth: true
+            layer.effect: DropShadow {
+                horizontalOffset: 0
+                verticalOffset: 2
+                radius: 16
+                color: "#1F1A1A1A"
+                samples: 32
+                transparentBorder: true
+            }
+
             // 监听页面切换，重新计算位置
             onCurrentIndexChanged: {
                 if (scoreDialog.visible) {
@@ -279,12 +319,56 @@ ApplicationWindow {
                     width: parent.width
                     height: 58
                     color: "transparent"
+                    
+                    // 添加头部拖动功能的鼠标区域
+                    MouseArea {
+                        id: headerDragArea
+                        anchors.fill: parent
+                        acceptedButtons: Qt.LeftButton
+                        property point lastMousePos
+                        property bool isDragging: false
+                        z: 0  // 确保在其他控件之下
+                        
+                        onPressed: {
+                            if (mouse.button === Qt.LeftButton) {
+                                lastMousePos = Qt.point(mouse.x, mouse.y)
+                                isDragging = false
+                            }
+                        }
+                        
+                        onPositionChanged: {
+                            if (pressed && pressedButtons & Qt.LeftButton) {
+                                var dx = mouse.x - lastMousePos.x
+                                var dy = mouse.y - lastMousePos.y
+                                
+                                // 如果移动距离超过阈值，开始拖动
+                                if (!isDragging && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
+                                    isDragging = true
+                                }
+                                
+                                if (isDragging) {
+                                    // 拖动悬浮窗，对话框会通过updateDialogPosition自动跟随
+                                    var newX = mainWindow.x + dx
+                                    var newY = mainWindow.y + dy
+                                    
+                                    // 限制拖动范围在屏幕内
+                                    newX = Math.max(0, Math.min(newX, Screen.width - mainWindow.width))
+                                    newY = Math.max(0, Math.min(newY, Screen.height - mainWindow.height))
+                                    
+                                    mainWindow.x = newX
+                                    mainWindow.y = newY
+                                }
+                            }
+                        }
+                    }
+                    
                     Row {
                         id: title
                         anchors.left: parent.left
                         anchors.verticalCenter: parent.verticalCenter
                         anchors.leftMargin: 17
                         spacing: 8
+                        z: 1  // 确保在拖动区域之上
                         Image {
                             source: "qrc:/image/titleIcon.png"
                             anchors.verticalCenter: parent.verticalCenter
@@ -303,6 +387,7 @@ ApplicationWindow {
                         anchors.rightMargin: 12
                         buttonSize: 28        // 按钮大小
                         spacing: 12          // 按钮间距
+                        z: 1  // 确保在拖动区域之上
                         iconSources: [       // 图标数组
                             "qrc:/image/home.png",
                             "qrc:/image/history.png",
@@ -333,6 +418,7 @@ ApplicationWindow {
                         anchors.right: titleClose.left
                         anchors.verticalCenter: parent.verticalCenter
                         color: "#14000000"
+                        z: 1  // 确保在拖动区域之上
                     }
                     
                     Button {
@@ -342,6 +428,7 @@ ApplicationWindow {
                         anchors.rightMargin: 15
                         width: 28
                         height: 28
+                        z: 1  // 确保在拖动区域之上
                         background: Rectangle {
                             color: parent.hovered ? "#F5F5F5" : "transparent"
                             radius: 1111
