@@ -90,7 +90,7 @@
       <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Release|x64'">input</DynamicSource>
       <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Filename).moc</QtMocFileName>
     </ClCompile>
-    <ClCompile Include="HistoryRecord.cpp">
+    <ClCompile Include="HistoryManager.cpp">
       <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">input</DynamicSource>
       <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Filename).moc</QtMocFileName>
       <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Release|x64'">input</DynamicSource>
@@ -117,7 +117,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CommonFunc.h" />
-    <QtMoc Include="HistoryRecord.h" />
+    <QtMoc Include="HistoryManager.h" />
     <QtMoc Include="RenalManager.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

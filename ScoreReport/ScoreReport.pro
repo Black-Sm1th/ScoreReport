@@ -16,10 +16,15 @@ SOURCES += ./main.cpp \
     ./LoginManager.cpp \
     ./CCLSScorer.cpp \
     ./TNMManager.cpp \
-    ./ApiManager.cpp
+    ./ApiManager.cpp \
+    ./RenalManager.cpp \
+    ./HistoryManager.cpp
 
 HEADERS += ./LoginManager.h \
     ./CCLSScorer.h \
     ./TNMManager.h \
-    ./ApiManager.h
+    ./ApiManager.h \
+    ./RenalManager.h \
+    ./HistoryManager.h \
+    ./CommonFunc.h
 RESOURCES += qml.qrc
