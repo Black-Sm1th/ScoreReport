@@ -118,23 +118,6 @@ void LoginManager::loadSavedCredentials()
     qDebug() << "[LoginManager] Loaded saved credentials, username:" << username << "remember:" << remember;
 }
 
-void LoginManager::clearSavedCredentials()
-{
-    if (!m_settings) {
-        return;
-    }
-    
-    m_settings->remove("username");
-    m_settings->remove("password");
-    m_settings->remove("rememberPassword");
-    m_settings->sync();
-    
-    setsavedUsername("");
-    setsavedPassword("");
-    setrememberPassword(false);
-    
-    qDebug() << "[LoginManager] Cleared saved credentials";
-}
 
 void LoginManager::addUserToList(const QString& username, const QString& password, const QString& userId, const QString& avatar)
 {

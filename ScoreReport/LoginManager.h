@@ -32,12 +32,8 @@ public slots:
     Q_INVOKABLE void logout();
     Q_INVOKABLE void saveCredentials(const QString& username, const QString& password, bool remember);
     Q_INVOKABLE void loadSavedCredentials();
-    Q_INVOKABLE void clearSavedCredentials();
     Q_INVOKABLE void addUserToList(const QString& username, const QString& password, const QString& userId, const QString& avatar);
     Q_INVOKABLE void removeUserFromList(const QString& userId);
-    Q_INVOKABLE void loadUserList();
-    Q_INVOKABLE void saveUserList();
-    Q_INVOKABLE QVariantMap findUserInList(const QString& userId);
 
 signals:
     void loginResult(bool success, const QString& message);
@@ -47,6 +43,10 @@ private slots:
     void onLoginResponse(bool success, const QString& message, const QJsonObject& data);
 
 private:
+    void loadUserList();
+    void saveUserList();
+    QVariantMap findUserInList(const QString& userId);
+
     ApiManager* m_apiManager;
     QSettings* m_settings;
 };
