@@ -9,7 +9,7 @@
 #include "ApiManager.h"
 #include "CommonFunc.h"
 #include "RenalManager.h"
-
+#include "HistoryRecord.h"
 int main(int argc, char *argv[])
 {
 #if defined(Q_OS_WIN)
@@ -25,6 +25,9 @@ int main(int argc, char *argv[])
     // 使用单例模式获取实例
     auto* apiManager = GET_SINGLETON(ApiManager);
     engine.rootContext()->setContextProperty("$apiManager", apiManager);
+
+    auto* historyManager = GET_SINGLETON(HistoryRecord);
+    engine.rootContext()->setContextProperty("$historyManager", historyManager);
 
     auto* loginManager = GET_SINGLETON(LoginManager);
     engine.rootContext()->setContextProperty("$loginManager", loginManager);

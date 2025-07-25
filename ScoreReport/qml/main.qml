@@ -42,7 +42,7 @@ ApplicationWindow {
         source: floatingWindow
         horizontalOffset: 0
         verticalOffset: 0
-        radius: 12
+        radius: 16
         color: "#1F1A1A1A"
         samples: 32
     }
@@ -285,7 +285,7 @@ ApplicationWindow {
             layer.effect: DropShadow {
                 horizontalOffset: 0
                 verticalOffset: 2
-                radius: 16
+                radius: 14
                 color: "#1F1A1A1A"
                 samples: 32
                 transparentBorder: true
@@ -296,6 +296,9 @@ ApplicationWindow {
                 if (scoreDialog.visible) {
                     // 使用Timer延迟更新位置，确保新页面内容已渲染
                     scoreDialog.updateDialogPosition()
+                }
+                if(currentIndex == 1){
+                    $historyManager.updateList()
                 }
             }
             
@@ -465,6 +468,13 @@ ApplicationWindow {
                     messageManager: dialogMessageBox
                     onCurrentPageChanged: {
                         contentRect.currentScore = index
+                    }
+                }
+                HistoryView{
+                    visible: contentRect.currentIndex === 1
+                    messageManager: dialogMessageBox
+                    onToScorer: {
+                        contentRect.currentIndex = 0
                     }
                 }
                 UserView{

@@ -148,7 +148,7 @@ Rectangle {
                         color: "transparent"
                     }
                     Image{
-                        source: passwordInput.showPassword ? "qrc:/image/eyeSlash.png" : "qrc:/image/eye.png"
+                        source: passwordInput.showPassword ? "qrc:/image/eye.png" : "qrc:/image/eyeSlash.png"
                         anchors.centerIn: parent
                     }
                     MouseArea{
