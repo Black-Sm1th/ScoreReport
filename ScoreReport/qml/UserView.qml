@@ -164,7 +164,7 @@ Rectangle {
                 width: 240
                 color: "transparent"
             }
-            // 记住账号复选框
+            // 记住密码复选框
             Rectangle {
                 anchors.left: passwordRec.left
                 height: 29
@@ -205,7 +205,7 @@ Rectangle {
                     color: "#D9000000"
                     anchors.leftMargin: 4
                     anchors.left: rememberCheckBox.right
-                    text: "记住账号"
+                    text: "记住密码"
                     anchors.verticalCenter: parent.verticalCenter
 
                     MouseArea {
@@ -247,7 +247,7 @@ Rectangle {
             anchors.horizontalCenter: parent.horizontalCenter
             width: parent.width
             visible: $loginManager.isLoggedIn
-            y:22.5
+            y:43
             Rectangle {
                 width: 56
                 height: 56
@@ -320,63 +320,63 @@ Rectangle {
                 color: "transparent"
             }
 
-            // 记住账号复选框
-            Rectangle {
-                anchors.left: inputRec.left
-                height: 29
-                width: 240
-                color:"transparent"
-                CheckBox {
-                    id: clearCheckBox
-                    checked: true
-                    width:16
-                    height: 16
-                    anchors.verticalCenter: parent.verticalCenter
-                    indicator: Rectangle {
-                        implicitWidth: 16
-                        implicitHeight: 16
-                        radius: 4
-                        anchors.verticalCenter: parent.verticalCenter
-                        border.color: clearCheckBox.checked ? "#006BFF" : "#40000000"
-                        border.width: 1
-                        color: clearCheckBox.checked ? "#006BFF" : "#ffffffff"
+            // // 记住账号复选框
+            // Rectangle {
+            //     anchors.left: inputRec.left
+            //     height: 29
+            //     width: 240
+            //     color:"transparent"
+            //     CheckBox {
+            //         id: clearCheckBox
+            //         checked: true
+            //         width:16
+            //         height: 16
+            //         anchors.verticalCenter: parent.verticalCenter
+            //         indicator: Rectangle {
+            //             implicitWidth: 16
+            //             implicitHeight: 16
+            //             radius: 4
+            //             anchors.verticalCenter: parent.verticalCenter
+            //             border.color: clearCheckBox.checked ? "#006BFF" : "#40000000"
+            //             border.width: 1
+            //             color: clearCheckBox.checked ? "#006BFF" : "#ffffffff"
 
-                        Image{
-                            source: "qrc:/image/vector.png"
-                            anchors.centerIn: parent
-                            visible: clearCheckBox.checked
-                        }
+            //             Image{
+            //                 source: "qrc:/image/vector.png"
+            //                 anchors.centerIn: parent
+            //                 visible: clearCheckBox.checked
+            //             }
 
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: clearCheckBox.checked = !clearCheckBox.checked
-                        }
-                    }
-                }
+            //             MouseArea {
+            //                 anchors.fill: parent
+            //                 cursorShape: Qt.PointingHandCursor
+            //                 onClicked: clearCheckBox.checked = !clearCheckBox.checked
+            //             }
+            //         }
+            //     }
 
-                Text {
-                    font.family: "Alibaba PuHuiTi 3.0"
-                    font.pixelSize: 16
-                    color: "#D9000000"
-                    anchors.leftMargin: 4
-                    anchors.left: clearCheckBox.right
-                    text: "清除历史记录"
-                    anchors.verticalCenter: parent.verticalCenter
+            //     Text {
+            //         font.family: "Alibaba PuHuiTi 3.0"
+            //         font.pixelSize: 16
+            //         color: "#D9000000"
+            //         anchors.leftMargin: 4
+            //         anchors.left: clearCheckBox.right
+            //         text: "清除历史记录"
+            //         anchors.verticalCenter: parent.verticalCenter
 
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: clearCheckBox.checked = !clearCheckBox.checked
-                    }
-                }
-            }
+            //         MouseArea {
+            //             anchors.fill: parent
+            //             cursorShape: Qt.PointingHandCursor
+            //             onClicked: clearCheckBox.checked = !clearCheckBox.checked
+            //         }
+            //     }
+            // }
 
-            Rectangle{
-                height: 12
-                width: 240
-                color: "transparent"
-            }
+            // Rectangle{
+            //     height: 12
+            //     width: 240
+            //     color: "transparent"
+            // }
 
             Row{
                 anchors.left: inputRec.left
