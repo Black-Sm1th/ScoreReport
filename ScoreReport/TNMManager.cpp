@@ -40,7 +40,7 @@ void TNMManager::startAnalysis()
 {
     currentChatId = CommonFunc::generateNumericUUID();
     // 获取当前登录用户的ID
-    QString userId = m_loginManager->getUserId();
+    QString userId = m_loginManager->getcurrentUserId();
     if (userId.isEmpty() || userId == "-1") {
         return;
     }
@@ -60,7 +60,7 @@ void TNMManager::endAnalysis()
 void TNMManager::submitContent(const QVariantList& inputContents)
 {
     // 获取当前登录用户的ID
-    QString userId = m_loginManager->getUserId();
+    QString userId = m_loginManager->getcurrentUserId();
     if (userId.isEmpty() || userId == "-1") {
         return;
     }

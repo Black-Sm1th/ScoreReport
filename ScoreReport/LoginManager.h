@@ -6,6 +6,8 @@
 #include <QDebug>
 #include <QJsonObject>
 #include <QSettings>
+#include <QVariantList>
+#include <QVariantMap>
 #include "CommonFunc.h"
 
 class ApiManager;
@@ -14,11 +16,15 @@ class LoginManager : public QObject
 {
     Q_OBJECT
     QUICK_PROPERTY(bool, isLoggedIn)
+    QUICK_PROPERTY(QString, currentUserId)
     QUICK_PROPERTY(QString, currentUserName)
     QUICK_PROPERTY(QString, currentUserAvatar)
     QUICK_PROPERTY(QString, savedUsername)
     QUICK_PROPERTY(QString, savedPassword)
     QUICK_PROPERTY(bool, rememberPassword)
+    QUICK_PROPERTY(QVariantList, userList)
+    QUICK_PROPERTY(bool, isChangingUser)
+    QUICK_PROPERTY(bool, isAdding)
     SINGLETON_CLASS(LoginManager)
 
 public slots:
@@ -26,8 +32,12 @@ public slots:
     Q_INVOKABLE void logout();
     Q_INVOKABLE void saveCredentials(const QString& username, const QString& password, bool remember);
     Q_INVOKABLE void loadSavedCredentials();
-
-    QString getUserId();
+    Q_INVOKABLE void clearSavedCredentials();
+    Q_INVOKABLE void addUserToList(const QString& username, const QString& password, const QString& userId, const QString& avatar);
+    Q_INVOKABLE void removeUserFromList(const QString& userId);
+    Q_INVOKABLE void loadUserList();
+    Q_INVOKABLE void saveUserList();
+    Q_INVOKABLE QVariantMap findUserInList(const QString& userId);
 
 signals:
     void loginResult(bool success, const QString& message);
@@ -37,7 +47,6 @@ private slots:
     void onLoginResponse(bool success, const QString& message, const QJsonObject& data);
 
 private:
-    QString currentUserId;
     ApiManager* m_apiManager;
     QSettings* m_settings;
 };

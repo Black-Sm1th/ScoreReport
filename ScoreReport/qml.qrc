@@ -38,5 +38,7 @@
         <file>qml/HistoryView.qml</file>
         <file>image/copy.png</file>
         <file>image/nodata.png</file>
+        <file>image/arrowSwap.png</file>
+        <file>image/add.png</file>
     </qresource>
 </RCC>

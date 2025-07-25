@@ -38,7 +38,7 @@ void RenalManager::startAnalysis()
 {
     currentChatId = CommonFunc::generateNumericUUID();
     // 获取当前登录用户的ID
-    QString userId = m_loginManager->getUserId();
+    QString userId = m_loginManager->getcurrentUserId();
     if (userId.isEmpty() || userId == "-1") {
         return;
     }
@@ -58,7 +58,7 @@ void RenalManager::endAnalysis()
 void RenalManager::submitContent(const QString& inputContents)
 {
     // 获取当前登录用户的ID
-    QString userId = m_loginManager->getUserId();
+    QString userId = m_loginManager->getcurrentUserId();
     if (userId.isEmpty() || userId == "-1") {
         return;
     }

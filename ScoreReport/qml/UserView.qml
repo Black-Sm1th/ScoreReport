@@ -28,8 +28,10 @@ Rectangle {
         target: $loginManager
         function onLoginResult(success,message){
             if(success){
-                // 登录成功时保存凭据
+                // 登录成功时保存凭据（用于记住密码功能）
                 $loginManager.saveCredentials(accountInput.text, passwordInput.text, rememberCheckBox.checked)
+                // 登录成功时添加用户到列表（不管是否记住密码都添加）
+                $loginManager.addUserToList(accountInput.text, passwordInput.text, $loginManager.currentUserId, $loginManager.currentUserAvatar)
                 messageManager.success("登录成功！")
             }else{
                 messageManager.error(message)
@@ -61,7 +63,7 @@ Rectangle {
         Column {
             anchors.horizontalCenter: parent.horizontalCenter
             width: parent.width
-            visible: !$loginManager.isLoggedIn
+            visible: !$loginManager.isLoggedIn || ($loginManager.isChangingUser && $loginManager.isAdding)
             y:32
             // 账号输入框
             Rectangle {
@@ -234,32 +236,53 @@ Rectangle {
                 width: 240
                 color: "transparent"
             }
-            CustomButton{
-                id: loginButton
-                text: "登录"
-                width: 240
+            Rectangle{
                 height: 37
-                borderWidth: 0
-                backgroundColor: "#006BFF"
-                textColor: "#ffffff"
+                width: 240
+                color: "transparent"
                 anchors.left: passwordRec.left
-                onClicked: {
-                    if(accountInput.text === ""){
-                        messageManager.warning("账号不能为空")
-                        return
+                CustomButton{
+                    id: returnButton
+                    text: "返回"
+                    visible: $loginManager.isChangingUser && $loginManager.isAdding
+                    width: 114
+                    height: 37
+                    borderWidth: 0
+                    backgroundColor: "#F5F5F5"
+                    textColor: "#73000000"
+                    anchors.left: parent.left
+                    onClicked: {
+                        $loginManager.isAdding = false
                     }
-                    if(passwordInput.text === ""){
-                        messageManager.warning("密码不能为空")
-                        return
+                }
+
+                CustomButton{
+                    id: loginButton
+                    text: "登录"
+                    width: $loginManager.isChangingUser && $loginManager.isAdding ? 114 : 240
+                    height: 37
+                    borderWidth: 0
+                    backgroundColor: "#006BFF"
+                    textColor: "#ffffff"
+                    anchors.right: parent.right
+                    onClicked: {
+                        if(accountInput.text === ""){
+                            messageManager.warning("账号不能为空")
+                            return
+                        }
+                        if(passwordInput.text === ""){
+                            messageManager.warning("密码不能为空")
+                            return
+                        }
+                        $loginManager.login(accountInput.text, passwordInput.text)
                     }
-                    $loginManager.login(accountInput.text, passwordInput.text)
                 }
             }
         }
         Column {
             anchors.horizontalCenter: parent.horizontalCenter
             width: parent.width
-            visible: $loginManager.isLoggedIn
+            visible: $loginManager.isLoggedIn && !$loginManager.isChangingUser && !$loginManager.isAdding
             y:43
             Rectangle {
                 width: 56
@@ -403,6 +426,7 @@ Rectangle {
                     backgroundColor: "#FF5132"
                     textColor: "#ffffff"
                     onClicked: {
+                        $loginManager.removeUserFromList($loginManager.currentUserId)
                         $loginManager.logout()
                     }
                 }
@@ -414,10 +438,171 @@ Rectangle {
                     backgroundColor: "#006BFF"
                     textColor: "#ffffff"
                     onClicked: {
-                        // 退出当前登录状态
-                        $loginManager.logout()
-                        // 重新加载保存的凭据以供切换账号
-                        loadSavedCredentials()
+                        $loginManager.isChangingUser = true
+                    }
+                }
+            }
+        }
+        Rectangle {
+            height: 292
+            width: parent.width
+            visible: $loginManager.isLoggedIn && $loginManager.isChangingUser && !$loginManager.isAdding
+            color: "transparent"
+            ScrollView {
+                id: scrollView
+                width: 312
+                height: parent.height
+                anchors.horizontalCenter: parent.horizontalCenter
+                clip: true
+                ScrollBar.vertical.policy: ScrollBar.AlwaysOff
+                Column{
+                    width: 312
+                    spacing: 12
+                    Repeater {
+                        model: $loginManager.userList.length
+                        delegate: Rectangle {
+                            width: 312
+                            height: 64
+                            radius: 8
+                            color: "#0A000000"
+                            MouseArea{
+                                id: userArea
+                                hoverEnabled: true
+                                anchors.fill: parent
+                            }
+                            Rectangle {
+                                id: userAvatar
+                                width: 40
+                                height: 40
+                                anchors.verticalCenter: parent.verticalCenter
+                                anchors.leftMargin: 12
+                                anchors.left: parent.left
+                                color: "transparent"
+                                Image {
+                                    id: userAvatarImage
+                                    anchors.fill: parent
+                                    source: $loginManager.userList[index].avatar
+                                    fillMode: Image.PreserveAspectCrop
+                                    visible: false
+                                }
+                                Rectangle {
+                                    id: userMaskRect
+                                    anchors.fill: parent
+                                    radius: 100
+                                    visible: false
+                                }
+
+                                OpacityMask {
+                                    anchors.fill: parent
+                                    source: userAvatarImage
+                                    maskSource: userMaskRect
+                                }
+                            }
+                            Text{
+                                anchors.verticalCenter: parent.verticalCenter
+                                font.family: "Alibaba PuHuiTi 3.0"
+                                font.pixelSize: 16
+                                color: "#D9000000"
+                                anchors.left: userAvatar.right
+                                anchors.leftMargin: 12
+                                text: $loginManager.userList[index].username
+                            }
+                            Row {
+                                height: 22
+                                anchors.verticalCenter: parent.verticalCenter
+                                anchors.right: parent.right
+                                anchors.rightMargin: 12
+                                visible: $loginManager.userList[index].userId === $loginManager.currentUserId
+                                spacing: 4
+                                Text{
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text:"●"
+                                    font.family: "Alibaba PuHuiTi 3.0"
+                                    font.pixelSize: 8
+                                    color: "#35C14A"
+                                }
+                                Text{
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text:"当前登录"
+                                    font.family: "Alibaba PuHuiTi 3.0"
+                                    font.pixelSize: 12
+                                    color: "#73000000"
+                                }
+                            }
+                            Rectangle {
+                                height: 22
+                                width: 40
+                                anchors.verticalCenter: parent.verticalCenter
+                                anchors.right: parent.right
+                                anchors.rightMargin: 12
+                                color: "transparent"
+                                visible: $loginManager.userList[index].userId !== $loginManager.currentUserId && (userArea.containsMouse || changeArea.containsMouse)
+                                Image{
+                                    anchors.left: parent.left
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    source: "qrc:/image/arrowSwap.png"
+                                }
+                                Text{
+                                    anchors.right: parent.right
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text:"切换"
+                                    font.family: "Alibaba PuHuiTi 3.0"
+                                    font.pixelSize: 12
+                                    color: "#006BFF"
+                                }
+                                MouseArea{
+                                    id: changeArea
+                                    hoverEnabled: true
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        accountInput.text = $loginManager.userList[index].username
+                                        passwordInput.text = $loginManager.userList[index].password
+                                        $loginManager.logout()
+                                        $loginManager.login($loginManager.userList[index].username, $loginManager.userList[index].password)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    Rectangle {
+                        width: 312
+                        height: 64
+                        radius: 8
+                        color: "#0A000000"
+                        Rectangle {
+                            id:addBtn
+                            width: 40
+                            height: 40
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.leftMargin: 12
+                            anchors.left: parent.left
+                            color: "#0F000000"
+                            opacity: addArea.containsMouse ? "0.8" : "1"
+                            radius: 100
+                            Image {
+                                source: "qrc:/image/add.png"
+                                anchors.centerIn: parent
+                            }
+                            MouseArea{
+                                id: addArea
+                                hoverEnabled: true
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    $loginManager.isAdding = true;
+                                }
+                            }
+                        }
+                        Text{
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.left: addBtn.right
+                            anchors.leftMargin: 12
+                            text:"添加账号"
+                            font.family: "Alibaba PuHuiTi 3.0"
+                            font.pixelSize: 16
+                            color: "#D9000000"
+                        }
                     }
                 }
             }
