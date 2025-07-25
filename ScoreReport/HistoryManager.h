@@ -67,23 +67,12 @@ class HistoryManager : public QObject
     Q_OBJECT
         QUICK_PROPERTY(QVariantList, historyList)
         QUICK_PROPERTY(bool, isLoading)
-        QUICK_PROPERTY(int, totalCount)
-        QUICK_PROPERTY(int, currentPage)
-        QUICK_PROPERTY(int, pageSize)
         SINGLETON_CLASS(HistoryManager)
 
 public slots:
     // QML调用的方法
     Q_INVOKABLE void updateList();
-    Q_INVOKABLE void loadMore();
-    Q_INVOKABLE void refresh();
-    Q_INVOKABLE void clearHistory();
     Q_INVOKABLE void copyToClipboard(const QString& content);
-    Q_INVOKABLE HistoryRecord* getRecordById(const QString& id);
-
-signals:
-    void updateCompleted(bool success, const QString& message);
-    void historyCleared();
 
 private slots:
     void onHistoryResponse(bool success, const QString& message, const QJsonObject& data);
@@ -94,9 +83,6 @@ private:
 
     // 更新QML可访问的历史记录列表
     void updateHistoryList();
-
-    // 清理内存中的记录
-    void clearRecords();
 
     // 解析服务器响应的历史记录数据
     void parseHistoryData(const QJsonObject& data);

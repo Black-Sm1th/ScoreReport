@@ -59,9 +59,6 @@ HistoryManager::HistoryManager(QObject* parent)
 {
     // 初始化属性
     setisLoading(false);
-    settotalCount(0);
-    setcurrentPage(1);
-    setpageSize(500);
     sethistoryList(QVariantList());
 
     // 获取ApiManager单例并连接信号
@@ -79,7 +76,6 @@ void HistoryManager::updateList()
 {
     if (!m_apiManager) {
         qWarning() << "[HistoryManager] ApiManager is null!";
-        emit updateCompleted(false, "ApiManager not available");
         return;
     }
 
@@ -89,52 +85,9 @@ void HistoryManager::updateList()
     }
 
     setisLoading(true);
-    setcurrentPage(1);
 
-    // 调用API获取历史记录
-    m_apiManager->getQualityList("", "", "", "", "", getcurrentPage(), getpageSize());
-}
-
-void HistoryManager::loadMore()
-{
-    if (!m_apiManager) {
-        qWarning() << "[HistoryManager] ApiManager is null!";
-        return;
-    }
-
-    if (getisLoading()) {
-        qDebug() << "[HistoryManager] Already loading, skip request";
-        return;
-    }
-
-    // 检查是否还有更多数据
-    int totalPages = (gettotalCount() + getpageSize() - 1) / getpageSize();
-    if (getcurrentPage() >= totalPages) {
-        qDebug() << "[HistoryManager] No more data to load";
-        return;
-    }
-
-    setisLoading(true);
-    setcurrentPage(getcurrentPage() + 1);
-
-    // 调用API获取下一页数据
-    m_apiManager->getQualityList("", "", "", "", "", getcurrentPage(), getpageSize());
-}
-
-void HistoryManager::refresh()
-{
-    // 清空当前数据并重新加载
-    clearRecords();
-    updateList();
-}
-
-void HistoryManager::clearHistory()
-{
-    clearRecords();
-    settotalCount(0);
-    setcurrentPage(1);
-    updateHistoryList();
-    emit historyCleared();
+    // 调用API获取历史记录，使用固定的分页参数
+    m_apiManager->getQualityList("", "", "", "", "", 1, 500);
 }
 
 void HistoryManager::copyToClipboard(const QString& content)
@@ -143,27 +96,18 @@ void HistoryManager::copyToClipboard(const QString& content)
     clipboard->setText(content);
 }
 
-HistoryRecord* HistoryManager::getRecordById(const QString& id)
-{
-    for (HistoryRecord* record : m_records) {
-        if (record && record->getId() == id) {
-            return record;
-        }
-    }
-    return nullptr;
-}
-
-
-
 void HistoryManager::onHistoryResponse(bool success, const QString& message, const QJsonObject& data)
 {
     setisLoading(false);
 
     if (success) {
-        // 如果是第一页，清空现有数据
-        if (getcurrentPage() == 1) {
-            clearRecords();
+        // 清空现有数据
+        for (HistoryRecord* record : m_records) {
+            if (record) {
+                record->deleteLater();
+            }
         }
+        m_records.clear();
 
         parseHistoryData(data);
         updateHistoryList();
@@ -173,11 +117,7 @@ void HistoryManager::onHistoryResponse(bool success, const QString& message, con
     else {
         qWarning() << "[HistoryManager] Failed to load history:" << message;
     }
-
-    emit updateCompleted(success, message);
 }
-
-
 
 void HistoryManager::updateHistoryList()
 {
@@ -190,24 +130,8 @@ void HistoryManager::updateHistoryList()
     sethistoryList(list);
 }
 
-void HistoryManager::clearRecords()
-{
-    // 清理内存中的记录对象
-    for (HistoryRecord* record : m_records) {
-        if (record) {
-            record->deleteLater();
-        }
-    }
-    m_records.clear();
-}
-
 void HistoryManager::parseHistoryData(const QJsonObject& data)
 {
-    // 解析分页信息
-    settotalCount(data.value("total").toString().toInt());
-    setcurrentPage(data.value("current").toString().toInt());
-    setpageSize(data.value("size").toString().toInt());
-
     // 解析记录列表
     QJsonArray records = data.value("records").toArray();
     for (const QJsonValue& value : records) {
@@ -218,5 +142,5 @@ void HistoryManager::parseHistoryData(const QJsonObject& data)
         }
     }
 
-    qDebug() << "[HistoryManager] Parsed" << records.size() << "records. Total count:" << gettotalCount();
+    qDebug() << "[HistoryManager] Parsed" << records.size() << "records.";
 }
