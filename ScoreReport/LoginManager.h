@@ -26,7 +26,6 @@ public slots:
     Q_INVOKABLE void logout();
     Q_INVOKABLE void saveCredentials(const QString& username, const QString& password, bool remember);
     Q_INVOKABLE void loadSavedCredentials();
-    Q_INVOKABLE void clearSavedCredentials();
 
     QString getUserId();
 
