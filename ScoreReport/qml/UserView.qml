@@ -28,6 +28,8 @@ Rectangle {
         target: $loginManager
         function onLoginResult(success,message){
             if(success){
+                // 登录成功时保存凭据
+                $loginManager.saveCredentials(accountInput.text, passwordInput.text, rememberCheckBox.checked)
                 messageManager.success("登录成功！")
             }else{
                 messageManager.error(message)
@@ -36,6 +38,17 @@ Rectangle {
         function onLogoutSuccess(){
             messageManager.success("已退出登录账号！")
         }
+    }
+
+    // 组件加载完成后自动填充保存的凭据
+    Component.onCompleted: {
+        loadSavedCredentials()
+    }
+
+    function loadSavedCredentials() {
+        accountInput.text = $loginManager.savedUsername
+        passwordInput.text = $loginManager.savedPassword
+        rememberCheckBox.checked = $loginManager.rememberPassword
     }
 
     // 登录表单区域
@@ -172,7 +185,7 @@ Rectangle {
                 color:"transparent"
                 CheckBox {
                     id: rememberCheckBox
-                    checked: true
+                    checked: false
                     width:16
                     height: 16
                     anchors.verticalCenter: parent.verticalCenter
@@ -401,7 +414,10 @@ Rectangle {
                     backgroundColor: "#006BFF"
                     textColor: "#ffffff"
                     onClicked: {
-
+                        // 退出当前登录状态
+                        $loginManager.logout()
+                        // 重新加载保存的凭据以供切换账号
+                        loadSavedCredentials()
                     }
                 }
             }
