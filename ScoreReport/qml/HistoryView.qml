@@ -19,6 +19,8 @@ Rectangle {
         dropDown.currentIndex = 0
         dropDown.currentText = "全部类型"
         $historyManager.searchType = ""
+        datePicker.reset()
+        $historyManager.searchDate = ""
     }
     // 监听历史数据变化
     Connections {
@@ -101,7 +103,8 @@ Rectangle {
             ScoreTypeDropdown {
                 id: dropDown
                 anchors.verticalCenter: parent.verticalCenter
-                anchors.right: parent.right
+                anchors.right: datePicker.left
+                anchors.rightMargin: 8
                 onSelectionChanged: function(index, text, value) {
                     if(text === "全部类型"){
                         $historyManager.searchType = ""
@@ -113,9 +116,28 @@ Rectangle {
                     }
                 }
             }
-
+            DatePicker{
+                id:datePicker
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.right: parent.right
+                onDateSelected: {
+                    if($historyManager.searchDate !== datePicker.currentText){
+                        $historyManager.searchDate = datePicker.currentText
+                        if($loginManager.currentUserId !== ""){
+                            $historyManager.updateList()
+                        }
+                    }
+                }
+                onDateCleared: {
+                    if($historyManager.searchDate !== ""){
+                        $historyManager.searchDate = ""
+                        if($loginManager.currentUserId !== ""){
+                            $historyManager.updateList()
+                        }
+                    }
+                }
+            }
         }
-        
         // 历史记录列表
         Rectangle {
             width: parent.width - 24
@@ -126,7 +148,7 @@ Rectangle {
                 id: scrollView
                 anchors.fill: parent
                 contentWidth: width
-                contentHeight: historyColumn.height
+                contentHeight: Math.max(292, historyColumn.height)
                 clip: true
                 ScrollBar.vertical.policy: ScrollBar.AsNeeded
                 

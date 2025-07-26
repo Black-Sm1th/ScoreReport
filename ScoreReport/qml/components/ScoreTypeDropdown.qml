@@ -33,8 +33,8 @@ Rectangle {
         { text: "RENAL", value: "renal", iconUrl: "qrc:/image/RENAL.png" },
         { text: "CCLS", value: "ccls", iconUrl: "qrc:/image/CCLS.png" },
         { text: "TNM", value: "tnm", iconUrl: "qrc:/image/TNM.png" },
-        { text: "UCLS-MRS", value: "ucls-mrs", iconUrl: "qrc:/image/UCLS-MRS.png" },
-        { text: "UCLS-CTS", value: "ucls-cts", iconUrl: "qrc:/image/UCLS-CTS.png" },
+        { text: "UCLS MRS", value: "ucls mrs", iconUrl: "qrc:/image/UCLS-MRS.png" },
+        { text: "UCLS CTS", value: "ucls cts", iconUrl: "qrc:/image/UCLS-CTS.png" },
         { text: "BIOSNAK", value: "biosnak", iconUrl: "qrc:/image/BIOSNAK.png" }
     ]
     
@@ -43,7 +43,7 @@ Rectangle {
     color: mainMouseArea.containsMouse ? hoverColor : backgroundColor
     border.color: dropdownOpen ? "#33006BFF" : "#0F000000"
     border.width: 1
-    radius: 6
+    radius: 8
     
     property bool dropdownOpen: false
     
@@ -149,7 +149,7 @@ Rectangle {
             color: backgroundColor
             border.color: "#E6EAF2"
             border.width: 1
-            radius: 6
+            radius: 8
         }
         
         ListView {
@@ -162,7 +162,7 @@ Rectangle {
                 width: listView.width
                 height: 28
                 color: itemMouseArea.containsMouse ? hoverColor : (index === currentIndex ? selectedColor : "transparent")
-                radius: 3
+                radius: 4
                 
                 Row {
                     anchors.left: parent.left

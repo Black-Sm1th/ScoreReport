@@ -42,5 +42,6 @@
         <file>image/add.png</file>
         <file>image/search.png</file>
         <file>qml/components/ScoreTypeDropdown.qml</file>
+        <file>qml/components/DatePicker.qml</file>
     </qresource>
 </RCC>
