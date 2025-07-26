@@ -420,6 +420,8 @@ ApplicationWindow {
                                 dialogMessageBox.warning("请先登录！")
                                 return
                             }
+                            $loginManager.isChangingUser = false
+                            $loginManager.isAdding = false
                             contentRect.currentIndex = index
                         }
                     }

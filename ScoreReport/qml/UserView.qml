@@ -38,7 +38,7 @@ Rectangle {
             }
         }
         function onLogoutSuccess(){
-            messageManager.success("已退出登录账号！")
+
         }
     }
 
@@ -274,6 +274,9 @@ Rectangle {
                             messageManager.warning("密码不能为空")
                             return
                         }
+                        if($loginManager.currentUserId !== ""){
+                            $loginManager.logout()
+                        }
                         $loginManager.login(accountInput.text, passwordInput.text)
                     }
                 }
@@ -428,6 +431,7 @@ Rectangle {
                     onClicked: {
                         $loginManager.removeUserFromList($loginManager.currentUserId)
                         $loginManager.logout()
+                        messageManager.success("已退出登录账号！")
                     }
                 }
                 CustomButton{
