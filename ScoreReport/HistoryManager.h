@@ -68,6 +68,7 @@ class HistoryManager : public QObject
         QUICK_PROPERTY(QVariantList, historyList)
         QUICK_PROPERTY(bool, isLoading)
         QUICK_PROPERTY(QString, searchText)
+        QUICK_PROPERTY(QString, searchType)
         SINGLETON_CLASS(HistoryManager)
 
 public slots:

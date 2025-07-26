@@ -60,6 +60,7 @@ HistoryManager::HistoryManager(QObject* parent)
     // 初始化属性
     setisLoading(false);
     setsearchText("");
+    setsearchType("");
     sethistoryList(QVariantList());
 
     // 获取ApiManager单例并连接信号
@@ -88,7 +89,7 @@ void HistoryManager::updateList()
     setisLoading(true);
 
     // 调用API获取历史记录，使用固定的分页参数
-    m_apiManager->getQualityList("", "", "", getsearchText(), "", 1, 500);
+    m_apiManager->getQualityList(getsearchType(), "", "", getsearchText(), "", 1, 500);
 }
 
 void HistoryManager::copyToClipboard(const QString& content)

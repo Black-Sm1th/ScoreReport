@@ -41,5 +41,6 @@
         <file>image/arrowSwap.png</file>
         <file>image/add.png</file>
         <file>image/search.png</file>
+        <file>qml/components/ScoreTypeDropdown.qml</file>
     </qresource>
 </RCC>

@@ -16,6 +16,9 @@ Rectangle {
     property var historyData: $historyManager.historyList || []
     function resetAllValue(){
         searchField.text = ""
+        dropDown.currentIndex = 0
+        dropDown.currentText = "全部类型"
+        $historyManager.searchType = ""
     }
     // 监听历史数据变化
     Connections {
@@ -62,7 +65,8 @@ Rectangle {
                 color: "#0A000000"
                 radius: 8
                 anchors.verticalCenter: parent.verticalCenter
-                anchors.right: parent.right
+                anchors.right: dropDown.left
+                anchors.rightMargin: 8
                 Image{
                     id: searchIco
                     anchors.verticalCenter: parent.verticalCenter
@@ -70,6 +74,7 @@ Rectangle {
                     anchors.leftMargin: 4
                     source: "qrc:/image/search.png"
                 }
+
                 TextField{
                     id:searchField
                     height: 21
@@ -93,6 +98,22 @@ Rectangle {
                     }
                 }
             }
+            ScoreTypeDropdown {
+                id: dropDown
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.right: parent.right
+                onSelectionChanged: function(index, text, value) {
+                    if(text === "全部类型"){
+                        $historyManager.searchType = ""
+                    }else{
+                        $historyManager.searchType = text
+                    }
+                    if($loginManager.currentUserId !== ""){
+                        $historyManager.updateList()
+                    }
+                }
+            }
+
         }
         
         // 历史记录列表
@@ -407,8 +428,8 @@ Rectangle {
     // 获取类型颜色
     function getTypeColor(type) {
         switch(type) {
-            case "CCLS": return "#F8FAFF"
-            case "RENAL": return "#F7FCFB"
+            case "CCLS": return "#F7FCFB"
+            case "RENAL": return "#F8FAFF"
             case "TNM": return "#FFFAF8"
             case "UCLS MRS": return "#FFFBF2"
             case "UCLS CTS": return "#F8F7FF"
@@ -420,8 +441,8 @@ Rectangle {
     // 获取类型图标
     function getTypeIcon(type) {
         switch(type) {
-        case "CCLS": return "qrc:/image/RENAL.png"
-        case "RENAL": return "qrc:/image/CCLS.png"
+        case "CCLS": return "qrc:/image/CCLS.png"
+        case "RENAL": return "qrc:/image/RENAL.png"
         case "TNM": return "qrc:/image/TNM.png"
         case "UCLS MRS": return "qrc:/image/UCLS-MRS.png"
         case "UCLS CTS": return "qrc:/image/UCLS-CTS.png"
