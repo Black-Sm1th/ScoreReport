@@ -40,5 +40,6 @@
         <file>image/nodata.png</file>
         <file>image/arrowSwap.png</file>
         <file>image/add.png</file>
+        <file>image/search.png</file>
     </qresource>
 </RCC>

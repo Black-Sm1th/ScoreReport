@@ -14,7 +14,9 @@ Rectangle {
     color: "transparent"
     
     property var historyData: $historyManager.historyList || []
-    
+    function resetAllValue(){
+        searchField.text = ""
+    }
     // 监听历史数据变化
     Connections {
         target: $historyManager
@@ -35,6 +37,17 @@ Rectangle {
             height: 29
             width: parent.width - 48
             color: "transparent"
+            Timer {
+                id: debounceTimer
+                interval: 300
+                repeat: false
+                onTriggered: {
+                    $historyManager.searchText = searchField.text
+                    if($loginManager.currentUserId !== ""){
+                        $historyManager.updateList()
+                    }
+                }
+            }
             Text {
                 text: "历史记录"
                 color: "#D9000000"
@@ -42,6 +55,43 @@ Rectangle {
                 font.weight: Font.Bold
                 font.pixelSize: 16
                 anchors.verticalCenter: parent.verticalCenter
+            }
+            Rectangle{
+                width: 100
+                height: 29
+                color: "#0A000000"
+                radius: 8
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.right: parent.right
+                Image{
+                    id: searchIco
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.left: parent.left
+                    anchors.leftMargin: 4
+                    source: "qrc:/image/search.png"
+                }
+                TextField{
+                    id:searchField
+                    height: 21
+                    width: 100 - searchIco.width - 8 - 4
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.left: searchIco.right
+                    anchors.leftMargin: 4
+                    placeholderText: "搜索"
+                    font.family: "Alibaba PuHuiTi 3.0"
+                    font.pixelSize: 14
+                    leftPadding: 0
+                    rightPadding: 0
+                    topPadding: 0
+                    bottomPadding: 0
+                    selectByMouse: true
+                    background: Rectangle {
+                        color: "transparent"
+                    }
+                    onTextChanged: {
+                        debounceTimer.restart()
+                    }
+                }
             }
         }
         

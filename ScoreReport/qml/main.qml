@@ -173,6 +173,7 @@ ApplicationWindow {
                 }
             }
             function onLogoutSuccess(){
+                historyView.resetAllValue()
                 if(contentRect.currentScore !== -1){
                     if(contentRect.currentScore == 0){
                         renalView.resetValues()

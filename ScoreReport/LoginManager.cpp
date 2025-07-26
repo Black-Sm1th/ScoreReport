@@ -59,6 +59,8 @@ void LoginManager::onLoginResponse(bool success, const QString& message, const Q
     } else {
         setisLoggedIn(false);
         setcurrentUserName("");
+        setcurrentUserAvatar("");
+        setcurrentUserId("");
     }
     
     emit loginResult(success, message);
