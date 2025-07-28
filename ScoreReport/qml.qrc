@@ -43,5 +43,6 @@
         <file>image/search.png</file>
         <file>qml/components/ScoreTypeDropdown.qml</file>
         <file>qml/components/DatePicker.qml</file>
+        <file>image/CHAT.png</file>
     </qresource>
 </RCC>

@@ -105,6 +105,11 @@ Rectangle {
                 backgroundColor: "#FFFAF8"
                 iconUrl: "qrc:/image/TNM.png"
             }
+            ScoreOptionCard {
+                title: "CHAT"
+                backgroundColor: "#F8FAFF"
+                iconUrl: "qrc:/image/CHAT.png"
+            }
         }
         // 分隔线
         Rectangle {

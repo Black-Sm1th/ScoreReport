@@ -23,12 +23,12 @@ HistoryRecord::HistoryRecord(const QJsonObject& json, QObject* parent)
     m_result = json.value("result").toString();
     m_isDelete = json.value("isDelete").toInt();
 
-    // 解析时间字符串
+    // 解析时间字符串 - 服务器返回的是东八区时间格式 "yyyy-MM-DD hh:mm:ss"
     QString createTimeStr = json.value("createTime").toString();
     QString updateTimeStr = json.value("updateTime").toString();
 
-    m_createTime = QDateTime::fromString(createTimeStr, Qt::ISODate);
-    m_updateTime = QDateTime::fromString(updateTimeStr, Qt::ISODate);
+    m_createTime = QDateTime::fromString(createTimeStr, "yyyy-MM-dd HH:mm:ss");
+    m_updateTime = QDateTime::fromString(updateTimeStr, "yyyy-MM-dd HH:mm:ss");
 }
 
 QVariantMap HistoryRecord::toVariantMap() const

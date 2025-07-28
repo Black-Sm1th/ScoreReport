@@ -421,20 +421,35 @@ Rectangle {
         return result
     }
     
-    // 解析ISO时间格式
-    function parseISODateTime(isoString) {
-        if (!isoString) return new Date()
+    // 解析东八区时间格式 "yyyy-MM-DD hh:mm:ss"
+    function parseISODateTime(dateTimeString) {
+        if (!dateTimeString) return new Date()
         
         try {
-            // 处理ISO 8601格式：2025-07-25T01:38:49.000+00:00
-            // 直接使用Date构造函数解析，会自动处理时区转换为本地时间
-            var date = new Date(isoString)
+            // 处理 "yyyy-MM-DD hh:mm:ss" 格式，例如：2025-07-26 19:19:36
+            // 将格式转换为 JavaScript Date 可以识别的格式
+            var isoFormat = dateTimeString.replace(' ', 'T') + '+08:00'
+            var date = new Date(isoFormat)
             
-            // 如果解析失败，尝试其他格式
+            // 如果解析失败，尝试直接解析原格式
             if (isNaN(date.getTime())) {
-                // 尝试移除毫秒部分
-                var withoutMs = isoString.replace(/\.\d{3}/, '')
-                date = new Date(withoutMs)
+                // 手动解析 "yyyy-MM-DD hh:mm:ss" 格式
+                var parts = dateTimeString.split(' ')
+                if (parts.length === 2) {
+                    var datePart = parts[0].split('-')
+                    var timePart = parts[1].split(':')
+                    if (datePart.length === 3 && timePart.length === 3) {
+                        // 注意：Date构造函数的月份是从0开始的
+                        date = new Date(
+                            parseInt(datePart[0]), // 年
+                            parseInt(datePart[1]) - 1, // 月（0-11）
+                            parseInt(datePart[2]), // 日
+                            parseInt(timePart[0]), // 时
+                            parseInt(timePart[1]), // 分
+                            parseInt(timePart[2])  // 秒
+                        )
+                    }
+                }
             }
             
             if (isNaN(date.getTime())) {
