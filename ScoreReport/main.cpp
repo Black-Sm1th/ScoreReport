@@ -10,6 +10,7 @@
 #include "CommonFunc.h"
 #include "RenalManager.h"
 #include "HistoryManager.h"
+#include "UCLSMRSManager.h"
 int main(int argc, char *argv[])
 {
 #if defined(Q_OS_WIN)
@@ -40,6 +41,9 @@ int main(int argc, char *argv[])
 
     auto* renalManager = GET_SINGLETON(RenalManager);
     engine.rootContext()->setContextProperty("$renalManager", renalManager);
+    
+    auto* uclsmrsManager = GET_SINGLETON(UCLSMRSManager);
+    engine.rootContext()->setContextProperty("$uclsmrsManager", uclsmrsManager);
 
     // 加载字体并检查是否成功
     int fontId1 = QFontDatabase::addApplicationFont(":/fonts/AlibabaPuHuiTi-3-55-Regular.ttf");

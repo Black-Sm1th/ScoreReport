@@ -44,5 +44,7 @@
         <file>qml/components/ScoreTypeDropdown.qml</file>
         <file>qml/components/DatePicker.qml</file>
         <file>image/CHAT.png</file>
+        <file>qml/UCLSMRS.qml</file>
+        <file>qml/CHAT.qml</file>
     </qresource>
 </RCC>

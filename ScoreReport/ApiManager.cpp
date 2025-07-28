@@ -150,6 +150,43 @@ void ApiManager::getRenalAiQualityScore(const QString& chatId, const QString& us
 }
 
 /**
+ * @brief 流式AI问答接口实现
+ * @param query 问题内容
+ * @param userId 当前用户ID
+ * @param chatId 会话ID（可选，首次对话时为空）
+ * 
+ * 发送流式问答请求到AI服务。
+ * 这是一个特殊的接口，响应数据以流的形式分块返回，需要监听readyRead信号。
+ * 数据通过 streamChatResponse 信号逐块返回，完成时通过 streamChatFinished 信号通知。
+ */
+void ApiManager::streamChat(const QString& query, const QString& userId, const QString& chatId)
+{
+    QJsonObject requestData;
+    requestData["query"] = query;
+    requestData["userId"] = userId;
+    
+    // chatId为可选参数，只有在不为空时才添加
+    if (!chatId.isEmpty()) {
+        requestData["chatId"] = chatId;
+    }
+    
+    QNetworkRequest request = createRequest("/admin/Ai/chat");
+    request.setRawHeader("X-Request-Type", "stream-chat");
+    
+    QByteArray body = QJsonDocument(requestData).toJson();
+    qDebug() << "[ApiManager] Stream chat request body:" << body;
+    
+    QNetworkReply* reply = m_networkManager->post(request, body);
+    m_activeReplies.insert(reply);
+    
+    // 保存chatId映射，用于在接收数据时识别会话
+    m_streamChatIds[reply] = chatId;
+    
+    // 连接流式数据读取信号
+    connect(reply, &QNetworkReply::readyRead, this, &ApiManager::onStreamDataReady);
+}
+
+/**
  * @brief 删除聊天接口实现
  * @param chatId 要删除的聊天ID
  * 
@@ -235,6 +272,56 @@ void ApiManager::getQualityList(const QString& type, const QString& title, const
 }
 
 /**
+ * @brief 流式数据就绪槽函数实现
+ * 
+ * 当流式聊天接口有新数据可读时调用此函数。
+ * 读取当前可用的数据块并通过 streamChatResponse 信号发出。
+ * 处理Server-Sent Events (SSE) 格式的数据。
+ */
+void ApiManager::onStreamDataReady()
+{
+    QNetworkReply* reply = qobject_cast<QNetworkReply*>(sender());
+    if (!reply) {
+        qWarning() << "[ApiManager] onStreamDataReady: Invalid sender";
+        return;
+    }
+    
+    // 获取对应的chatId
+    QString chatId = m_streamChatIds.value(reply, "");
+    
+    // 读取所有可用数据
+    QByteArray data = reply->readAll();
+    if (data.isEmpty()) {
+        return;
+    }
+    
+    QString dataString = QString::fromUtf8(data);
+    qDebug() << "[ApiManager] Stream data received:" << dataString;
+    
+    // 处理SSE格式的数据，通常以"data: "开头
+    QStringList lines = dataString.split('\n');
+    for (const QString& line : lines) {
+        if (line.startsWith("data: ")) {
+            QString content = line.mid(6); // 移除"data: "前缀
+            if (!content.isEmpty() && content != "[DONE]") {
+                // 尝试解析JSON数据
+                QJsonDocument doc = QJsonDocument::fromJson(content.toUtf8());
+                if (doc.isObject()) {
+                    QJsonObject obj = doc.object();
+                    QString text = obj.value("content").toString();
+                    if (!text.isEmpty()) {
+                        emit streamChatResponse(text, chatId);
+                    }
+                } else {
+                    // 如果不是JSON，直接发送文本内容
+                    emit streamChatResponse(content, chatId);
+                }
+            }
+        }
+    }
+}
+
+/**
  * @brief 网络请求响应的统一处理函数
  * @param reply 网络回复对象
  * 
@@ -294,6 +381,12 @@ void ApiManager::onNetworkReply(QNetworkReply* reply)
                 emit addQualityRecordResponse(success, message, data);
             } else if (requestType == "get-quality-list") {
                 emit getQualityListResponse(success, message, data);
+            } else if (requestType == "stream-chat") {
+                // 流式聊天完成，发送完成信号
+                QString chatId = m_streamChatIds.value(reply, "");
+                emit streamChatFinished(success, message, chatId);
+                // 清理chatId映射
+                m_streamChatIds.remove(reply);
             }
         }
     } else {
@@ -321,6 +414,12 @@ void ApiManager::onNetworkReply(QNetworkReply* reply)
                 emit addQualityRecordResponse(false, errorString, QJsonObject());
             } else if (requestType == "get-quality-list") {
                 emit getQualityListResponse(false, errorString, QJsonObject());
+            } else if (requestType == "stream-chat") {
+                // 流式聊天错误，发送错误完成信号
+                QString chatId = m_streamChatIds.value(reply, "");
+                emit streamChatFinished(false, errorString, chatId);
+                // 清理chatId映射
+                m_streamChatIds.remove(reply);
             } else {
                 emit networkError(errorString);
             }
@@ -351,6 +450,9 @@ void ApiManager::abortAllRequests()
             reply->abort();
         }
     }
+    
+    // 清理所有流式聊天的chatId映射
+    m_streamChatIds.clear();
 }
 
 /**
@@ -374,6 +476,11 @@ void ApiManager::abortRequestsByType(const QString& requestType)
                 qDebug() << "[ApiManager] Aborting request:" << reply->url().toString() 
                          << "Type:" << replyType;
                 reply->abort();
+                
+                // 如果是流式聊天请求，清理对应的chatId映射
+                if (replyType == "stream-chat") {
+                    m_streamChatIds.remove(reply);
+                }
             }
         }
     }

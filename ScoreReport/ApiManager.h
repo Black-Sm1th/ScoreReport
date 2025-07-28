@@ -62,6 +62,16 @@ public:
     void getRenalAiQualityScore(const QString& chatId, const QString& userId, const QString& content);
     
     /**
+     * @brief 流式AI问答接口
+     * @param query 问题内容
+     * @param userId 用户ID
+     * @param chatId 会话ID（可选，首次不传）
+     * 
+     * 发送流式问答请求到AI服务，结果通过 streamChatResponse 和 streamChatFinished 信号返回
+     */
+    void streamChat(const QString& query, const QString& userId, const QString& chatId = "");
+    
+    /**
      * @brief 删除指定的聊天记录
      * @param chatId 要删除的聊天ID
      * 
@@ -140,6 +150,25 @@ signals:
     void renalAiQualityScoreResponse(bool success, const QString& message, const QJsonObject& data);
     
     /**
+     * @brief 流式聊天数据接收信号
+     * @param data 接收到的流式数据块
+     * @param chatId 会话ID
+     * 
+     * 当接收到流式聊天数据时发出此信号，data为每次接收到的数据块
+     */
+    void streamChatResponse(const QString& data, const QString& chatId);
+    
+    /**
+     * @brief 流式聊天完成信号
+     * @param success 是否成功完成
+     * @param message 完成消息
+     * @param chatId 会话ID
+     * 
+     * 当流式聊天结束时发出此信号
+     */
+    void streamChatFinished(bool success, const QString& message, const QString& chatId);
+    
+    /**
      * @brief 删除聊天响应信号
      * @param success 是否删除成功
      * @param message 服务器返回的消息
@@ -184,6 +213,13 @@ private slots:
      * 统一处理所有网络请求的响应，根据请求类型分发到对应的信号
      */
     void onNetworkReply(QNetworkReply* reply);
+    
+    /**
+     * @brief 流式数据就绪槽函数
+     * 
+     * 当流式聊天接口有新数据可读时调用，处理分块接收的数据
+     */
+    void onStreamDataReady();
 
 private:
     /**
@@ -219,6 +255,9 @@ private:
     
     /// @brief 跟踪所有活跃的网络请求，用于终止操作
     QSet<QNetworkReply*> m_activeReplies;
+    
+    /// @brief 跟踪流式聊天请求的chatId映射，用于在接收数据时识别会话
+    QMap<QNetworkReply*, QString> m_streamChatIds;
 
     // API地址常量
     const QString INTERNAL_BASE_URL = "http://192.168.1.2:9898/api";  ///< 内网API基础地址

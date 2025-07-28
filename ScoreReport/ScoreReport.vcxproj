@@ -90,6 +90,7 @@
       <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Release|x64'">input</DynamicSource>
       <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Filename).moc</QtMocFileName>
     </ClCompile>
+    <ClCompile Include="ChatManager.cpp" />
     <ClCompile Include="HistoryManager.cpp">
       <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">input</DynamicSource>
       <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Filename).moc</QtMocFileName>
@@ -100,6 +101,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="RenalManager.cpp" />
     <ClCompile Include="TNMManager.cpp" />
+    <ClCompile Include="UCLSMRSManager.cpp" />
     <QtRcc Include="qml.qrc" />
     <None Include="main.qml" />
   </ItemGroup>
@@ -116,7 +118,9 @@
     <QtMoc Include="ApiManager.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ChatManager.h" />
     <ClInclude Include="CommonFunc.h" />
+    <QtMoc Include="UCLSMRSManager.h" />
     <QtMoc Include="HistoryManager.h" />
     <QtMoc Include="RenalManager.h" />
   </ItemGroup>

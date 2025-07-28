@@ -172,7 +172,14 @@ Rectangle {
                     }else{
                         messageManager.warning("剪贴板为空，请先复制内容")
                     }
-                }else{
+                }
+                else if(title === "CHAT"){
+                    currentPageChanged(6)
+                }
+                // else if(title === "UCLS MRS"){
+                //     currentPageChanged(3)
+                // }
+                else{
                     messageManager.warning("该功能暂未开放")
                 }
             }

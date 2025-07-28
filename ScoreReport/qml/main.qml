@@ -181,6 +181,10 @@ ApplicationWindow {
                         cclsView.resetValues()
                     }else if(contentRect.currentScore == 2){
                         tnmView.resetValues()
+                    }else if(contentRect.currentScore == 3){
+                        uclsmrsView.resetValues()
+                    }else if(contentRect.currentScore == 6){
+                        chatView.reset()
                     }
                     contentRect.currentScore = -1
                 }
@@ -516,6 +520,22 @@ ApplicationWindow {
                 TNM{
                     id:tnmView
                     visible: contentRect.currentIndex === 0 && contentRect.currentScore === 2
+                    messageManager: dialogMessageBox
+                    onExitScore: {
+                        contentRect.currentScore = -1
+                    }
+                }
+                UCLSMRS{
+                    id:uclsmrsView
+                    visible: contentRect.currentIndex === 0 && contentRect.currentScore === 3
+                    messageManager: dialogMessageBox
+                    onExitScore: {
+                        contentRect.currentScore = -1
+                    }
+                }
+                CHAT{
+                    id:chatView
+                    visible: contentRect.currentIndex === 0 && contentRect.currentScore === 6
                     messageManager: dialogMessageBox
                     onExitScore: {
                         contentRect.currentScore = -1
