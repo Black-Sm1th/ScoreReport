@@ -16,7 +16,7 @@ Rectangle {
 
     Column {
         id: contentArea
-        width: parent.width - 40  // 左右各20px边距
+        width: parent.width - 48  // 左右各20px边距
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
         // 标题和标签

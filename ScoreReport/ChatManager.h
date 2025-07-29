@@ -27,6 +27,9 @@ class ChatManager : public QObject
     /// @brief 当前聊天ID
     QUICK_PROPERTY(QString, currentChatId)
     
+    /// @brief 最后一条用户消息
+    QUICK_PROPERTY(QString, lastUserMessage)
+    
     SINGLETON_CLASS(ChatManager)
 
 public:
@@ -37,14 +40,16 @@ public:
     Q_INVOKABLE void sendMessage(const QString& message);
     
     /**
-     * @brief 清空聊天记录
-     */
-    Q_INVOKABLE void clearMessages();
-    
-    /**
      * @brief 重置聊天并添加欢迎消息
      */
     Q_INVOKABLE void resetWithWelcomeMessage();
+    
+    /**
+     * @brief 再次生成最后一条AI回复
+     */
+    Q_INVOKABLE void regenerateLastResponse();
+
+    Q_INVOKABLE void copyToClipboard(const QString& content);
 
 private slots:
     /**

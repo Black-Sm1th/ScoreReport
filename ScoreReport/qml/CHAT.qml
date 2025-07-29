@@ -16,13 +16,13 @@ Rectangle {
     Column {
         id: chatColumn
         width: parent.width
-        spacing: 0
+        spacing: 12
 
         // 对话记录区域
         Rectangle {
             id: messagesArea
             width: parent.width
-            height: 630
+            height: 630 - 12
             color: "transparent"
 
             ScrollView {
@@ -39,14 +39,20 @@ Rectangle {
                         id: messagesRepeater
                         model: $chatManager.messages
                         // 消息气泡
-                        delegate: Rectangle {
+                        delegate: Column {
+                            id: messageItem
+                            width: messageBubble.width
+                            anchors.right: modelData.type === "user" ? parent.right : undefined
+                            anchors.rightMargin: modelData.type === "user" ? 24 : 0
+                            anchors.left: (modelData.type === "ai" || modelData.type === "thinking") ? parent.left : undefined
+                            anchors.leftMargin: (modelData.type === "ai" || modelData.type === "thinking") ? 24 : 0
+                            spacing: 8
+                            
+                            // 消息气泡
+                            Rectangle {
                                 id: messageBubble
                                 width: modelData.type !== "thinking" ? messageContent.width : thinkingRow.width
                                 height: modelData.type !== "thinking" ? messageContent.height : thinkingRow.height
-                                anchors.right: modelData.type === "user" ? parent.right : undefined
-                                anchors.rightMargin: modelData.type === "user" ? 24 : 0
-                                anchors.left: (modelData.type === "ai" || modelData.type === "thinking") ? parent.left : undefined
-                                anchors.leftMargin: (modelData.type === "ai" || modelData.type === "thinking") ? 24 : 0
                                 color: modelData.type === "user" ? "#F5F5F5" : "transparent"
                                 radius: 12
                                 
@@ -60,18 +66,21 @@ Rectangle {
                                     font.family: "Alibaba PuHuiTi 3.0"
                                     font.pixelSize: 16
                                     color: "#D9000000"
-                                    wrapMode: Text.WrapAnywhere
+                                    wrapMode: Text.Wrap
+                                    textFormat: Text.PlainText
                                     visible: modelData.type !== "thinking"
                                 }
+                                
                                 // 思考中动画
                                 Row {
                                     id: thinkingRow
                                     anchors.centerIn: parent
                                     spacing: 2
                                     visible: modelData.type === "thinking"
+                                    
                                     Text {
                                         text: "思考中"
-                                        font.weight: Font.Bold
+                                         font.weight: Font.Bold
                                         font.family: "Alibaba PuHuiTi 3.0"
                                         font.pixelSize: 16
                                         color: "#D9000000"
@@ -80,10 +89,11 @@ Rectangle {
                                     Text {
                                         id: dots
                                         text: "."
+                                         font.weight: Font.Bold
                                         font.family: "Alibaba PuHuiTi 3.0"
-                                        font.weight: Font.Bold
                                         font.pixelSize: 16
                                         color: "#D9000000"
+                                        
                                         Timer {
                                             id: dotsTimer
                                             interval: 500
@@ -99,6 +109,91 @@ Rectangle {
                                     }
                                 }
                             }
+                            
+                            // AI消息的操作按钮（只在最后一条AI消息显示）
+                            Row {
+                                id: actionButtons
+                                spacing: 4
+                                visible: modelData.type === "ai" && index === ($chatManager.messages.length - 1) && !$chatManager.isSending && index !== 0
+                                
+                                Rectangle {
+                                    id: regenerateBtn
+                                    width: 88
+                                    height: 29
+                                    color: "#F5F5F5"
+                                    radius: 8
+                                    opacity: regenerateBtnArea.containsMouse ? 0.8 : 1
+                                    
+                                    Row {
+                                        anchors.centerIn: parent
+                                        spacing: 4
+                                        
+                                        Image {
+                                            source: "qrc:/image/repeat.png"
+                                            anchors.verticalCenter: parent.verticalCenter
+                                        }
+                                        
+                                        Text {
+                                            text: "再次生成"
+                                            font.family: "Alibaba PuHuiTi 3.0"
+                                            font.pixelSize: 14
+                                            color: "#73000000"
+                                            anchors.verticalCenter: parent.verticalCenter
+                                        }
+                                    }
+                                    
+                                    MouseArea {
+                                        id: regenerateBtnArea
+                                        anchors.fill: parent
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: $chatManager.regenerateLastResponse()
+                                        hoverEnabled: true
+                                        onPressed: parent.scale = 0.9
+                                        onReleased: parent.scale = 1
+                                    }
+                                }
+                                
+                                Rectangle {
+                                    id: copyBtn
+                                    width: 64
+                                    height: 29
+                                    color: "#F5F5F5"
+                                    radius: 8
+                                    opacity: copyBtnArea.containsMouse ? 0.8 : 1
+                                    
+                                    Row {
+                                        anchors.centerIn: parent
+                                        spacing: 4
+                                        
+                                        Image {
+                                            source: "qrc:/image/chatCopy.png"
+                                            anchors.verticalCenter: parent.verticalCenter
+                                        }
+                                        
+                                        Text {
+                                            text: "复制"
+                                            font.family: "Alibaba PuHuiTi 3.0"
+                                            font.pixelSize: 14
+                                            color: "#73000000"
+                                            anchors.verticalCenter: parent.verticalCenter
+                                        }
+                                    }
+                                    
+                                    MouseArea {
+                                        id: copyBtnArea
+                                        anchors.fill: parent
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: {
+                                            $chatManager.copyToClipboard(modelData.content)
+                                            messageManager.success("已复制！")
+                                        }
+                                        onPressed: parent.scale = 0.9
+                                        onReleased: parent.scale = 1
+                                        hoverEnabled: true
+                                    }
+                                }
+                            }
+                        }
                     }
 
                 }

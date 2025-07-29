@@ -1,5 +1,7 @@
 ﻿#include "ChatManager.h"
 #include "ApiManager.h"
+#include <QGuiApplication>
+#include <QClipboard>
 #include "LoginManager.h"
 #include <QVariantMap>
 #include <QDateTime>
@@ -12,6 +14,7 @@ ChatManager::ChatManager(QObject* parent)
     , m_isSending(false)
     , m_isThinking(false)
     , m_isReceivingAi(false)
+    , m_lastUserMessage("")
 {
     // 连接ApiManager的信号
     auto* apiManager = GET_SINGLETON(ApiManager);
@@ -30,8 +33,13 @@ void ChatManager::sendMessage(const QString& message)
         return;
     }
     
+    QString trimmedMessage = message.trimmed();
+    
+    // 保存用户消息，用于再次生成功能
+    setlastUserMessage(trimmedMessage);
+    
     // 添加用户消息到界面
-    addUserMessage(message.trimmed());
+    addUserMessage(trimmedMessage);
     
     // 设置发送状态
     setisSending(true);
@@ -48,23 +56,7 @@ void ChatManager::sendMessage(const QString& message)
     
     // 调用API发送消息
     auto* apiManager = GET_SINGLETON(ApiManager);
-    apiManager->streamChat(message.trimmed(), userId, m_currentChatId);
-}
-
-void ChatManager::clearMessages()
-{
-    QVariantList emptyList;
-    setmessages(emptyList);
-    
-    // 重新生成聊天ID
-    m_currentChatId = CommonFunc::generateNumericUUID();
-    setcurrentChatId(m_currentChatId);
-    
-    // 重置状态
-    m_currentAiMessage.clear();
-    m_isReceivingAi = false;
-    setisSending(false);
-    setisThinking(false);
+    apiManager->streamChat(trimmedMessage, userId, m_currentChatId);
 }
 
 void ChatManager::resetWithWelcomeMessage()
@@ -82,9 +74,47 @@ void ChatManager::resetWithWelcomeMessage()
     m_isReceivingAi = false;
     setisSending(false);
     setisThinking(false);
+    setlastUserMessage("");
     
     // 添加欢迎消息
     addAiMessage(QString::fromLocal8Bit("您好，我是您的AI辅助助手。请您随时提出问题，我将尽最大努力为您提供有价值的信息支持。"));
+}
+
+void ChatManager::regenerateLastResponse()
+{
+    if (getlastUserMessage().isEmpty() || m_isSending) {
+        return;
+    }
+    
+    // 移除最后一条AI消息（如果存在）
+    QVariantList currentMessages = getmessages();
+    if (!currentMessages.isEmpty()) {
+        QVariantMap lastMessage = currentMessages.last().toMap();
+        if (lastMessage["type"].toString() == "ai") {
+            currentMessages.removeLast();
+            setmessages(currentMessages);
+        }
+    }
+    
+    // 重新发送最后一条用户消息
+    QString lastMessage = getlastUserMessage();
+    
+    // 设置发送状态
+    setisSending(true);
+    setisThinking(true);
+    m_isReceivingAi = true;
+    m_currentAiMessage.clear();
+    
+    // 添加思考中的占位消息
+    addThinkingMessage();
+    
+    // 获取用户ID
+    auto* loginManager = GET_SINGLETON(LoginManager);
+    QString userId = loginManager->getcurrentUserId();
+    
+    // 调用API发送消息
+    auto* apiManager = GET_SINGLETON(ApiManager);
+    apiManager->streamChat(lastMessage, userId, m_currentChatId);
 }
 
 void ChatManager::onStreamChatResponse(const QString& data, const QString& chatId)
@@ -93,9 +123,6 @@ void ChatManager::onStreamChatResponse(const QString& data, const QString& chatI
     if (chatId != m_currentChatId) {
         return;
     }
-    
-    qDebug() << "[ChatManager] Received data:" << QStringLiteral("'%1'").arg(data) << "Length:" << data.length();
-    
     // 如果是第一次接收AI响应，移除思考状态并替换占位消息
     if (m_currentAiMessage.isEmpty()) {
         setisThinking(false);
@@ -206,4 +233,10 @@ void ChatManager::updateLastAiMessage(const QString& additionalText)
         currentMessages.append(lastMessage);
         setmessages(currentMessages);
     }
+}
+
+void ChatManager::copyToClipboard(const QString& content)
+{
+    QClipboard* clipboard = QGuiApplication::clipboard();
+    clipboard->setText(content);
 }

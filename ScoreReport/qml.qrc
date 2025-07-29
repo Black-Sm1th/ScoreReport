@@ -50,5 +50,7 @@
         <file>image/closeGrey.png</file>
         <file>image/send.png</file>
         <file>image/sendDisable.png</file>
+        <file>image/chatCopy.png</file>
+        <file>image/repeat.png</file>
     </qresource>
 </RCC>
