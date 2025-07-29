@@ -176,9 +176,9 @@ Rectangle {
                 else if(title === "CHAT"){
                     currentPageChanged(6)
                 }
-                // else if(title === "UCLS MRS"){
-                //     currentPageChanged(3)
-                // }
+                else if(title === "UCLS MRS"){
+                    currentPageChanged(3)
+                }
                 else{
                     messageManager.warning("该功能暂未开放")
                 }

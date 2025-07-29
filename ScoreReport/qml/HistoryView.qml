@@ -304,7 +304,7 @@ Rectangle {
                                                 width: parent.width
                                                 elide: Text.ElideRight
                                                 visible: contentMouseArea.containsMouse || copyArea.containsMouse
-                                                wrapMode: Text.Wrap        
+                                                wrapMode: Text.NoWrap
                                                 Behavior on maximumLineCount {
                                                     NumberAnimation {
                                                         duration: 200
@@ -500,7 +500,7 @@ Rectangle {
             case "TNM":
                 return $tnmManager.sourceText
             case "UCLS MRS":
-                return ""
+                return $uclsmrsManager.sourceText
             case "UCLS CTS":
                 return ""
             case "BIOSNAK":

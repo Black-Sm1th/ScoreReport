@@ -12,7 +12,7 @@ Rectangle {
     color: "transparent"
     signal exitScore()
     
-    property int currentStep: 0      // 当前步骤 (0-8)
+    property int currentStep: 0      // 当前步骤 (0-6)
     property int currentScore: 0
     property string detailedDiagnosis: ""
     property var messageManager: null
@@ -21,12 +21,10 @@ Rectangle {
     property int macroFat: -1               // 0:有 1:无
     property int microFat: -1               // 0:有 1:无  
     property int t2Signal: -1               // 0:高 1:低
-    property int arterialRatio1: -1         // 0:>100 1:≤100
-    property int arterialIndex: -1          // 0:≥5 1:<5
-    property int delayedIndex: -1           // 0:≥125 1:<125
-    property int ader1: -1                  // 0:>1.5 1:≤1.5
-    property int arterialRatio2: -1         // 0:>100 1:≤100
-    property int ader2: -1                  // 0:>1.5 1:≤1.5
+    property int arterialRatio1: -1         // 0:>100 1:≤100 (动脉强化比)
+    property int arterialIndex: -1          // 0:≥5 1:<5 (相对动脉增强比)
+    property int delayedIndex: -1           // 0:≥125 1:<125 (延迟增强指数)
+    property int ader1: -1                  // 0:>1.5 1:≤1.5 (ADER)
     
     property bool showResult: false
     
@@ -160,12 +158,29 @@ Rectangle {
                     TextButtonGroup {
                         id: t2SignalGroup
                         width: parent.width
-                        options: ["高或等", "低"]
-                        selectedIndex: uclsmrsView.t2Signal
+                        // 有微脂肪时显示"高"和"低"，无微脂肪时显示"高或等"和"低"
+                        options: microFat === 0 ? ["高", "低"] : ["高或等", "低"]
+                        selectedIndex: {
+                            if (uclsmrsView.t2Signal === -1) return -1
+                            if (microFat === 0) {
+                                // 有微脂肪时：0=高显示为0，2=低显示为1
+                                return uclsmrsView.t2Signal === 0 ? 0 : 1
+                            } else {
+                                // 无微脂肪时：0或1=高或等显示为0，2=低显示为1
+                                return (uclsmrsView.t2Signal === 0 || uclsmrsView.t2Signal === 1) ? 0 : 1
+                            }
+                        }
                         disabled: currentStep > 2 && !showResult
                         visible: currentStep === 2 || t2Signal >= 0
                         onSelectionChanged: {
-                            uclsmrsView.t2Signal = index
+                            if (microFat === 0) {
+                                // 有微脂肪时：0=高，1=低
+                                uclsmrsView.t2Signal = index === 0 ? 0 : 2  // 0=高，2=低
+                            } else {
+                                // 无微脂肪时：0=高或等，1=低
+                                // 这里将"高或等"映射为高信号(0)，因为在评分逻辑中高或等都是同样处理的
+                                uclsmrsView.t2Signal = index === 0 ? 0 : 2  // 0=高或等，2=低
+                            }
                             if (currentStep === 2) {
                                 nextStep()
                             }
@@ -173,7 +188,7 @@ Rectangle {
                     }
                 }
                 
-                // 步骤3: 相对动脉强化比1选择 (T2高信号路径)
+                // 步骤3: 动脉强化比选择 (仅无微脂肪时显示)
                 Column {
                     width: parent.width - 40
                     spacing: 10
@@ -187,7 +202,7 @@ Rectangle {
                             font.family: "Alibaba PuHuiTi 3.0"
                             font.pixelSize: 16
                             color: currentStep === 3 ? "#006BFF" : "#D9000000"
-                            text: "相对动脉强化比"
+                            text: "动脉强化比"
                         }
                     }
                     TextButtonGroup {
@@ -206,12 +221,12 @@ Rectangle {
                     }
                 }
                 
-                // 步骤4: 相对动脉增强指数选择
+                // 步骤4: 相对动脉增强比选择 (仅高T2且动脉强化比>100时显示)
                 Column {
                     width: parent.width - 40
                     spacing: 10
                     leftPadding: 40
-                    visible: currentStep >= 4 && $uclsmrsManager.needsOption(macroFat, microFat, t2Signal, 4) && !showResult
+                    visible: currentStep >= 4 && $uclsmrsManager.needsOption(macroFat, microFat, t2Signal, 4, arterialRatio1) && !showResult
                     Rectangle{
                         height: 24
                         width:parent.width
@@ -220,7 +235,7 @@ Rectangle {
                             font.family: "Alibaba PuHuiTi 3.0"
                             font.pixelSize: 16
                             color: currentStep === 4 ? "#006BFF" : "#D9000000"
-                            text: "相对动脉增强指数"
+                            text: "相对动脉增强比"
                         }
                     }
                     TextButtonGroup {
@@ -244,7 +259,7 @@ Rectangle {
                     width: parent.width - 40
                     spacing: 10
                     leftPadding: 40
-                    visible: currentStep >= 5 && $uclsmrsManager.needsOption(macroFat, microFat, t2Signal, 5) && !showResult
+                    visible: currentStep >= 5 && $uclsmrsManager.needsOption(macroFat, microFat, t2Signal, 5, arterialRatio1, arterialIndex) && !showResult
                     Rectangle{
                         height: 24
                         width:parent.width
@@ -272,7 +287,7 @@ Rectangle {
                     }
                 }
                 
-                // 步骤6: ADER1选择 (T2高信号路径)
+                // 步骤6: ADER选择 (仅低T2信号时显示)
                 Column {
                     width: parent.width - 40
                     spacing: 10
@@ -294,77 +309,11 @@ Rectangle {
                         width: parent.width
                         options: ["> 1.5", "≤ 1.5"]
                         selectedIndex: uclsmrsView.ader1
-                        disabled: currentStep > 6 && !showResult
+                        disabled: showResult
                         visible: currentStep === 6 || ader1 >= 0
                         onSelectionChanged: {
                             uclsmrsView.ader1 = index
                             if (currentStep === 6) {
-                                nextStep()
-                            }
-                        }
-                    }
-                }
-                
-                // 步骤7: 相对动脉强化比2选择 (T2低信号路径)
-                Column {
-                    width: parent.width - 40
-                    spacing: 10
-                    leftPadding: 40
-                    visible: currentStep >= 7 && $uclsmrsManager.needsOption(macroFat, microFat, t2Signal, 7) && !showResult
-                    Rectangle{
-                        height: 24
-                        width:parent.width
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            font.family: "Alibaba PuHuiTi 3.0"
-                            font.pixelSize: 16
-                            color: currentStep === 7 ? "#006BFF" : "#D9000000"
-                            text: "相对动脉强化比"
-                        }
-                    }
-                    TextButtonGroup {
-                        id: arterialRatio2Group
-                        width: parent.width
-                        options: ["> 100", "≤ 100"]
-                        selectedIndex: uclsmrsView.arterialRatio2
-                        disabled: currentStep > 7 && !showResult
-                        visible: currentStep === 7 || arterialRatio2 >= 0
-                        onSelectionChanged: {
-                            uclsmrsView.arterialRatio2 = index
-                            if (currentStep === 7) {
-                                nextStep()
-                            }
-                        }
-                    }
-                }
-                
-                // 步骤8: ADER2选择 (T2低信号路径)
-                Column {
-                    width: parent.width - 40
-                    spacing: 10
-                    leftPadding: 40
-                    visible: currentStep >= 8 && $uclsmrsManager.needsOption(macroFat, microFat, t2Signal, 8) && !showResult
-                    Rectangle{
-                        height: 24
-                        width:parent.width
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            font.family: "Alibaba PuHuiTi 3.0"
-                            font.pixelSize: 16
-                            color: currentStep === 8 ? "#006BFF" : "#D9000000"
-                            text: "ADER"
-                        }
-                    }
-                    TextButtonGroup {
-                        id: ader2Group
-                        width: parent.width
-                        options: ["> 1.5", "≤ 1.5"]
-                        selectedIndex: uclsmrsView.ader2
-                        disabled: showResult
-                        visible: currentStep === 8 || ader2 >= 0
-                        onSelectionChanged: {
-                            uclsmrsView.ader2 = index
-                            if (currentStep === 8) {
                                 calculateFinalScore()
                             }
                         }
@@ -397,7 +346,7 @@ Rectangle {
                                 font.family: "Alibaba PuHuiTi 3.0"
                                 font.pixelSize: 16
                                 color: "#D9000000"
-                                text: "UCLS-MRS评分："
+                                text: "UCLS MRS评分："
                                 anchors.verticalCenter: parent.verticalCenter
                             }
                             
@@ -418,7 +367,21 @@ Rectangle {
                             font.pixelSize: 16
                             visible: detailedDiagnosis !== ""
                             color: "#A6000000"
-                            text: "符合" + detailedDiagnosis + "典型特征"
+                            text: {
+                                var text = ""
+                                if(currentScore === 1){
+                                    text = "肯定良性。"
+                                }else if(currentScore === 2){
+                                    text = "可能良性。"
+                                }else if(currentScore === 3){
+                                    text = "不确定。"
+                                }else if(currentScore === 4){
+                                    text = "可能恶性。"
+                                }else if(currentScore === 5){
+                                    text = "肯定ccRCC。"
+                                }
+                                return detailedDiagnosis + "，" + text
+                            }
                         }
 
                         Rectangle{
@@ -548,13 +511,19 @@ Rectangle {
     }
     
     function nextStep() {
+        // 如果有微脂肪，在T2信号选择后直接计算分数
+        if (macroFat == 1 && microFat == 0 && currentStep == 2) {
+            calculateFinalScore()
+            return
+        }
+        
         // 跳过不需要的步骤
         do {
             currentStep++
-        } while (currentStep <= 8 && !$uclsmrsManager.needsOption(macroFat, microFat, t2Signal, currentStep))
+        } while (currentStep <= 6 && !$uclsmrsManager.needsOption(macroFat, microFat, t2Signal, currentStep, arterialRatio1, arterialIndex))
         
         // 如果所有必要步骤都完成了，自动计算分数
-        if (currentStep > 8 || !$uclsmrsManager.needsOption(macroFat, microFat, t2Signal, currentStep)) {
+        if (currentStep > 6 || !$uclsmrsManager.needsOption(macroFat, microFat, t2Signal, currentStep, arterialRatio1, arterialIndex)) {
             calculateFinalScore()
         }
     }
@@ -568,8 +537,8 @@ Rectangle {
                     arterialIndex === -1 ? 1 : arterialIndex,
                     delayedIndex === -1 ? 1 : delayedIndex,
                     ader1 === -1 ? 1 : ader1,
-                    arterialRatio2 === -1 ? 1 : arterialRatio2,
-                    ader2 === -1 ? 1 : ader2
+                    0, // arterialRatio2 不再使用
+                    0  // ader2 不再使用
                     )
         detailedDiagnosis = $uclsmrsManager.getDetailedDiagnosis(
                     macroFat,
@@ -579,14 +548,15 @@ Rectangle {
                     arterialIndex === -1 ? 1 : arterialIndex,
                     delayedIndex === -1 ? 1 : delayedIndex,
                     ader1 === -1 ? 1 : ader1,
-                    arterialRatio2 === -1 ? 1 : arterialRatio2,
-                    ader2 === -1 ? 1 : ader2
+                    0, // arterialRatio2 不再使用
+                    0  // ader2 不再使用
                     )
         $uclsmrsManager.finishScore(currentScore, detailedDiagnosis)
         showResult = true
     }
     
     function resetValues() {
+        // 重置所有评分参数
         macroFat = -1
         microFat = -1
         t2Signal = -1
@@ -594,22 +564,24 @@ Rectangle {
         arterialIndex = -1
         delayedIndex = -1
         ader1 = -1
-        arterialRatio2 = -1
-        ader2 = -1
+        
+        // 重置界面状态
         currentScore = 0
         detailedDiagnosis = ""
         currentStep = 0
         showResult = false
-        
-        // 重置所有按钮组
-        macroFatGroup.selectedIndex = -1
-        microFatGroup.selectedIndex = -1
-        t2SignalGroup.selectedIndex = -1
-        arterialRatio1Group.selectedIndex = -1
-        arterialIndexGroup.selectedIndex = -1
-        delayedIndexGroup.selectedIndex = -1
-        ader1Group.selectedIndex = -1
-        arterialRatio2Group.selectedIndex = -1
-        ader2Group.selectedIndex = -1
+
+        // 重置所有按钮组的选择状态
+        // 注意：需要在下一帧重置，避免绑定冲突
+        Qt.callLater(function() {
+            macroFatGroup.selectedIndex = -1
+            microFatGroup.selectedIndex = -1
+            // t2SignalGroup会通过绑定自动更新，但需要确保正确重置
+            t2SignalGroup.selectedIndex = -1
+            arterialRatio1Group.selectedIndex = -1
+            arterialIndexGroup.selectedIndex = -1
+            delayedIndexGroup.selectedIndex = -1
+            ader1Group.selectedIndex = -1
+        })
     }
 }
