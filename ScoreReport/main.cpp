@@ -11,6 +11,7 @@
 #include "RenalManager.h"
 #include "HistoryManager.h"
 #include "UCLSMRSManager.h"
+#include "ChatManager.h"
 int main(int argc, char *argv[])
 {
 #if defined(Q_OS_WIN)
@@ -44,6 +45,9 @@ int main(int argc, char *argv[])
     
     auto* uclsmrsManager = GET_SINGLETON(UCLSMRSManager);
     engine.rootContext()->setContextProperty("$uclsmrsManager", uclsmrsManager);
+
+    auto* chatManager = GET_SINGLETON(ChatManager);
+    engine.rootContext()->setContextProperty("$chatManager", chatManager);
 
     // 加载字体并检查是否成功
     int fontId1 = QFontDatabase::addApplicationFont(":/fonts/AlibabaPuHuiTi-3-55-Regular.ttf");

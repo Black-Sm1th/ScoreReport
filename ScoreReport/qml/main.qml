@@ -183,8 +183,6 @@ ApplicationWindow {
                         tnmView.resetValues()
                     }else if(contentRect.currentScore == 3){
                         uclsmrsView.resetValues()
-                    }else if(contentRect.currentScore == 6){
-                        chatView.reset()
                     }
                     contentRect.currentScore = -1
                 }
@@ -486,6 +484,9 @@ ApplicationWindow {
                     visible: contentRect.currentIndex === 0 && contentRect.currentScore === -1
                     messageManager: dialogMessageBox
                     onCurrentPageChanged: {
+                        if(index === 6){
+                            chatView.resetValue()
+                        }
                         contentRect.currentScore = index
                     }
                 }

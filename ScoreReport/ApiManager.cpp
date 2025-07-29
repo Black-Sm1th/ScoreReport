@@ -298,23 +298,53 @@ void ApiManager::onStreamDataReady()
     QString dataString = QString::fromUtf8(data);
     qDebug() << "[ApiManager] Stream data received:" << dataString;
     
-    // 处理SSE格式的数据，通常以"data: "开头
+    // 处理SSE格式的数据
     QStringList lines = dataString.split('\n');
+    QString eventType = "";
+    
     for (const QString& line : lines) {
-        if (line.startsWith("data: ")) {
-            QString content = line.mid(6); // 移除"data: "前缀
+        QString trimmedLine = line.trimmed();
+        
+        // 处理 event: 行
+        if (trimmedLine.startsWith("event:")) {
+            eventType = trimmedLine.mid(6).trimmed();
+            continue;
+        }
+        
+        // 处理 data: 或 data:xxx 格式的行
+        if (trimmedLine.startsWith("data:")) {
+            QString content;
+            if (trimmedLine.length() > 5 && trimmedLine.at(5) == ' ') {
+                // data: xxx 格式（有空格）
+                content = trimmedLine.mid(6);
+            } else {
+                // data:xxx 格式（无空格）
+                content = trimmedLine.mid(5);
+            }
+            
             if (!content.isEmpty() && content != "[DONE]") {
-                // 尝试解析JSON数据
-                QJsonDocument doc = QJsonDocument::fromJson(content.toUtf8());
-                if (doc.isObject()) {
-                    QJsonObject obj = doc.object();
-                    QString text = obj.value("content").toString();
-                    if (!text.isEmpty()) {
-                        emit streamChatResponse(text, chatId);
-                    }
-                } else {
-                    // 如果不是JSON，直接发送文本内容
+                if (eventType == "message") {
+                    // 消息事件，直接发送文本内容
                     emit streamChatResponse(content, chatId);
+                } else if (eventType == "complete") {
+                    // 完成事件，发送完成信号
+                    emit streamChatFinished(true, "聊天完成", chatId);
+                    // 清理chatId映射
+                    m_streamChatIds.remove(reply);
+                    return; // 完成后退出
+                } else {
+                    // 其他事件，尝试解析JSON数据
+                    QJsonDocument doc = QJsonDocument::fromJson(content.toUtf8());
+                    if (doc.isObject()) {
+                        QJsonObject obj = doc.object();
+                        QString text = obj.value("content").toString();
+                        if (!text.isEmpty()) {
+                            emit streamChatResponse(text, chatId);
+                        }
+                    } else {
+                        // 如果不是JSON，直接发送文本内容
+                        emit streamChatResponse(content, chatId);
+                    }
                 }
             }
         }

@@ -50,6 +50,9 @@
     <ClCompile Include="UCLSMRSManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ChatManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="LoginManager.h">
@@ -73,20 +76,17 @@
     <QtMoc Include="UCLSMRSManager.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="ChatManager.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CommonFunc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ChatManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ChatManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

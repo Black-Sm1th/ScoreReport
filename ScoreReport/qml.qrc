@@ -46,5 +46,7 @@
         <file>image/CHAT.png</file>
         <file>qml/UCLSMRS.qml</file>
         <file>qml/CHAT.qml</file>
+        <file>image/closeRed.png</file>
+        <file>image/closeGrey.png</file>
     </qresource>
 </RCC>
