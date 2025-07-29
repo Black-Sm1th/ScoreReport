@@ -41,25 +41,62 @@ Rectangle {
                         // 消息气泡
                         delegate: Rectangle {
                                 id: messageBubble
-                                width: messageContent.width
-                                height: messageContent.height
+                                width: modelData.type !== "thinking" ? messageContent.width : thinkingRow.width
+                                height: modelData.type !== "thinking" ? messageContent.height : thinkingRow.height
                                 anchors.right: modelData.type === "user" ? parent.right : undefined
                                 anchors.rightMargin: modelData.type === "user" ? 24 : 0
-                                anchors.left: modelData.type === "ai" ? parent.left : undefined
-                                anchors.leftMargin: modelData.type === "ai" ? 24 : 0
+                                anchors.left: (modelData.type === "ai" || modelData.type === "thinking") ? parent.left : undefined
+                                anchors.leftMargin: (modelData.type === "ai" || modelData.type === "thinking") ? 24 : 0
                                 color: modelData.type === "user" ? "#F5F5F5" : "transparent"
                                 radius: 12
-                                // 消息内容
+                                
+                                // 普通消息内容
                                 Text {
                                     id: messageContent
                                     anchors.centerIn: parent
                                     width: Math.min(implicitWidth, messagesColumn.width - 48)
-                                    text: modelData.content
+                                    text: modelData.type === "thinking" ? "" : modelData.content
                                     padding: modelData.type === "user" ? 12 : 0
                                     font.family: "Alibaba PuHuiTi 3.0"
                                     font.pixelSize: 16
                                     color: "#D9000000"
                                     wrapMode: Text.WrapAnywhere
+                                    visible: modelData.type !== "thinking"
+                                }
+                                // 思考中动画
+                                Row {
+                                    id: thinkingRow
+                                    anchors.centerIn: parent
+                                    spacing: 2
+                                    visible: modelData.type === "thinking"
+                                    Text {
+                                        text: "思考中"
+                                        font.weight: Font.Bold
+                                        font.family: "Alibaba PuHuiTi 3.0"
+                                        font.pixelSize: 16
+                                        color: "#D9000000"
+                                    }
+                                    
+                                    Text {
+                                        id: dots
+                                        text: "."
+                                        font.family: "Alibaba PuHuiTi 3.0"
+                                        font.weight: Font.Bold
+                                        font.pixelSize: 16
+                                        color: "#D9000000"
+                                        Timer {
+                                            id: dotsTimer
+                                            interval: 500
+                                            running: modelData.type === "thinking"
+                                            repeat: true
+                                            property int dotCount: 1
+                                            
+                                            onTriggered: {
+                                                dotCount = (dotCount % 3) + 1
+                                                dots.text = ".".repeat(dotCount)
+                                            }
+                                        }
+                                    }
                                 }
                             }
                     }
@@ -169,35 +206,40 @@ Rectangle {
                                     enabled: !$chatManager.isSending
                                     padding: 0
                                     Keys.onPressed: {
-                                        if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter) && event.modifiers === Qt.ControlModifier) {
-                                            sendMessage()
-                                            event.accepted = true
+                                        if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter)) {
+                                            if (event.modifiers === Qt.ShiftModifier) {
+                                                // Shift+回车：换行（不处理，让默认行为执行）
+                                                return
+                                            } else if (event.modifiers === Qt.NoModifier) {
+                                                // 单独回车：发送消息
+                                                sendMessage()
+                                                event.accepted = true
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
-                        // 发送按钮
-                        Rectangle {
+
+                        Image{
                             id: sendButton
-                            width: 40
-                            height: 40
-                            anchors.verticalCenter: parent.verticalCenter
-                            color: $chatManager.isSending || messageInput.text.trim().length === 0 ? "#D1D5DB" : "#007AFF"
-                            radius: 8
+                            anchors.bottom: parent.bottom
+                            anchors.bottomMargin: 12
+                            source: $chatManager.isSending || messageInput.text.trim().length === 0 ? "qrc:/image/sendDisable.png" : "qrc:/image/send.png"
                             enabled: !$chatManager.isSending && messageInput.text.trim().length > 0
-
-                            Text {
-                                anchors.centerIn: parent
-                                text: "发送"
-                                font.family: "Alibaba PuHuiTi 3.0"
-                                font.pixelSize: 14
-                                color: "#FFFFFF"
-                            }
-
+                            opacity: enabled && clickArea.containsMouse ? 0.8 : 1
                             MouseArea {
+                                id: clickArea
                                 anchors.fill: parent
+                                hoverEnabled: true
                                 onClicked: sendMessage()
+                                cursorShape: Qt.PointingHandCursor
+                                onPressed: {
+                                    sendButton.scale = 0.9
+                                }
+                                onReleased: {
+                                    sendButton.scale = 1
+                                }
                                 enabled: parent.enabled
                             }
                         }

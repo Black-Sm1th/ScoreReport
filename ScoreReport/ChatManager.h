@@ -21,6 +21,9 @@ class ChatManager : public QObject
     /// @brief 是否正在发送消息
     QUICK_PROPERTY(bool, isSending)
     
+    /// @brief 是否显示思考中状态
+    QUICK_PROPERTY(bool, isThinking)
+    
     /// @brief 当前聊天ID
     QUICK_PROPERTY(QString, currentChatId)
     
@@ -71,6 +74,16 @@ private:
      * @param message 消息内容
      */
     void addAiMessage(const QString& message);
+    
+    /**
+     * @brief 添加思考中消息
+     */
+    void addThinkingMessage();
+
+    /**
+     * @brief 移除思考中消息
+     */
+    void removeThinkingMessage();
     
     /**
      * @brief 更新最后一条AI消息

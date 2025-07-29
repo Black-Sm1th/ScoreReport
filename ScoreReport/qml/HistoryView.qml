@@ -162,6 +162,7 @@ Rectangle {
                         width: parent.width - 24
                         spacing: 16
                         height: 255
+                        topPadding: 35
                         visible: historyData.length === 0
                         Image {
                             source: "qrc:/image/nodata.png"

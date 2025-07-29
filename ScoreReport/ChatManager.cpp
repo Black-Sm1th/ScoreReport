@@ -10,6 +10,7 @@
 ChatManager::ChatManager(QObject* parent)
     : QObject(parent)
     , m_isSending(false)
+    , m_isThinking(false)
     , m_isReceivingAi(false)
 {
     // 连接ApiManager的信号
@@ -34,8 +35,12 @@ void ChatManager::sendMessage(const QString& message)
     
     // 设置发送状态
     setisSending(true);
+    setisThinking(true);
     m_isReceivingAi = true;
     m_currentAiMessage.clear();
+    
+    // 添加思考中的占位消息
+    addThinkingMessage();
     
     // 获取用户ID
     auto* loginManager = GET_SINGLETON(LoginManager);
@@ -59,6 +64,7 @@ void ChatManager::clearMessages()
     m_currentAiMessage.clear();
     m_isReceivingAi = false;
     setisSending(false);
+    setisThinking(false);
 }
 
 void ChatManager::resetWithWelcomeMessage()
@@ -75,6 +81,7 @@ void ChatManager::resetWithWelcomeMessage()
     m_currentAiMessage.clear();
     m_isReceivingAi = false;
     setisSending(false);
+    setisThinking(false);
     
     // 添加欢迎消息
     addAiMessage(QString::fromLocal8Bit("您好，我是您的AI辅助助手。请您随时提出问题，我将尽最大努力为您提供有价值的信息支持。"));
@@ -87,8 +94,12 @@ void ChatManager::onStreamChatResponse(const QString& data, const QString& chatI
         return;
     }
     
-    // 如果是第一次接收AI响应，添加AI消息
+    qDebug() << "[ChatManager] Received data:" << QStringLiteral("'%1'").arg(data) << "Length:" << data.length();
+    
+    // 如果是第一次接收AI响应，移除思考状态并替换占位消息
     if (m_currentAiMessage.isEmpty()) {
+        setisThinking(false);
+        removeThinkingMessage();
         addAiMessage(data);
         m_currentAiMessage = data;
     } else {
@@ -107,15 +118,18 @@ void ChatManager::onStreamChatFinished(bool success, const QString& message, con
     
     // 重置状态
     setisSending(false);
+    setisThinking(false);
     m_isReceivingAi = false;
     
     if (!success) {
-        // 如果失败，添加错误消息
+        // 如果失败，移除思考消息并添加错误消息
+        removeThinkingMessage();
         addAiMessage(QString("抱歉，发生了错误：%1").arg(message));
     }
     
     // 如果当前AI消息为空，添加一个默认回复
     if (m_currentAiMessage.isEmpty()) {
+        removeThinkingMessage();
         addAiMessage("抱歉，我无法回复您的消息。");
     }
     
@@ -144,6 +158,33 @@ void ChatManager::addAiMessage(const QString& message)
     QVariantList currentMessages = getmessages();
     currentMessages.append(aiMessage);
     setmessages(currentMessages);
+}
+
+void ChatManager::addThinkingMessage()
+{
+    QVariantMap thinkingMessage;
+    thinkingMessage["type"] = "thinking";
+    thinkingMessage["content"] = "思考中";
+    thinkingMessage["timestamp"] = QDateTime::currentDateTime().toString("hh:mm");
+    
+    QVariantList currentMessages = getmessages();
+    currentMessages.append(thinkingMessage);
+    setmessages(currentMessages);
+}
+
+void ChatManager::removeThinkingMessage()
+{
+    QVariantList currentMessages = getmessages();
+    
+    // 从后往前查找并移除思考中消息
+    for (int i = currentMessages.size() - 1; i >= 0; i--) {
+        QVariantMap message = currentMessages[i].toMap();
+        if (message["type"].toString() == "thinking") {
+            currentMessages.removeAt(i);
+            setmessages(currentMessages);
+            break;
+        }
+    }
 }
 
 void ChatManager::updateLastAiMessage(const QString& additionalText)
