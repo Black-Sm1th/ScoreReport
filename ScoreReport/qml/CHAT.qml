@@ -261,6 +261,7 @@ Rectangle {
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
+                                $chatManager.endAnalysis()
                                 exitScore()
                             }
                         }

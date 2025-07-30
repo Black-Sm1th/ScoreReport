@@ -184,6 +184,7 @@ Rectangle {
                             backgroundColor: "#006BFF"
                             textColor: "#ffffff"
                             fontSize: 14
+                            radius: 4
                             buttonRadius: 4
                             borderWidth: 0
                             anchors.horizontalCenter: parent.horizontalCenter

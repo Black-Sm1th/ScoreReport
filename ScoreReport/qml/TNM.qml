@@ -412,6 +412,7 @@ Rectangle {
                 width: 88
                 height: 36
                 fontSize: 14
+                radius: 4
                 borderWidth: 1
                 borderColor: "#33006BFF"
                 backgroundColor: "#1A006BFF"
@@ -433,6 +434,7 @@ Rectangle {
                 width: 88
                 height: 36
                 fontSize: 14
+                radius: 4
                 borderWidth: 1
                 borderColor: "#33006BFF"
                 backgroundColor: "#1A006BFF"
@@ -453,6 +455,7 @@ Rectangle {
                 width: 88
                 height: 36
                 fontSize: 14
+                radius: 4
                 borderWidth: 1
                 borderColor: "#33006BFF"
                 backgroundColor: "#1A006BFF"
@@ -471,6 +474,7 @@ Rectangle {
                 width: 88
                 height: 36
                 fontSize: 14
+                radius: 4
                 backgroundColor: "#006BFF"
                 textColor: "#FFFFFF"
                 onClicked: {
@@ -488,6 +492,7 @@ Rectangle {
                 width: 88
                 height: 36
                 fontSize: 14
+                radius: 4
                 borderWidth: 1
                 borderColor: "#33006BFF"
                 backgroundColor: "#1A006BFF"
@@ -507,6 +512,7 @@ Rectangle {
                 width: 88
                 height: 36
                 fontSize: 14
+                radius: 4
                 borderWidth: 1
                 borderColor: "#33006BFF"
                 backgroundColor: "#1A006BFF"
@@ -527,6 +533,7 @@ Rectangle {
                 width: 88
                 height: 36
                 fontSize: 14
+                radius: 4
                 backgroundColor: "#006BFF"
                 textColor: "#FFFFFF"
                 onClicked: {

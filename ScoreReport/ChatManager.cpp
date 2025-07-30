@@ -235,6 +235,11 @@ void ChatManager::updateLastAiMessage(const QString& additionalText)
     }
 }
 
+void ChatManager::endAnalysis()
+{
+    GET_SINGLETON(ApiManager)->abortRequestsByType("stream-chat");
+}
+
 void ChatManager::copyToClipboard(const QString& content)
 {
     QClipboard* clipboard = QGuiApplication::clipboard();

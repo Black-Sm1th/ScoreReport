@@ -451,6 +451,7 @@ Rectangle {
                 text: "重置"
                 width: 88
                 height: 36
+                radius: 4
                 fontSize: 14
                 borderWidth: 1
                 borderColor: "#33006BFF"
@@ -470,6 +471,7 @@ Rectangle {
                 text: "终止"
                 width: 88
                 height: 36
+                radius: 4
                 fontSize: 14
                 borderWidth: 1
                 borderColor: "#33006BFF"
@@ -491,6 +493,7 @@ Rectangle {
                 text: "粘贴并评分"
                 width: 88
                 height: 36
+                radius: 4
                 fontSize: 14
                 borderWidth: 1
                 borderColor: "#33006BFF"
@@ -510,6 +513,7 @@ Rectangle {
                 text: "重选方案"
                 width: 88
                 height: 36
+                radius: 4
                 fontSize: 14
                 borderWidth: 1
                 borderColor: "#33006BFF"
@@ -530,6 +534,7 @@ Rectangle {
                 text: "复制"
                 width: 88
                 height: 36
+                radius: 4
                 fontSize: 14
                 backgroundColor: "#006BFF"
                 textColor: "#FFFFFF"

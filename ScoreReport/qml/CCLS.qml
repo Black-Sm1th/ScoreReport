@@ -356,8 +356,9 @@ Rectangle {
                 anchors.right: resetBtn.left
                 anchors.rightMargin: 12
                 text: "终止"
-                width: 44
+                width: 88
                 height: 36
+                radius: 4
                 fontSize: 14
                 visible: !showResult
                 borderWidth: 1
@@ -376,8 +377,9 @@ Rectangle {
                 anchors.right: parent.right
                 anchors.rightMargin: 24
                 text: "重置"
-                width: 72
+                width: 88
                 height: 36
+                radius: 4
                 visible: !showResult
                 fontSize: 14
                 borderWidth: 1
@@ -395,8 +397,9 @@ Rectangle {
                 anchors.left: parent.left
                 anchors.leftMargin: 24
                 text: "再次评分"
-                width: 72
+                width: 88
                 height: 36
+                radius: 4
                 visible: showResult
                 fontSize: 14
                 borderWidth: 1
@@ -413,8 +416,9 @@ Rectangle {
                 anchors.left: rescore.right
                 anchors.leftMargin: 12
                 text: "重选方案"
-                width: 72
+                width: 88
                 height: 36
+                radius: 4
                 visible: showResult
                 fontSize: 14
                 borderWidth: 1
@@ -432,8 +436,9 @@ Rectangle {
                 anchors.right: parent.right
                 anchors.rightMargin: 24
                 text: "复制"
-                width: 72
+                width: 88
                 height: 36
+                radius: 4
                 visible: showResult
                 fontSize: 14
                 borderWidth: 0

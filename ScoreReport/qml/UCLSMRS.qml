@@ -68,7 +68,7 @@ Rectangle {
                         font.pixelSize: 16
                         color: "#D9000000"
                         anchors.verticalCenter: parent.verticalCenter
-                        text: showResult ? qsTr("已完成UCLS-MRS评分！") : qsTr("UCLS-MRS评分分析中，请填写以下信息")
+                        text: showResult ? qsTr("已完成UCLS MRS评分！") : qsTr("UCLS MRS评分分析中，请填写以下信息")
                     }
                 }
                 
@@ -202,7 +202,7 @@ Rectangle {
                             font.family: "Alibaba PuHuiTi 3.0"
                             font.pixelSize: 16
                             color: currentStep === 3 ? "#006BFF" : "#D9000000"
-                            text: "动脉强化比"
+                            text: "动脉强化比(病灶CM-病灶平扫期)/病灶平扫期"
                         }
                     }
                     TextButtonGroup {
@@ -235,13 +235,13 @@ Rectangle {
                             font.family: "Alibaba PuHuiTi 3.0"
                             font.pixelSize: 16
                             color: currentStep === 4 ? "#006BFF" : "#D9000000"
-                            text: "相对动脉增强比"
+                            text: "相对动脉增强比(病灶CM-皮质CM)/皮质CM"
                         }
                     }
                     TextButtonGroup {
                         id: arterialIndexGroup
                         width: parent.width
-                        options: ["≥ 5", "< 5"]
+                        options: ["≥ -5", "< -5"]
                         selectedIndex: uclsmrsView.arterialIndex
                         disabled: currentStep > 4 && !showResult
                         visible: currentStep === 4 || arterialIndex >= 0
@@ -268,7 +268,7 @@ Rectangle {
                             font.family: "Alibaba PuHuiTi 3.0"
                             font.pixelSize: 16
                             color: currentStep === 5 ? "#006BFF" : "#D9000000"
-                            text: "延迟增强指数"
+                            text: "延迟增强指数(病灶排泄期-病灶平扫期)/病灶平扫期"
                         }
                     }
                     TextButtonGroup {
@@ -301,7 +301,7 @@ Rectangle {
                             font.family: "Alibaba PuHuiTi 3.0"
                             font.pixelSize: 16
                             color: currentStep === 6 ? "#006BFF" : "#D9000000"
-                            text: "ADER"
+                            text: "ADER(病灶皮髓质期-病灶平扫期)/(病灶排泄期-病灶平扫期)"
                         }
                     }
                     TextButtonGroup {
@@ -420,9 +420,10 @@ Rectangle {
                 anchors.right: resetBtn.left
                 anchors.rightMargin: 12
                 text: "终止"
-                width: 44
+                width: 88
                 height: 36
                 fontSize: 14
+                radius: 4
                 visible: !showResult
                 borderWidth: 1
                 borderColor: "#33006BFF"
@@ -440,8 +441,9 @@ Rectangle {
                 anchors.right: parent.right
                 anchors.rightMargin: 24
                 text: "重置"
-                width: 72
+                width: 88
                 height: 36
+                radius: 4
                 visible: !showResult
                 fontSize: 14
                 borderWidth: 1
@@ -459,8 +461,9 @@ Rectangle {
                 anchors.left: parent.left
                 anchors.leftMargin: 24
                 text: "再次评分"
-                width: 72
+                width: 88
                 height: 36
+                radius: 4
                 visible: showResult
                 fontSize: 14
                 borderWidth: 1
@@ -477,8 +480,9 @@ Rectangle {
                 anchors.left: rescore.right
                 anchors.leftMargin: 12
                 text: "重选方案"
-                width: 72
+                width: 88
                 height: 36
+                radius: 4
                 visible: showResult
                 fontSize: 14
                 borderWidth: 1
@@ -496,8 +500,9 @@ Rectangle {
                 anchors.right: parent.right
                 anchors.rightMargin: 24
                 text: "复制"
-                width: 72
+                width: 88
                 height: 36
+                radius: 4
                 visible: showResult
                 fontSize: 14
                 borderWidth: 0

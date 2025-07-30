@@ -183,6 +183,8 @@ ApplicationWindow {
                         tnmView.resetValues()
                     }else if(contentRect.currentScore == 3){
                         uclsmrsView.resetValues()
+                    }else if(contentRect.currentScore == 6){
+                        $chatManager.endAnalysis()
                     }
                     contentRect.currentScore = -1
                 }

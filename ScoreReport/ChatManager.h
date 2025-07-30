@@ -50,6 +50,7 @@ public:
     Q_INVOKABLE void regenerateLastResponse();
 
     Q_INVOKABLE void copyToClipboard(const QString& content);
+    Q_INVOKABLE void endAnalysis();
 
 private slots:
     /**
