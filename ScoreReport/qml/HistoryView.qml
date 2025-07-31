@@ -141,7 +141,7 @@ Rectangle {
         // 历史记录列表
         Rectangle {
             width: parent.width - 24
-            height: Math.min(scrollView.contentHeight, 700)
+            height: emptyType.visible ? Math.min(scrollView.contentHeight, 700) : 700
             color: "transparent"
             
             ScrollView {
@@ -159,6 +159,7 @@ Rectangle {
                     rightPadding: 24
                     // 空状态
                     Column {
+                        id: emptyType
                         width: parent.width - 24
                         spacing: 16
                         height: 255
