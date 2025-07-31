@@ -44,6 +44,16 @@ public:
     void loginUser(const QString& username, const QString& password);
     
     /**
+     * @brief 用户注册请求
+     * @param userAccount 用户账号
+     * @param userPassword 用户密码
+     * @param checkPassword 确认密码
+     * 
+     * 发送注册请求到服务器，结果通过 registerResponse 信号返回
+     */
+    void registerUser(const QString& userAccount, const QString& userPassword, const QString& checkPassword);
+    
+    /**
      * @brief 获取TNM AI质量评分
      * @param userId 用户ID
      * @param content 待评分的内容
@@ -133,6 +143,14 @@ signals:
      */
     void loginResponse(bool success, const QString& message, const QJsonObject& data);
     
+    /**
+     * @brief 注册响应信号
+     * @param success 是否注册成功
+     * @param message 服务器返回的消息
+     * @param data 用户数据（注册成功时包含用户信息）
+     */
+    void registerResponse(bool success, const QString& message, const QJsonObject& data);
+
     /**
      * @brief TNM AI质量评分响应信号
      * @param success 是否请求成功

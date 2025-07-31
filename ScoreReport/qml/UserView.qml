@@ -14,13 +14,17 @@ Rectangle {
     // 添加键盘焦点支持
     focus: true
     Keys.onReturnPressed: {
-        if (!$loginManager.isLoggedIn) {
+        if ((!$loginManager.isLoggedIn || ($loginManager.isChangingUser && $loginManager.isAdding)) && !$loginManager.isRegistering) {
             loginButton.clicked()
+        }else if((!$loginManager.isLoggedIn || ($loginManager.isChangingUser && $loginManager.isAdding)) && $loginManager.isRegistering){
+            registButton.clicked()
         }
     }
     Keys.onEnterPressed: {
-        if (!$loginManager.isLoggedIn) {
+        if ((!$loginManager.isLoggedIn || ($loginManager.isChangingUser && $loginManager.isAdding)) && !$loginManager.isRegistering) {
             loginButton.clicked()
+        }else if((!$loginManager.isLoggedIn || ($loginManager.isChangingUser && $loginManager.isAdding)) && $loginManager.isRegistering){
+            registButton.clicked()
         }
     }
 
@@ -39,6 +43,19 @@ Rectangle {
         }
         function onLogoutSuccess(){
 
+        }
+        function onRegistResult(success,message){
+            if(success){
+                $loginManager.isRegistering = false
+                accountInput.text = accountInputRegist.text
+                passwordInput.text = ""
+                accountInputRegist.text = ""
+                passwordInputRegist.text = ""
+                surepasswordInputRegist.text = ""
+                messageManager.success("注册成功！")
+            }else{
+                messageManager.error(message)
+            }
         }
     }
 
@@ -64,7 +81,7 @@ Rectangle {
         Column {
             anchors.horizontalCenter: parent.horizontalCenter
             width: parent.width
-            visible: !$loginManager.isLoggedIn || ($loginManager.isChangingUser && $loginManager.isAdding)
+            visible: (!$loginManager.isLoggedIn || ($loginManager.isChangingUser && $loginManager.isAdding)) && !$loginManager.isRegistering
             y:32
             Text {
                 text: "登录账号"
@@ -296,13 +313,29 @@ Rectangle {
                         onClicked: rememberCheckBox.checked = !rememberCheckBox.checked
                     }
                 }
+
+                CustomButton{
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.right: parent.right
+                    width: 63
+                    height: 29
+                    border.width: 0
+                    backgroundColor: "transparent"
+                    textColor: "#006BFF"
+                    hoverTextColor: "#D9006BFF"
+                    text: "注册账号"
+                    fontSize: 16
+                    onClicked: {
+                        $loginManager.isRegistering = true
+                    }
+                }
             }
         }
         //登录后用户界面
         Column {
             anchors.horizontalCenter: parent.horizontalCenter
             width: parent.width
-            visible: $loginManager.isLoggedIn && !$loginManager.isChangingUser && !$loginManager.isAdding
+            visible: $loginManager.isLoggedIn && !$loginManager.isChangingUser && !$loginManager.isAdding && !$loginManager.isRegistering
             y:43
             Rectangle {
                 width: 56
@@ -468,7 +501,7 @@ Rectangle {
         Rectangle {
             height: 292
             width: parent.width
-            visible: $loginManager.isLoggedIn && $loginManager.isChangingUser && !$loginManager.isAdding
+            visible: $loginManager.isLoggedIn && $loginManager.isChangingUser && !$loginManager.isAdding && !$loginManager.isRegistering
             color: "transparent"
             ScrollView {
                 id: scrollView
@@ -626,6 +659,260 @@ Rectangle {
                             color: "#D9000000"
                         }
                     }
+                }
+            }
+        }
+        //注册界面
+        Column {
+            anchors.horizontalCenter: parent.horizontalCenter
+            width: parent.width
+            visible: (!$loginManager.isLoggedIn || ($loginManager.isChangingUser && $loginManager.isAdding)) && $loginManager.isRegistering
+            Text {
+                text: "注册账号"
+                font.family: "Alibaba PuHuiTi 3.0"
+                font.pixelSize: 16
+                color: "#D9000000"
+                font.weight: Font.Bold
+                anchors.left: passwordRecRegist.left
+            }
+            Rectangle{
+                height: 20
+                width: 240
+                color: "transparent"
+            }
+            // 账号输入框
+            Rectangle {
+                width: 240
+                height: 37
+                anchors.horizontalCenter: parent.horizontalCenter
+                color: "#0A000000"
+                radius: 8
+                Text {
+                    id: accountLabelRegist
+                    text: "账号"
+                    width: surepasswordLabelRegist.width
+                    font.family: "Alibaba PuHuiTi 3.0"
+                    font.pixelSize: 16
+                    color: "#D9000000"
+                    anchors.left: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.leftMargin: 12
+                }
+                TextField {
+                    id: accountInputRegist
+                    anchors.leftMargin: 12
+                    anchors.rightMargin: 12
+                    anchors.left: accountLabelRegist.right
+                    height: parent.height
+                    width: 240 - accountLabelRegist.width - 36
+                    anchors.verticalCenter: parent.verticalCenter
+                    font.family: "Alibaba PuHuiTi 3.0"
+                    font.pixelSize: 16
+                    color: "#D9000000"
+                    selectByMouse: true
+                    placeholderText: "请输入"
+                    placeholderTextColor: "#40000000"
+                    leftPadding: 0
+                    rightPadding: 0
+                    topPadding: 0
+                    bottomPadding: 0
+                    background: Rectangle {
+                        color: "transparent"
+                    }
+                }
+            }
+            Rectangle{
+                height: 12
+                width: 240
+                color: "transparent"
+            }
+            // 密码输入框
+            Rectangle {
+                id: passwordRecRegist
+                width: 240
+                height: 37
+                anchors.horizontalCenter: parent.horizontalCenter
+                color: "#0A000000"
+                radius: 8
+                Text {
+                    id: passwordLabelRegist
+                    text: "密码"
+                    width: surepasswordLabelRegist.width
+                    font.family: "Alibaba PuHuiTi 3.0"
+                    font.pixelSize: 16
+                    color: "#D9000000"
+                    anchors.left: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.leftMargin: 12
+                }
+                TextField {
+                    id: passwordInputRegist
+                    anchors.leftMargin: 12
+                    anchors.rightMargin: 12
+                    anchors.left: passwordLabelRegist.right
+                    width: 240 - passwordLabelRegist.width - 36 - 28
+                    height: parent.height
+                    anchors.verticalCenter: parent.verticalCenter
+                    font.family: "Alibaba PuHuiTi 3.0"
+                    font.pixelSize: 16
+                    selectByMouse: true
+                    echoMode: showPassword ? TextInput.Normal : TextInput.Password
+                    color: "#D9000000"
+                    placeholderText: "请输入"
+                    placeholderTextColor: "#40000000"
+                    property bool showPassword: false
+                    leftPadding: 0
+                    rightPadding: 0
+                    topPadding: 0
+                    bottomPadding: 0
+                    background: Rectangle {
+                        color: "transparent"
+                    }
+                }
+                // 显示/隐藏密码按钮
+                Button {
+                    width: 16
+                    height: 16
+                    anchors.right: parent.right
+                    anchors.rightMargin: 12
+                    anchors.verticalCenter: parent.verticalCenter
+                    background: Rectangle {
+                        color: "transparent"
+                    }
+                    Image{
+                        source: passwordInputRegist.showPassword ? "qrc:/image/eye.png" : "qrc:/image/eyeSlash.png"
+                        anchors.centerIn: parent
+                    }
+                    MouseArea{
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: passwordInputRegist.showPassword = !passwordInputRegist.showPassword
+                    }
+                }
+            }
+            Rectangle{
+                height: 12
+                width: 240
+                color: "transparent"
+            }
+            // 确认输入框
+            Rectangle {
+                id: surepasswordRecRegist
+                width: 240
+                height: 37
+                anchors.horizontalCenter: parent.horizontalCenter
+                color: "#0A000000"
+                radius: 8
+                Text {
+                    id: surepasswordLabelRegist
+                    text: "确认密码"
+                    font.family: "Alibaba PuHuiTi 3.0"
+                    font.pixelSize: 16
+                    color: "#D9000000"
+                    anchors.left: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.leftMargin: 12
+                }
+                TextField {
+                    id: surepasswordInputRegist
+                    anchors.leftMargin: 12
+                    anchors.rightMargin: 12
+                    anchors.left: surepasswordLabelRegist.right
+                    width: 240 - surepasswordLabelRegist.width - 36 - 28
+                    height: parent.height
+                    anchors.verticalCenter: parent.verticalCenter
+                    font.family: "Alibaba PuHuiTi 3.0"
+                    font.pixelSize: 16
+                    selectByMouse: true
+                    echoMode: showPassword ? TextInput.Normal : TextInput.Password
+                    color: "#D9000000"
+                    placeholderText: "请输入"
+                    placeholderTextColor: "#40000000"
+                    property bool showPassword: false
+                    leftPadding: 0
+                    rightPadding: 0
+                    topPadding: 0
+                    bottomPadding: 0
+                    background: Rectangle {
+                        color: "transparent"
+                    }
+                }
+                // 显示/隐藏密码按钮
+                Button {
+                    width: 16
+                    height: 16
+                    anchors.right: parent.right
+                    anchors.rightMargin: 12
+                    anchors.verticalCenter: parent.verticalCenter
+                    background: Rectangle {
+                        color: "transparent"
+                    }
+                    Image{
+                        source: surepasswordInputRegist.showPassword ? "qrc:/image/eye.png" : "qrc:/image/eyeSlash.png"
+                        anchors.centerIn: parent
+                    }
+                    MouseArea{
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: surepasswordInputRegist.showPassword = !surepasswordInputRegist.showPassword
+                    }
+                }
+            }
+            Rectangle{
+                height: 20
+                width: 240
+                color: "transparent"
+            }
+
+            Rectangle{
+                height: 37
+                width: 240
+                color: "transparent"
+                anchors.left: surepasswordRecRegist.left
+
+                CustomButton{
+                    id: registButton
+                    text: "注册"
+                    width: 240
+                    height: 37
+                    borderWidth: 0
+                    backgroundColor: "#006BFF"
+                    textColor: "#ffffff"
+                    anchors.right: parent.right
+                    onClicked: {
+                        if(accountInputRegist.text === ""){
+                            messageManager.warning("账号不能为空")
+                            return
+                        }
+                        if(passwordInputRegist.text === ""){
+                            messageManager.warning("密码不能为空")
+                            return
+                        }
+                        if(surepasswordInputRegist.text === ""){
+                            messageManager.warning("确认密码不能为空")
+                            return
+                        }
+                        $loginManager.registAccount(accountInputRegist.text, passwordInputRegist.text, surepasswordInputRegist.text)
+                    }
+                }
+            }
+            Rectangle{
+                height: 12
+                width: 240
+                color: "transparent"
+            }
+            CustomButton{
+                anchors.horizontalCenter: parent.horizontalCenter
+                width: 63
+                height: 29
+                border.width: 0
+                backgroundColor: "transparent"
+                textColor: "#006BFF"
+                hoverTextColor: "#D9006BFF"
+                text: "登录账号"
+                fontSize: 16
+                onClicked: {
+                    $loginManager.isRegistering = false
                 }
             }
         }

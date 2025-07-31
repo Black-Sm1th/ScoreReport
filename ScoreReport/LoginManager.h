@@ -25,6 +25,7 @@ class LoginManager : public QObject
     QUICK_PROPERTY(QVariantList, userList)
     QUICK_PROPERTY(bool, isChangingUser)
     QUICK_PROPERTY(bool, isAdding)
+    QUICK_PROPERTY(bool, isRegistering)
     SINGLETON_CLASS(LoginManager)
 
 public slots:
@@ -34,12 +35,14 @@ public slots:
     Q_INVOKABLE void loadSavedCredentials();
     Q_INVOKABLE void addUserToList(const QString& username, const QString& password, const QString& userId, const QString& avatar);
     Q_INVOKABLE void removeUserFromList(const QString& userId);
-
+    Q_INVOKABLE bool registAccount(const QString& userAccount, const QString& userPassword, const QString& checkPassword);
 signals:
     void loginResult(bool success, const QString& message);
     void logoutSuccess();
+    void registResult(bool success, const QString& message);
 
 private slots:
+    void onRegistResponse(bool success, const QString& message, const QJsonObject& data);
     void onLoginResponse(bool success, const QString& message, const QJsonObject& data);
     void onTextSelected(const QString& text);
 private:

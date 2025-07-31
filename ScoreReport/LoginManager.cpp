@@ -14,6 +14,7 @@ LoginManager::LoginManager(QObject* parent)
     setsavedPassword("");
     setisChangingUser(false);
     setisAdding(false);
+    setisRegistering(false);
     setrememberPassword(false);
     setuserList(QVariantList());
     m_selector = new GlobalTextMonitor();
@@ -26,7 +27,8 @@ LoginManager::LoginManager(QObject* parent)
     m_apiManager = GET_SINGLETON(ApiManager);
     connect(m_apiManager, &ApiManager::loginResponse,
         this, &LoginManager::onLoginResponse);
-    
+    connect(m_apiManager, &ApiManager::registerResponse,
+        this, &LoginManager::onRegistResponse);
     // 启动时加载保存的凭据和用户列表
     loadSavedCredentials();
     loadUserList();
@@ -183,6 +185,24 @@ void LoginManager::removeUserFromList(const QString& userId)
             break;
         }
     }
+}
+
+bool LoginManager::registAccount(const QString& userAccount, const QString& userPassword, const QString& checkPassword)
+{
+    if (!m_apiManager) {
+        qWarning() << "[LoginManager] ApiManager is null!";
+        emit registResult(false, "Internal error: ApiManager not available");
+        return false;
+    }
+
+    // 使用ApiManager进行登录请求
+    m_apiManager->registerUser(userAccount, userPassword, checkPassword);
+    return true;
+}
+
+void LoginManager::onRegistResponse(bool success, const QString& message, const QJsonObject& data)
+{
+    emit registResult(success, message);
 }
 
 void LoginManager::onTextSelected(const QString& text)

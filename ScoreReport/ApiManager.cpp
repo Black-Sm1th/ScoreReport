@@ -112,6 +112,25 @@ void ApiManager::loginUser(const QString& username, const QString& password)
 }
 
 /**
+ * @brief 用户注册接口实现
+ * @param userAccount 用户账号
+ * @param userPassword 用户密码
+ * @param checkPassword 确认密码
+ * 
+ * 构造注册请求数据并发送到服务器的 /admin/user/register 端点。
+ * 请求类型标记为 "register"，结果会通过 registerResponse 信号返回。
+ */
+void ApiManager::registerUser(const QString& userAccount, const QString& userPassword, const QString& checkPassword)
+{
+    QJsonObject registerData;
+    registerData["userAccount"] = userAccount;
+    registerData["userPassword"] = userPassword;
+    registerData["checkPassword"] = checkPassword;
+    
+    makePostRequest("/admin/user/register", registerData, "register");
+}
+
+/**
  * @brief TNM AI质量评分接口实现
  * @param userId 当前用户ID
  * @param content 需要评分的TNM内容
@@ -392,6 +411,8 @@ void ApiManager::onNetworkReply(QNetworkReply* reply)
             // 根据请求类型分发响应到对应的信号
             if (requestType == "login") {
                 emit loginResponse(success, message, data);
+            } else if (requestType == "register") {
+                emit registerResponse(success, message, data);
             } else if (requestType == "test-connection") {
                 emit connectionTestResult(success, message);
             } else if (requestType == "tnm-ai-score") {
@@ -425,6 +446,8 @@ void ApiManager::onNetworkReply(QNetworkReply* reply)
             // 根据请求类型发送错误响应
             if (requestType == "login") {
                 emit loginResponse(false, errorString, QJsonObject());
+            } else if (requestType == "register") {
+                emit registerResponse(false, errorString, QJsonObject());
             } else if (requestType == "test-connection") {
                 emit connectionTestResult(false, errorString);
             } else if (requestType == "tnm-ai-score") {
