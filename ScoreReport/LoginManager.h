@@ -9,7 +9,7 @@
 #include <QVariantList>
 #include <QVariantMap>
 #include "CommonFunc.h"
-
+#include "GlobalTextMonitor.h"
 class ApiManager;
 
 class LoginManager : public QObject
@@ -41,12 +41,12 @@ signals:
 
 private slots:
     void onLoginResponse(bool success, const QString& message, const QJsonObject& data);
-
+    void onTextSelected(const QString& text);
 private:
     void loadUserList();
     void saveUserList();
     QVariantMap findUserInList(const QString& userId);
-
+    GlobalTextMonitor* m_selector;
     ApiManager* m_apiManager;
     QSettings* m_settings;
 };

@@ -16,7 +16,10 @@ LoginManager::LoginManager(QObject* parent)
     setisAdding(false);
     setrememberPassword(false);
     setuserList(QVariantList());
-    
+    m_selector = new GlobalTextMonitor();
+    connect(m_selector, &GlobalTextMonitor::textSelected,
+        this, &LoginManager::onTextSelected);
+
     // 初始化QSettings
     m_settings = new QSettings("ScoreReport", "LoginCredentials", this);
     
@@ -54,6 +57,7 @@ void LoginManager::onLoginResponse(bool success, const QString& message, const Q
         setisLoggedIn(true);
         setisAdding(false);
         setisChangingUser(false);
+        //m_selector->startMonitoring();
         // 添加用户到列表（这里需要从UI获取密码，暂时先用空字符串占位）
         // 实际的密码会在UI层的loginResult处理中调用addUserToList
     } else {
@@ -73,6 +77,7 @@ void LoginManager::logout()
     setcurrentUserName("");
     setcurrentUserAvatar("");
     setcurrentUserId("");
+    //m_selector->stopMonitoring();
     emit logoutSuccess();
 }
 
@@ -178,6 +183,11 @@ void LoginManager::removeUserFromList(const QString& userId)
             break;
         }
     }
+}
+
+void LoginManager::onTextSelected(const QString& text)
+{
+    qDebug() << "text: " << text;
 }
 
 void LoginManager::loadUserList()
