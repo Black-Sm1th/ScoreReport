@@ -326,7 +326,7 @@ Rectangle {
                                             radius: 8
                                             Image{
                                                 anchors.centerIn: parent
-                                                source: "qrc:/image/copy.png"
+                                                source: copyArea.containsMouse ? "qrc:/image/copyHover.png" : "qrc:/image/copy.png"
                                             }
                                             MouseArea{
                                                 id: copyArea
@@ -504,7 +504,7 @@ Rectangle {
             case "UCLS MRS":
                 return $uclsmrsManager.sourceText
             case "UCLS CTS":
-                return ""
+                return $uclsctsScorer.sourceText
             case "BIOSNAK":
                 return ""
             default:

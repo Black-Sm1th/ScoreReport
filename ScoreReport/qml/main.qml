@@ -192,6 +192,8 @@ ApplicationWindow {
                         tnmView.resetValues()
                     }else if(contentRect.currentScore == 3){
                         uclsmrsView.resetValues()
+                    }else if(contentRect.currentScore == 4){
+                        uclsctsView.resetValues()
                     }else if(contentRect.currentScore == 6){
                         $chatManager.endAnalysis()
                     }
@@ -657,6 +659,14 @@ ApplicationWindow {
                 UCLSMRS{
                     id:uclsmrsView
                     visible: contentRect.currentIndex === 0 && contentRect.currentScore === 3
+                    messageManager: dialogMessageBox
+                    onExitScore: {
+                        contentRect.currentScore = -1
+                    }
+                }
+                UCLSCTS{
+                    id:uclsctsView
+                    visible: contentRect.currentIndex === 0 && contentRect.currentScore === 4
                     messageManager: dialogMessageBox
                     onExitScore: {
                         contentRect.currentScore = -1

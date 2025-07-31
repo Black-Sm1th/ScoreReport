@@ -11,6 +11,7 @@
 #include "RenalManager.h"
 #include "HistoryManager.h"
 #include "UCLSMRSManager.h"
+#include "UCLSCTSScorer.h"
 #include "ChatManager.h"
 int main(int argc, char *argv[])
 {
@@ -45,6 +46,9 @@ int main(int argc, char *argv[])
     
     auto* uclsmrsManager = GET_SINGLETON(UCLSMRSManager);
     engine.rootContext()->setContextProperty("$uclsmrsManager", uclsmrsManager);
+    
+    auto* uclsctsScorer = GET_SINGLETON(UCLSCTSScorer);
+    engine.rootContext()->setContextProperty("$uclsctsScorer", uclsctsScorer);
 
     auto* chatManager = GET_SINGLETON(ChatManager);
     engine.rootContext()->setContextProperty("$chatManager", chatManager);

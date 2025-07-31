@@ -15,6 +15,7 @@ RCC_DIR += .
 SOURCES += ./main.cpp \
     ./LoginManager.cpp \
     ./CCLSScorer.cpp \
+./UCLSCTSScorer.cpp \
     ./TNMManager.cpp \
     ./ApiManager.cpp \
     ./RenalManager.cpp \
@@ -22,6 +23,7 @@ SOURCES += ./main.cpp \
 
 HEADERS += ./LoginManager.h \
     ./CCLSScorer.h \
+./UCLSCTSScorer.h \
     ./TNMManager.h \
     ./ApiManager.h \
     ./RenalManager.h \

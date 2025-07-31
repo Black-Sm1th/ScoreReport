@@ -36,7 +36,6 @@
         <file>qml/TNM.qml</file>
         <file>qml/RENAL.qml</file>
         <file>qml/HistoryView.qml</file>
-        <file>image/copy.png</file>
         <file>image/nodata.png</file>
         <file>image/arrowSwap.png</file>
         <file>image/add.png</file>
@@ -50,7 +49,9 @@
         <file>image/closeGrey.png</file>
         <file>image/send.png</file>
         <file>image/sendDisable.png</file>
-        <file>image/chatCopy.png</file>
         <file>image/repeat.png</file>
+        <file>image/copy.png</file>
+        <file>image/copyHover.png</file>
+        <file>qml/UCLSCTS.qml</file>
     </qresource>
 </RCC>

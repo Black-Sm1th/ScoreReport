@@ -1,4 +1,4 @@
-#ifndef GLOBALTEXTMONITOR_H
+﻿#ifndef GLOBALTEXTMONITOR_H
 #define GLOBALTEXTMONITOR_H
 
 #include <QObject>

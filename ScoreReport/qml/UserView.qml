@@ -60,11 +60,25 @@ Rectangle {
         height: 292 + 24
         color: "transparent"
         anchors.centerIn: parent
+        //登录界面
         Column {
             anchors.horizontalCenter: parent.horizontalCenter
             width: parent.width
             visible: !$loginManager.isLoggedIn || ($loginManager.isChangingUser && $loginManager.isAdding)
             y:32
+            Text {
+                text: "登录账号"
+                font.family: "Alibaba PuHuiTi 3.0"
+                font.pixelSize: 16
+                color: "#D9000000"
+                font.weight: Font.Bold
+                 anchors.left: passwordRec.left
+            }
+            Rectangle{
+                height: 20
+                width: 240
+                color: "transparent"
+            }
             // 账号输入框
             Rectangle {
                 width: 240
@@ -106,7 +120,7 @@ Rectangle {
                 }
             }
             Rectangle{
-                height: 16
+                height: 12
                 width: 240
                 color: "transparent"
             }
@@ -175,10 +189,63 @@ Rectangle {
             }
 
             Rectangle{
-                height: 32
+                height: 20
                 width: 240
                 color: "transparent"
             }
+
+            Rectangle{
+                height: 37
+                width: 240
+                color: "transparent"
+                anchors.left: passwordRec.left
+                CustomButton{
+                    id: returnButton
+                    text: "返回"
+                    visible: $loginManager.isChangingUser && $loginManager.isAdding
+                    width: 114
+                    height: 37
+                    borderWidth: 0
+                    backgroundColor: "#F5F5F5"
+                    textColor: "#73000000"
+                    anchors.left: parent.left
+                    onClicked: {
+                        $loginManager.isAdding = false
+                    }
+                }
+
+                CustomButton{
+                    id: loginButton
+                    text: "登录"
+                    width: $loginManager.isChangingUser && $loginManager.isAdding ? 114 : 240
+                    height: 37
+                    borderWidth: 0
+                    backgroundColor: "#006BFF"
+                    textColor: "#ffffff"
+                    anchors.right: parent.right
+                    onClicked: {
+                        if(accountInput.text === ""){
+                            messageManager.warning("账号不能为空")
+                            return
+                        }
+                        if(passwordInput.text === ""){
+                            messageManager.warning("密码不能为空")
+                            return
+                        }
+                        if($loginManager.currentUserId !== ""){
+                            $loginManager.logout()
+                        }
+                        $loginManager.login(accountInput.text, passwordInput.text)
+                    }
+                }
+            }
+
+            Rectangle{
+                height: 12
+                width: 240
+                color: "transparent"
+            }
+
             // 记住密码复选框
             Rectangle {
                 anchors.left: passwordRec.left
@@ -230,58 +297,8 @@ Rectangle {
                     }
                 }
             }
-
-            Rectangle{
-                height: 12
-                width: 240
-                color: "transparent"
-            }
-            Rectangle{
-                height: 37
-                width: 240
-                color: "transparent"
-                anchors.left: passwordRec.left
-                CustomButton{
-                    id: returnButton
-                    text: "返回"
-                    visible: $loginManager.isChangingUser && $loginManager.isAdding
-                    width: 114
-                    height: 37
-                    borderWidth: 0
-                    backgroundColor: "#F5F5F5"
-                    textColor: "#73000000"
-                    anchors.left: parent.left
-                    onClicked: {
-                        $loginManager.isAdding = false
-                    }
-                }
-
-                CustomButton{
-                    id: loginButton
-                    text: "登录"
-                    width: $loginManager.isChangingUser && $loginManager.isAdding ? 114 : 240
-                    height: 37
-                    borderWidth: 0
-                    backgroundColor: "#006BFF"
-                    textColor: "#ffffff"
-                    anchors.right: parent.right
-                    onClicked: {
-                        if(accountInput.text === ""){
-                            messageManager.warning("账号不能为空")
-                            return
-                        }
-                        if(passwordInput.text === ""){
-                            messageManager.warning("密码不能为空")
-                            return
-                        }
-                        if($loginManager.currentUserId !== ""){
-                            $loginManager.logout()
-                        }
-                        $loginManager.login(accountInput.text, passwordInput.text)
-                    }
-                }
-            }
         }
+        //登录后用户界面
         Column {
             anchors.horizontalCenter: parent.horizontalCenter
             width: parent.width
@@ -447,6 +464,7 @@ Rectangle {
                 }
             }
         }
+        //切换用户界面
         Rectangle {
             height: 292
             width: parent.width

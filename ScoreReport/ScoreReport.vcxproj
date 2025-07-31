@@ -102,6 +102,7 @@
     <ClCompile Include="RenalManager.cpp" />
     <ClCompile Include="GlobalTextMonitor.cpp" />
     <ClCompile Include="TNMManager.cpp" />
+    <ClCompile Include="UCLSCTSScorer.cpp" />
     <ClCompile Include="UCLSMRSManager.cpp" />
     <QtRcc Include="qml.qrc" />
     <None Include="main.qml" />
@@ -119,6 +120,7 @@
     <QtMoc Include="ApiManager.h" />
   </ItemGroup>
   <ItemGroup>
+    <QtMoc Include="UCLSCTSScorer.h" />
     <QtMoc Include="GlobalTextMonitor.h" />
     <QtMoc Include="ChatManager.h" />
     <ClInclude Include="CommonFunc.h" />

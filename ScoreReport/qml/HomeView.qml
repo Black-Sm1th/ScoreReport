@@ -179,6 +179,9 @@ Rectangle {
                 else if(title === "UCLS MRS"){
                     currentPageChanged(3)
                 }
+                else if(title === "UCLS CTS"){
+                    currentPageChanged(4)
+                }
                 else{
                     messageManager.warning("该功能暂未开放")
                 }
