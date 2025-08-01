@@ -53,5 +53,9 @@
         <file>image/copy.png</file>
         <file>image/copyHover.png</file>
         <file>qml/UCLSCTS.qml</file>
+        <file>translations/ScoreReport_en_US.qm</file>
+        <file>translations/ScoreReport_zh_CN.qm</file>
+        <file>translations/ScoreReport_en_US.ts</file>
+        <file>translations/ScoreReport_zh_CN.ts</file>
     </qresource>
 </RCC>

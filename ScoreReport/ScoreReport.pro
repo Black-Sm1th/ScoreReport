@@ -19,7 +19,10 @@ SOURCES += ./main.cpp \
     ./TNMManager.cpp \
     ./ApiManager.cpp \
     ./RenalManager.cpp \
-    ./HistoryManager.cpp
+    ./HistoryManager.cpp \
+    ./LanguageManager.cpp \
+    ./UCLSMRSManager.cpp \
+    ./ChatManager.cpp
 
 HEADERS += ./LoginManager.h \
     ./CCLSScorer.h \
@@ -28,5 +31,28 @@ HEADERS += ./LoginManager.h \
     ./ApiManager.h \
     ./RenalManager.h \
     ./HistoryManager.h \
-    ./CommonFunc.h
+    ./CommonFunc.h \
+    ./LanguageManager.h \
+    ./UCLSMRSManager.h \
+    ./ChatManager.h
 RESOURCES += qml.qrc
+
+# 翻译文件配置
+TRANSLATIONS += translations/ScoreReport_zh_CN.ts \
+                translations/ScoreReport_en_US.ts
+
+# 配置Qt版本和模块
+QT += quick qml widgets
+
+# 语言文件编译和资源打包
+qtPrepareTool(LRELEASE, lrelease)
+qtPrepareTool(LUPDATE, lupdate)
+
+# 在构建时更新翻译文件
+updateqm.input = TRANSLATIONS
+updateqm.output = ${QMAKE_FUNC_FILE_IN_stripSrcDir:${QMAKE_FILE_IN}}
+updateqm.commands = $$LRELEASE ${QMAKE_FILE_IN} -qm translations/${QMAKE_FILE_BASE}.qm
+updateqm.CONFIG += no_link target_predeps
+QMAKE_EXTRA_COMPILERS += updateqm
+
+# 翻译文件已包含在主qml.qrc中

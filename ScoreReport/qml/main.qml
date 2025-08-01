@@ -756,6 +756,85 @@ ApplicationWindow {
                 id: menuColumn
                 width: parent.width
                 
+                // 语言切换选项
+                Rectangle {
+                    width: parent.width
+                    height: 40
+                    color: languageMouseArea.containsMouse ? "#F5F5F5" : "transparent"
+                    radius: 6
+                    
+                    Row {
+                        anchors.left: parent.left
+                        anchors.leftMargin: 12
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 8
+                        
+                        // 语言图标
+                        Rectangle {
+                            width: 16
+                            height: 16
+                            anchors.verticalCenter: parent.verticalCenter
+                            color: "transparent"
+                            
+                            // 简单的语言图标 (A文)
+                            Canvas {
+                                anchors.fill: parent
+                                onPaint: {
+                                    var ctx = getContext("2d")
+                                    ctx.clearRect(0, 0, width, height)
+                                    ctx.fillStyle = "#007ACC"
+                                    ctx.font = "bold 10px Arial"
+                                    ctx.textAlign = "center"
+                                    ctx.textBaseline = "middle"
+                                    ctx.fillText("语", 8, 8)
+                                }
+                            }
+                        }
+                        
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            font.family: "Alibaba PuHuiTi 3.0"
+                            font.pixelSize: 14
+                            color: languageMouseArea.containsMouse ? "#007ACC" : "#666666"
+                            text: qsTr("语言") + " (" + (languageManager ? languageManager.getLanguageDisplayName(languageManager.currentLanguage) : "中文") + ")"
+                            
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: 150
+                                    easing.type: Easing.OutQuad
+                                }
+                            }
+                        }
+                    }
+                    
+                    MouseArea {
+                        id: languageMouseArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        
+                        onClicked: {
+                            if (languageManager) {
+                                // 切换语言：如果当前是中文，切换到英文；如果是英文，切换到中文
+                                if (languageManager.currentLanguage === "zh_CN") {
+                                    languageManager.setCurrentLanguage("en_US")
+                                } else {
+                                    languageManager.setCurrentLanguage("zh_CN")
+                                }
+                            }
+                            contextMenu.hide()
+                        }
+                    }
+                }
+                
+                // 分隔线
+                Rectangle {
+                    width: parent.width - 16
+                    height: 1
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    color: "#E0E0E0"
+                }
+                
                 Rectangle {
                     width: parent.width
                     height: 40
@@ -801,7 +880,7 @@ ApplicationWindow {
                             font.family: "Alibaba PuHuiTi 3.0"
                             font.pixelSize: 14
                             color: exitMouseArea.containsMouse ? "#FF4444" : "#666666"
-                            text: "退出程序"
+                            text: qsTr("退出程序")
                             
                             Behavior on color {
                                 ColorAnimation {

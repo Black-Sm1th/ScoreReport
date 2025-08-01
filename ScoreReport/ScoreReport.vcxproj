@@ -97,6 +97,7 @@
       <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Release|x64'">input</DynamicSource>
       <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Filename).moc</QtMocFileName>
     </ClCompile>
+    <ClCompile Include="LanguageManager.cpp" />
     <ClCompile Include="LoginManager.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="RenalManager.cpp" />
@@ -104,6 +105,8 @@
     <ClCompile Include="TNMManager.cpp" />
     <ClCompile Include="UCLSCTSScorer.cpp" />
     <ClCompile Include="UCLSMRSManager.cpp" />
+    <None Include="translations\ScoreReport_en_US.qm" />
+    <None Include="translations\ScoreReport_zh_CN.qm" />
     <QtRcc Include="qml.qrc" />
     <None Include="main.qml" />
   </ItemGroup>
@@ -120,6 +123,7 @@
     <QtMoc Include="ApiManager.h" />
   </ItemGroup>
   <ItemGroup>
+    <QtMoc Include="LanguageManager.h" />
     <QtMoc Include="UCLSCTSScorer.h" />
     <QtMoc Include="GlobalTextMonitor.h" />
     <QtMoc Include="ChatManager.h" />
@@ -127,6 +131,10 @@
     <QtMoc Include="UCLSMRSManager.h" />
     <QtMoc Include="HistoryManager.h" />
     <QtMoc Include="RenalManager.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtTranslation Include="translations\ScoreReport_en_US.ts" />
+    <QtTranslation Include="translations\ScoreReport_zh_CN.ts" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

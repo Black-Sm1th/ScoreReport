@@ -84,7 +84,7 @@ Rectangle {
             visible: (!$loginManager.isLoggedIn || ($loginManager.isChangingUser && $loginManager.isAdding)) && !$loginManager.isRegistering
             y:32
             Text {
-                text: "登录账号"
+                text: qsTr("登录账号")
                 font.family: "Alibaba PuHuiTi 3.0"
                 font.pixelSize: 16
                 color: "#D9000000"
@@ -105,7 +105,7 @@ Rectangle {
                 radius: 8
                 Text {
                     id: accountLabel
-                    text: "账号"
+                    text: qsTr("账号")
                     font.family: "Alibaba PuHuiTi 3.0"
                     font.pixelSize: 16
                     color: "#D9000000"
@@ -151,7 +151,7 @@ Rectangle {
                 radius: 8
                 Text {
                     id: passwordLabel
-                    text: "密码"
+                    text: qsTr("密码")
                     font.family: "Alibaba PuHuiTi 3.0"
                     font.pixelSize: 16
                     color: "#D9000000"
@@ -218,7 +218,7 @@ Rectangle {
                 anchors.left: passwordRec.left
                 CustomButton{
                     id: returnButton
-                    text: "返回"
+                    text: qsTr("返回")
                     visible: $loginManager.isChangingUser && $loginManager.isAdding
                     width: 114
                     height: 37
@@ -233,7 +233,7 @@ Rectangle {
 
                 CustomButton{
                     id: loginButton
-                    text: "登录"
+                    text: qsTr("登录")
                     width: $loginManager.isChangingUser && $loginManager.isAdding ? 114 : 240
                     height: 37
                     borderWidth: 0
@@ -242,11 +242,11 @@ Rectangle {
                     anchors.right: parent.right
                     onClicked: {
                         if(accountInput.text === ""){
-                            messageManager.warning("账号不能为空")
+                            messageManager.warning(qsTr("账号不能为空"))
                             return
                         }
                         if(passwordInput.text === ""){
-                            messageManager.warning("密码不能为空")
+                            messageManager.warning(qsTr("密码不能为空"))
                             return
                         }
                         if($loginManager.currentUserId !== ""){
@@ -304,7 +304,7 @@ Rectangle {
                     color: "#D9000000"
                     anchors.leftMargin: 4
                     anchors.left: rememberCheckBox.right
-                    text: "记住密码"
+                    text: qsTr("记住密码")
                     anchors.verticalCenter: parent.verticalCenter
 
                     MouseArea {
@@ -323,7 +323,7 @@ Rectangle {
                     backgroundColor: "transparent"
                     textColor: "#006BFF"
                     hoverTextColor: "#D9006BFF"
-                    text: "注册账号"
+                    text: qsTr("注册账号")
                     fontSize: 16
                     onClicked: {
                         $loginManager.isRegistering = true
@@ -381,7 +381,7 @@ Rectangle {
                 radius: 8
                 Text {
                     id: accountText
-                    text: "账号"
+                    text: qsTr("账号")
                     font.family: "Alibaba PuHuiTi 3.0"
                     font.pixelSize: 16
                     color: "#D9000000"

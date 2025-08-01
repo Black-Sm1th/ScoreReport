@@ -13,6 +13,7 @@
 #include "UCLSMRSManager.h"
 #include "UCLSCTSScorer.h"
 #include "ChatManager.h"
+#include "LanguageManager.h"
 int main(int argc, char *argv[])
 {
 #if defined(Q_OS_WIN)
@@ -52,6 +53,10 @@ int main(int argc, char *argv[])
 
     auto* chatManager = GET_SINGLETON(ChatManager);
     engine.rootContext()->setContextProperty("$chatManager", chatManager);
+
+    // 初始化语言管理器
+    auto* languageManager = GET_SINGLETON(LanguageManager);
+    languageManager->initializeTranslator(&engine);
 
     // 加载字体并检查是否成功
     int fontId1 = QFontDatabase::addApplicationFont(":/fonts/AlibabaPuHuiTi-3-55-Regular.ttf");
