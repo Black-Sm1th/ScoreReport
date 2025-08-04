@@ -20,7 +20,7 @@ Rectangle {
     property color borderColor: "#E6EAF2"
     property color hoverColor: "#F8FAFF"
     property color selectedColor: "#F0F7FF"
-    property string placeholderText: "全部"
+    property string placeholderText: qsTr("全部类型")
     property int currentIndex: 0
     property string currentText: scoreTypes[currentIndex].text
     
@@ -29,7 +29,7 @@ Rectangle {
     
     // 评分类型数据
     property var scoreTypes: [
-        { text: "全部类型", value: "all", iconUrl: "" },
+        { text: qsTr("全部类型"), value: "all", iconUrl: "" },
         { text: "RENAL", value: "renal", iconUrl: "qrc:/image/RENAL.png" },
         { text: "CCLS", value: "ccls", iconUrl: "qrc:/image/CCLS.png" },
         { text: "TNM", value: "tnm", iconUrl: "qrc:/image/TNM.png" },

@@ -8,6 +8,22 @@ ApplicationWindow {
     id: mainWindow
     visible: true
     
+    // 监听语言变化，强制重新渲染
+    property int languageVersion: 0
+    
+    Connections {
+        target: languageManager
+        function onLanguageChanged() {
+            console.log("Language changed, forcing UI update...")
+            mainWindow.languageVersion++
+            // 强制重新渲染所有text元素
+            Qt.callLater(function() {
+                mainWindow.visible = false
+                mainWindow.visible = true
+            })
+        }
+    }
+    
     // 全局鼠标区域，用于隐藏右键菜单
     MouseArea {
         anchors.fill: parent
@@ -687,7 +703,7 @@ ApplicationWindow {
     // 右键菜单
     Window {
         id: contextMenu
-        width: 120
+        width: menuBackground.width
         height: menuColumn.height
         visible: false
         flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Popup
@@ -736,7 +752,8 @@ ApplicationWindow {
         
         Rectangle {
             id: menuBackground
-            anchors.fill: parent
+            width: contentArea.width + 24
+            height: parent.height
             color: "#FFFFFF"
             radius: 8
             border.color: "#E0E0E0"
@@ -754,16 +771,17 @@ ApplicationWindow {
             
             Column {
                 id: menuColumn
-                width: parent.width
+                width: contentArea.width + 24
                 
                 // 语言切换选项
                 Rectangle {
-                    width: parent.width
+                    width: contentArea.width + 24
                     height: 40
                     color: languageMouseArea.containsMouse ? "#F5F5F5" : "transparent"
                     radius: 6
                     
                     Row {
+                        id: contentArea
                         anchors.left: parent.left
                         anchors.leftMargin: 12
                         anchors.verticalCenter: parent.verticalCenter
@@ -899,6 +917,7 @@ ApplicationWindow {
                         
                         onClicked: {
                             contextMenu.hide()
+                            $loginManager.stopMonitoring()
                             Qt.quit()
                         }
                     }

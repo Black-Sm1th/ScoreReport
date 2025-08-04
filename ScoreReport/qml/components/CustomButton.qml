@@ -11,7 +11,7 @@ Rectangle {
     property color textColor: "#FFFFFF"
     property color backgroundColor: "#FFFFFF"
     property int fontSize: 16
-    property string text: "按钮"
+    property string text: qsTr("按钮")
     property int borderWidth: 1
     property int buttonRadius: 8
     

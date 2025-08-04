@@ -19,7 +19,7 @@ Rectangle {
     property color borderColor: "#0F000000"
     property color hoverColor: "#F8FAFF"
     property color selectedColor: "#F0F7FF"
-    property string placeholderText: "日期"
+    property string placeholderText: qsTr("日期")
     property bool hasSelection: false
     property date selectedDate: new Date()
     property string currentText: placeholderText
@@ -142,7 +142,7 @@ Rectangle {
                 width: parent.width
                 
                 Text {
-                    text: "选择日期"
+                    text: qsTr("选择日期")
                     font.family: "Alibaba PuHuiTi 3.0"
                     font.pixelSize: 14
                     font.weight: Font.Medium
@@ -157,7 +157,7 @@ Rectangle {
                 
                 CustomButton {
                     id: clearButton
-                    text: "取消"
+                    text: qsTr("取消")
                     buttonWidth: 50
                     buttonHeight: 24
                     backgroundColor: "#FF5132"
@@ -281,7 +281,7 @@ Rectangle {
                         
                         Text {
                             id: monthText
-                            text: calendar.currentMonth + "月"
+                            text: calendar.currentMonth + qsTr("月")
                             font.family: "Alibaba PuHuiTi 3.0"
                             font.pixelSize: 12
                             color: "#D9000000"

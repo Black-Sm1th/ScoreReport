@@ -10,9 +10,19 @@ Rectangle {
     height: loginForm.height
     color: "transparent"
     property var messageManager: null
+    property int languageVersion: 0
 
     // 添加键盘焦点支持
     focus: true
+    
+    // 监听语言变化
+    Connections {
+        target: languageManager
+        function onLanguageChanged() {
+            console.log("UserView: Language changed, updating UI...")
+            languageVersion++
+        }
+    }
     Keys.onReturnPressed: {
         if ((!$loginManager.isLoggedIn || ($loginManager.isChangingUser && $loginManager.isAdding)) && !$loginManager.isRegistering) {
             loginButton.clicked()
@@ -36,9 +46,9 @@ Rectangle {
                 $loginManager.saveCredentials(accountInput.text, passwordInput.text, rememberCheckBox.checked)
                 // 登录成功时添加用户到列表（不管是否记住密码都添加）
                 $loginManager.addUserToList(accountInput.text, passwordInput.text, $loginManager.currentUserId, $loginManager.currentUserAvatar)
-                messageManager.success("登录成功！")
+                messageManager.success(qsTr("登录成功！"))
             }else{
-                messageManager.error(message)
+                messageManager.error(qsTr(message))
             }
         }
         function onLogoutSuccess(){
@@ -52,9 +62,9 @@ Rectangle {
                 accountInputRegist.text = ""
                 passwordInputRegist.text = ""
                 surepasswordInputRegist.text = ""
-                messageManager.success("注册成功！")
+                messageManager.success(qsTr("注册成功！"))
             }else{
-                messageManager.error(message)
+                messageManager.error(qsTr(message))
             }
         }
     }
@@ -84,7 +94,7 @@ Rectangle {
             visible: (!$loginManager.isLoggedIn || ($loginManager.isChangingUser && $loginManager.isAdding)) && !$loginManager.isRegistering
             y:32
             Text {
-                text: qsTr("登录账号")
+                text: languageVersion >= 0 ? qsTr("登录账号") : ""
                 font.family: "Alibaba PuHuiTi 3.0"
                 font.pixelSize: 16
                 color: "#D9000000"
@@ -125,7 +135,7 @@ Rectangle {
                     font.pixelSize: 16
                     color: "#D9000000"
                     selectByMouse: true
-                    placeholderText: "请输入"
+                    placeholderText: qsTr("请输入")
                     placeholderTextColor: "#40000000"
                     leftPadding: 0
                     rightPadding: 0
@@ -172,7 +182,7 @@ Rectangle {
                     selectByMouse: true
                     echoMode: showPassword ? TextInput.Normal : TextInput.Password
                     color: "#D9000000"
-                    placeholderText: "请输入"
+                    placeholderText: qsTr("请输入")
                     placeholderTextColor: "#40000000"
                     property bool showPassword: false
                     leftPadding: 0
@@ -472,7 +482,7 @@ Rectangle {
                 spacing: 12
 
                 CustomButton{
-                    text: "退出账号"
+                    text: qsTr("退出账号")
                     width: 228 / 2
                     height: 37
                     borderWidth: 0
@@ -481,11 +491,11 @@ Rectangle {
                     onClicked: {
                         $loginManager.removeUserFromList($loginManager.currentUserId)
                         $loginManager.logout()
-                        messageManager.success("已退出登录账号！")
+                        messageManager.success(qsTr("已退出登录账号！"))
                     }
                 }
                 CustomButton{
-                    text: "切换账号"
+                    text: qsTr("切换账号")
                     width: 228 / 2
                     height: 37
                     borderWidth: 0
@@ -578,7 +588,7 @@ Rectangle {
                                 }
                                 Text{
                                     anchors.verticalCenter: parent.verticalCenter
-                                    text:"当前登录"
+                                    text:qsTr("当前登录")
                                     font.family: "Alibaba PuHuiTi 3.0"
                                     font.pixelSize: 12
                                     color: "#73000000"
@@ -586,21 +596,23 @@ Rectangle {
                             }
                             Rectangle {
                                 height: 22
-                                width: 40
+                                width: switchImage.width + 4 + switchText.width
                                 anchors.verticalCenter: parent.verticalCenter
                                 anchors.right: parent.right
                                 anchors.rightMargin: 12
                                 color: "transparent"
                                 visible: $loginManager.userList[index].userId !== $loginManager.currentUserId && (userArea.containsMouse || changeArea.containsMouse)
                                 Image{
+                                    id:switchImage
                                     anchors.left: parent.left
                                     anchors.verticalCenter: parent.verticalCenter
                                     source: "qrc:/image/arrowSwap.png"
                                 }
                                 Text{
+                                    id:switchText
                                     anchors.right: parent.right
                                     anchors.verticalCenter: parent.verticalCenter
-                                    text:"切换"
+                                    text:qsTr("切换")
                                     font.family: "Alibaba PuHuiTi 3.0"
                                     font.pixelSize: 12
                                     color: "#006BFF"
@@ -653,7 +665,7 @@ Rectangle {
                             anchors.verticalCenter: parent.verticalCenter
                             anchors.left: addBtn.right
                             anchors.leftMargin: 12
-                            text:"添加账号"
+                            text:qsTr("添加账号")
                             font.family: "Alibaba PuHuiTi 3.0"
                             font.pixelSize: 16
                             color: "#D9000000"
@@ -668,7 +680,7 @@ Rectangle {
             width: parent.width
             visible: (!$loginManager.isLoggedIn || ($loginManager.isChangingUser && $loginManager.isAdding)) && $loginManager.isRegistering
             Text {
-                text: "注册账号"
+                text: qsTr("注册账号")
                 font.family: "Alibaba PuHuiTi 3.0"
                 font.pixelSize: 16
                 color: "#D9000000"
@@ -689,7 +701,7 @@ Rectangle {
                 radius: 8
                 Text {
                     id: accountLabelRegist
-                    text: "账号"
+                    text: qsTr("账号")
                     width: surepasswordLabelRegist.width
                     font.family: "Alibaba PuHuiTi 3.0"
                     font.pixelSize: 16
@@ -710,7 +722,7 @@ Rectangle {
                     font.pixelSize: 16
                     color: "#D9000000"
                     selectByMouse: true
-                    placeholderText: "请输入"
+                    placeholderText: qsTr("请输入")
                     placeholderTextColor: "#40000000"
                     leftPadding: 0
                     rightPadding: 0
@@ -736,7 +748,7 @@ Rectangle {
                 radius: 8
                 Text {
                     id: passwordLabelRegist
-                    text: "密码"
+                    text: qsTr("密码")
                     width: surepasswordLabelRegist.width
                     font.family: "Alibaba PuHuiTi 3.0"
                     font.pixelSize: 16
@@ -758,7 +770,7 @@ Rectangle {
                     selectByMouse: true
                     echoMode: showPassword ? TextInput.Normal : TextInput.Password
                     color: "#D9000000"
-                    placeholderText: "请输入"
+                    placeholderText: qsTr("请输入")
                     placeholderTextColor: "#40000000"
                     property bool showPassword: false
                     leftPadding: 0
@@ -805,7 +817,7 @@ Rectangle {
                 radius: 8
                 Text {
                     id: surepasswordLabelRegist
-                    text: "确认密码"
+                    text: qsTr("确认密码")
                     font.family: "Alibaba PuHuiTi 3.0"
                     font.pixelSize: 16
                     color: "#D9000000"
@@ -826,7 +838,7 @@ Rectangle {
                     selectByMouse: true
                     echoMode: showPassword ? TextInput.Normal : TextInput.Password
                     color: "#D9000000"
-                    placeholderText: "请输入"
+                    placeholderText: qsTr("请输入")
                     placeholderTextColor: "#40000000"
                     property bool showPassword: false
                     leftPadding: 0
@@ -872,7 +884,7 @@ Rectangle {
 
                 CustomButton{
                     id: registButton
-                    text: "注册"
+                    text: qsTr("注册")
                     width: 240
                     height: 37
                     borderWidth: 0
@@ -881,15 +893,15 @@ Rectangle {
                     anchors.right: parent.right
                     onClicked: {
                         if(accountInputRegist.text === ""){
-                            messageManager.warning("账号不能为空")
+                            messageManager.warning(qsTr("账号不能为空"))
                             return
                         }
                         if(passwordInputRegist.text === ""){
-                            messageManager.warning("密码不能为空")
+                            messageManager.warning(qsTr("密码不能为空"))
                             return
                         }
                         if(surepasswordInputRegist.text === ""){
-                            messageManager.warning("确认密码不能为空")
+                            messageManager.warning(qsTr("确认密码不能为空"))
                             return
                         }
                         $loginManager.registAccount(accountInputRegist.text, passwordInputRegist.text, surepasswordInputRegist.text)
@@ -909,7 +921,7 @@ Rectangle {
                 backgroundColor: "transparent"
                 textColor: "#006BFF"
                 hoverTextColor: "#D9006BFF"
-                text: "登录账号"
+                text: qsTr("登录账号")
                 fontSize: 16
                 onClicked: {
                     $loginManager.isRegistering = false

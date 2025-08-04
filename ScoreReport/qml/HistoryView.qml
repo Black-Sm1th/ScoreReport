@@ -54,7 +54,7 @@ Rectangle {
                 }
             }
             Text {
-                text: "历史记录"
+                text: qsTr("历史记录")
                 color: "#D9000000"
                 font.family: "Alibaba PuHuiTi 3.0"
                 font.weight: Font.Bold
@@ -84,7 +84,7 @@ Rectangle {
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.left: searchIco.right
                     anchors.leftMargin: 4
-                    placeholderText: "搜索"
+                    placeholderText: qsTr("搜索")
                     font.family: "Alibaba PuHuiTi 3.0"
                     font.pixelSize: 14
                     leftPadding: 0
@@ -171,7 +171,7 @@ Rectangle {
                         }
                         
                         Text {
-                            text: "您还没有历史记录，请先进行评分~"
+                            text: qsTr("您还没有历史记录，请先进行评分~")
                             color: "#73000000"
                             font.family: "Alibaba PuHuiTi 3.0"
                             font.pixelSize: 16
@@ -179,7 +179,7 @@ Rectangle {
                         }
                         
                         CustomButton {
-                            text: "前往评分"
+                            text: qsTr("前往评分")
                             width: 88
                             height: 36
                             backgroundColor: "#006BFF"

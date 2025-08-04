@@ -56,13 +56,20 @@ void LanguageManager::setCurrentLanguage(const QString& language)
         
         emit currentLanguageChanged();
         emit languageChanged();
+        
+        // 强制QML重新加载（作为最后手段）
+        qDebug() << "Language changed to:" << language << "forcing QML reload...";
+        if (m_engine) {
+            // 清除组件缓存，强制重新加载
+            m_engine->clearComponentCache();
+        }
     }
 }
 
 QString LanguageManager::getLanguageDisplayName(const QString& language) const
 {
     if (language == "zh_CN") {
-        return "中文";
+        return QString::fromLocal8Bit("中文");
     } else if (language == "en_US") {
         return "English";
     }
@@ -85,6 +92,13 @@ void LanguageManager::loadTranslation(const QString& language)
         // 通知QML引擎重新翻译
         if (m_engine) {
             m_engine->retranslate();
+            // 强制刷新所有根对象
+            for (auto obj : m_engine->rootObjects()) {
+                if (obj) {
+                    // 发送语言变化信号，强制界面更新
+                    QMetaObject::invokeMethod(obj, "forceActiveFocus", Qt::QueuedConnection);
+                }
+            }
         }
     } else {
         qDebug() << "Failed to load translation for language:" << language;

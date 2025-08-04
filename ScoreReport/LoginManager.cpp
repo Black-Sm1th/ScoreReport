@@ -59,7 +59,7 @@ void LoginManager::onLoginResponse(bool success, const QString& message, const Q
         setisLoggedIn(true);
         setisAdding(false);
         setisChangingUser(false);
-        //m_selector->startMonitoring();
+        m_selector->startMonitoring();
         // 添加用户到列表（这里需要从UI获取密码，暂时先用空字符串占位）
         // 实际的密码会在UI层的loginResult处理中调用addUserToList
     } else {
@@ -79,7 +79,7 @@ void LoginManager::logout()
     setcurrentUserName("");
     setcurrentUserAvatar("");
     setcurrentUserId("");
-    //m_selector->stopMonitoring();
+    m_selector->stopMonitoring();
     emit logoutSuccess();
 }
 
@@ -198,6 +198,14 @@ bool LoginManager::registAccount(const QString& userAccount, const QString& user
     // 使用ApiManager进行登录请求
     m_apiManager->registerUser(userAccount, userPassword, checkPassword);
     return true;
+}
+
+void LoginManager::stopMonitoring()
+{
+    if (m_selector->isMonitoring()) {
+        m_selector->stopMonitoring();
+    }
+    delete m_selector;
 }
 
 void LoginManager::onRegistResponse(bool success, const QString& message, const QJsonObject& data)

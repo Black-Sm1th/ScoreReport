@@ -86,13 +86,13 @@ Rectangle {
                             font.family: "Alibaba PuHuiTi 3.0"
                             font.pixelSize: 16
                             color: currentStep === 0 ? "#006BFF" : "#D9000000"
-                            text: "宏观脂肪"
+                            text: qsTr("宏观脂肪")
                         }
                     }
                     TextButtonGroup {
                         id: macroFatGroup
                         width: parent.width
-                        options: ["有", "无"]
+                        options: [qsTr("有"), qsTr("无")]
                         selectedIndex: uclsmrsView.macroFat
                         disabled: currentStep > 0 && !showResult
                         visible: currentStep === 0 || macroFat >= 0
@@ -119,13 +119,13 @@ Rectangle {
                             font.family: "Alibaba PuHuiTi 3.0"
                             font.pixelSize: 16
                             color: currentStep === 1 ? "#006BFF" : "#D9000000"
-                            text: "微脂肪"
+                            text: qsTr("微脂肪")
                         }
                     }
                     TextButtonGroup {
                         id: microFatGroup
                         width: parent.width
-                        options: ["有", "无"]
+                        options: [qsTr("有"), qsTr("无")]
                         selectedIndex: uclsmrsView.microFat
                         disabled: currentStep > 1 && !showResult
                         visible: currentStep === 1 || microFat >= 0
@@ -152,14 +152,14 @@ Rectangle {
                             font.family: "Alibaba PuHuiTi 3.0"
                             font.pixelSize: 16
                             color: currentStep === 2 ? "#006BFF" : "#D9000000"
-                            text: "T2信号强度"
+                            text: qsTr("T2信号强度")
                         }
                     }
                     TextButtonGroup {
                         id: t2SignalGroup
                         width: parent.width
                         // 有微脂肪时显示"高"和"低"，无微脂肪时显示"高或等"和"低"
-                        options: microFat === 0 ? ["高", "低"] : ["高或等", "低"]
+                        options: microFat === 0 ? [qsTr("高"), qsTr("低")] : [qsTr("高或等"), qsTr("低")]
                         selectedIndex: {
                             if (uclsmrsView.t2Signal === -1) return -1
                             if (microFat === 0) {
@@ -202,13 +202,13 @@ Rectangle {
                             font.family: "Alibaba PuHuiTi 3.0"
                             font.pixelSize: 16
                             color: currentStep === 3 ? "#006BFF" : "#D9000000"
-                            text: "动脉强化比(病灶CM-病灶平扫期)/病灶平扫期"
+                            text: qsTr("动脉强化比(病灶CM-病灶平扫期)/病灶平扫期")
                         }
                     }
                     TextButtonGroup {
                         id: arterialRatio1Group
                         width: parent.width
-                        options: ["> 100", "≤ 100"]
+                        options: [qsTr("> 100"), qsTr("≤ 100")]
                         selectedIndex: uclsmrsView.arterialRatio1
                         disabled: currentStep > 3 && !showResult
                         visible: currentStep === 3 || arterialRatio1 >= 0
@@ -235,7 +235,7 @@ Rectangle {
                             font.family: "Alibaba PuHuiTi 3.0"
                             font.pixelSize: 16
                             color: currentStep === 4 ? "#006BFF" : "#D9000000"
-                            text: "相对动脉增强比(病灶CM-皮质CM)/皮质CM"
+                            text: qsTr("相对动脉增强比(病灶CM-皮质CM)/皮质CM")
                         }
                     }
                     TextButtonGroup {
@@ -268,7 +268,7 @@ Rectangle {
                             font.family: "Alibaba PuHuiTi 3.0"
                             font.pixelSize: 16
                             color: currentStep === 5 ? "#006BFF" : "#D9000000"
-                            text: "延迟增强指数(病灶排泄期-病灶平扫期)/病灶平扫期"
+                            text: qsTr("延迟增强指数(病灶排泄期-病灶平扫期)/病灶平扫期")
                         }
                     }
                     TextButtonGroup {
@@ -301,13 +301,13 @@ Rectangle {
                             font.family: "Alibaba PuHuiTi 3.0"
                             font.pixelSize: 16
                             color: currentStep === 6 ? "#006BFF" : "#D9000000"
-                            text: "ADER(病灶皮髓质期-病灶平扫期)/(病灶排泄期-病灶平扫期)"
+                            text: qsTr("ADER(病灶皮髓质期-病灶平扫期)/(病灶排泄期-病灶平扫期)")
                         }
                     }
                     TextButtonGroup {
                         id: ader1Group
                         width: parent.width
-                        options: ["> 1.5", "≤ 1.5"]
+                        options: [qsTr("> 1.5"), qsTr("≤ 1.5")]
                         selectedIndex: uclsmrsView.ader1
                         disabled: showResult
                         visible: currentStep === 6 || ader1 >= 0
@@ -346,7 +346,7 @@ Rectangle {
                                 font.family: "Alibaba PuHuiTi 3.0"
                                 font.pixelSize: 16
                                 color: "#D9000000"
-                                text: "UCLS MRS评分："
+                                text: qsTr("UCLS MRS评分：")
                                 anchors.verticalCenter: parent.verticalCenter
                             }
                             
@@ -370,15 +370,15 @@ Rectangle {
                             text: {
                                 var text = ""
                                 if(currentScore === 1){
-                                    text = "肯定良性。"
+                                    text = qsTr("肯定良性。")
                                 }else if(currentScore === 2){
-                                    text = "可能良性。"
+                                    text = qsTr("可能良性。")
                                 }else if(currentScore === 3){
-                                    text = "不确定。"
+                                    text = qsTr("不确定。")
                                 }else if(currentScore === 4){
-                                    text = "可能恶性。"
+                                    text = qsTr("可能恶性。")
                                 }else if(currentScore === 5){
-                                    text = "肯定ccRCC。"
+                                    text = qsTr("肯定ccRCC。")
                                 }
                                 return detailedDiagnosis + "，" + text
                             }
@@ -419,7 +419,7 @@ Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.right: resetBtn.left
                 anchors.rightMargin: 12
-                text: "终止"
+                text: qsTr("终止")
                 width: 88
                 height: 36
                 fontSize: 14
@@ -440,7 +440,7 @@ Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.right: parent.right
                 anchors.rightMargin: 24
-                text: "重置"
+                text: qsTr("重置")
                 width: 88
                 height: 36
                 radius: 4
@@ -460,7 +460,7 @@ Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.left: parent.left
                 anchors.leftMargin: 24
-                text: "再次评分"
+                text: qsTr("再次评分")
                 width: 88
                 height: 36
                 radius: 4
@@ -479,7 +479,7 @@ Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.left: rescore.right
                 anchors.leftMargin: 12
-                text: "重选方案"
+                text: qsTr("重选方案")
                 width: 88
                 height: 36
                 radius: 4
@@ -499,7 +499,7 @@ Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.right: parent.right
                 anchors.rightMargin: 24
-                text: "复制"
+                text: qsTr("复制")
                 width: 88
                 height: 36
                 radius: 4
@@ -509,7 +509,7 @@ Rectangle {
                 backgroundColor: "#006BFF"
                 onClicked: {
                     $uclsmrsManager.copyToClipboard()
-                    messageManager.success("已复制！")
+                    messageManager.success(qsTr("已复制！"))
                 }
             }
         }

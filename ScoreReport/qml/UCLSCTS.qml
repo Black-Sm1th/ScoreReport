@@ -96,7 +96,7 @@ Rectangle {
                         font.pixelSize: 16
                         color: "#D9000000"
                         anchors.verticalCenter: parent.verticalCenter
-                        text: "定量特征分析中"
+                        text: qsTr("定量特征分析中")
                     }
                 }
                 
@@ -114,7 +114,7 @@ Rectangle {
                             font.family: "Alibaba PuHuiTi 3.0"
                             font.pixelSize: 16
                             color: currentStep === 0 ? "#006BFF" : "#D9000000"
-                            text: "不强化区域衰减量绝对值小于45HU"
+                            text: qsTr("不强化区域衰减量绝对值小于45HU")
                         }
                     }
                     TextButtonGroup {
@@ -147,7 +147,7 @@ Rectangle {
                             font.family: "Alibaba PuHuiTi 3.0"
                             font.pixelSize: 16
                             color: currentStep === 1 ? "#006BFF" : "#D9000000"
-                            text: "在皮髓质期病变强化程度最高"
+                            text: qsTr("在皮髓质期病变强化程度最高")
                         }
                     }
                     TextButtonGroup {
@@ -180,7 +180,7 @@ Rectangle {
                             font.family: "Alibaba PuHuiTi 3.0"
                             font.pixelSize: 16
                             color: currentStep === 2 ? "#006BFF" : "#D9000000"
-                            text: "绝对强化（皮髓质期病变ROI-实质期病变ROI）"
+                            text: qsTr("绝对强化（皮髓质期病变ROI-实质期病变ROI）")
                         }
                     }
                     TextButtonGroup {
@@ -213,7 +213,7 @@ Rectangle {
                             font.family: "Alibaba PuHuiTi 3.0"
                             font.pixelSize: 16
                             color: currentStep === 3 ? "#006BFF" : "#D9000000"
-                            text: "皮髓质期相对强化"
+                            text: qsTr("皮髓质期相对强化")
                         }
                     }
                     TextButtonGroup {
@@ -255,7 +255,7 @@ Rectangle {
                         font.pixelSize: 16
                         color: "#D9000000"
                         anchors.verticalCenter: parent.verticalCenter
-                        text: "定量特征分析中"
+                        text: qsTr("定量特征分析中")
                     }
                 }
                 
@@ -273,7 +273,7 @@ Rectangle {
                             font.family: "Alibaba PuHuiTi 3.0"
                             font.pixelSize: 16
                             color: currentStep === 4 ? "#006BFF" : "#D9000000"
-                            text: "非均匀强化：实性强化区域伴有囊性/坏死性非强化区域"
+                            text: qsTr("非均匀强化：实性强化区域伴有囊性/坏死性非强化区域")
                         }
                     }
                     TextButtonGroup {
@@ -306,7 +306,7 @@ Rectangle {
                             font.family: "Alibaba PuHuiTi 3.0"
                             font.pixelSize: 16
                             color: currentStep === 5 ? "#006BFF" : "#D9000000"
-                            text: "不规则外形"
+                            text: qsTr("不规则外形")
                         }
                     }
                     TextButtonGroup {
@@ -339,7 +339,7 @@ Rectangle {
                             font.family: "Alibaba PuHuiTi 3.0"
                             font.pixelSize: 16
                             color: currentStep === 6 ? "#006BFF" : "#D9000000"
-                            text: "新生血管：受累肾脏附近肾筋膜有不规则和未命名的血管"
+                            text: qsTr("新生血管：受累肾脏附近肾筋膜有不规则和未命名的血管")
                         }
                     }
                     TextButtonGroup {
@@ -372,7 +372,7 @@ Rectangle {
                             font.family: "Alibaba PuHuiTi 3.0"
                             font.pixelSize: 16
                             color: currentStep === 7 ? "#006BFF" : "#D9000000"
-                            text: "营养不良性钙化"
+                            text: qsTr("营养不良性钙化")
                         }
                     }
                     TextButtonGroup {
@@ -405,7 +405,7 @@ Rectangle {
                             font.family: "Alibaba PuHuiTi 3.0"
                             font.pixelSize: 16
                             color: currentStep === 8 ? "#006BFF" : "#D9000000"
-                            text: "劈裂征"
+                            text: qsTr("劈裂征")
                         }
                     }
                     
@@ -500,7 +500,7 @@ Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.right: resetBtn.left
                 anchors.rightMargin: 12
-                text: "终止"
+                text: qsTr("终止")
                 width: 88
                 height: 36
                 radius: 4
@@ -521,7 +521,7 @@ Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.right: parent.right
                 anchors.rightMargin: 24
-                text: "重置"
+                text: qsTr("重置")
                 width: 88
                 height: 36
                 radius: 4
@@ -541,7 +541,7 @@ Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.left: parent.left
                 anchors.leftMargin: 24
-                text: "再次评分"
+                text: qsTr("再次评分")
                 width: 88
                 height: 36
                 radius: 4
@@ -560,7 +560,7 @@ Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.left: rescore.right
                 anchors.leftMargin: 12
-                text: "重选方案"
+                text: qsTr("重选方案")
                 width: 88
                 height: 36
                 radius: 4
@@ -580,7 +580,7 @@ Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.right: parent.right
                 anchors.rightMargin: 24
-                text: "复制"
+                text: qsTr("复制")
                 width: 88
                 height: 36
                 radius: 4

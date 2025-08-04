@@ -252,7 +252,7 @@ Rectangle {
                             font.weight: Font.Bold
                             font.pixelSize: 16
                             color: "#D9000000"
-                            text: "TNM分期："
+                            text: qsTr("TNM分期：")
                             anchors.verticalCenter: parent.verticalCenter
                         }
 
@@ -274,14 +274,14 @@ Rectangle {
                             font.family: "Alibaba PuHuiTi 3.0"
                             font.pixelSize: 16
                             color: "#A6000000"
-                            text: "临床分期：" + $tnmManager.Stage
+                            text: qsTr("临床分期：") + $tnmManager.Stage
                         }
                         Text {
                             font.family: "Alibaba PuHuiTi 3.0"
                             font.weight: Font.Bold
                             font.pixelSize: 16
                             color: "#A6000000"
-                            text: "T分期 （原发肿瘤）："
+                            text: qsTr("T分期 （原发肿瘤）：")
                         }
                         Row{
                             height: label1.height
@@ -313,7 +313,7 @@ Rectangle {
                             font.weight: Font.Bold
                             font.pixelSize: 16
                             color: "#A6000000"
-                            text: "N分期 （区域淋巴结）："
+                            text: qsTr("N分期 （区域淋巴结）：")
                         }
                         Row{
                             height: label2.height
@@ -345,7 +345,7 @@ Rectangle {
                             font.weight: Font.Bold
                             font.pixelSize: 16
                             color: "#A6000000"
-                            text: "M分期 （原发肿瘤）："
+                            text: qsTr("M分期 （原发肿瘤）：")
                         }
                         Row{
                             height: label3.height
@@ -408,7 +408,7 @@ Rectangle {
                 anchors.right: parent.right
                 anchors.rightMargin: 24
                 visible: $tnmManager.isAnalyzing
-                text: "终止"
+                text: qsTr("终止")
                 width: 88
                 height: 36
                 fontSize: 14
@@ -430,7 +430,7 @@ Rectangle {
                 anchors.left: parent.left
                 anchors.leftMargin: 24
                 visible: !$tnmManager.isAnalyzing && !$tnmManager.isCompleted
-                text: "终止"
+                text: qsTr("终止")
                 width: 88
                 height: 36
                 fontSize: 14
@@ -451,7 +451,7 @@ Rectangle {
                 anchors.left: stopBtn.right
                 anchors.leftMargin: 12
                 visible: !$tnmManager.isAnalyzing && !$tnmManager.isCompleted
-                text: "重置"
+                text: qsTr("重置")
                 width: 88
                 height: 36
                 fontSize: 14
@@ -470,7 +470,7 @@ Rectangle {
                 anchors.right: parent.right
                 anchors.rightMargin: 24
                 visible: !$tnmManager.isAnalyzing && !$tnmManager.isCompleted
-                text: "提交"
+                text: qsTr("提交")
                 width: 88
                 height: 36
                 fontSize: 14
@@ -488,7 +488,7 @@ Rectangle {
                 anchors.left: parent.left
                 anchors.leftMargin: 24
                 visible: !$tnmManager.isAnalyzing && $tnmManager.isCompleted
-                text: "粘贴并评分"
+                text: qsTr("粘贴并评分")
                 width: 88
                 height: 36
                 fontSize: 14
@@ -508,7 +508,7 @@ Rectangle {
                 anchors.left: resetBtn.right
                 anchors.leftMargin: 12
                 visible: !$tnmManager.isAnalyzing && $tnmManager.isCompleted
-                text: "重选方案"
+                text: qsTr("重选方案")
                 width: 88
                 height: 36
                 fontSize: 14
@@ -529,7 +529,7 @@ Rectangle {
                 anchors.right: parent.right
                 anchors.rightMargin: 24
                 visible: !$tnmManager.isAnalyzing && $tnmManager.isCompleted
-                text: "复制"
+                text: qsTr("复制")
                 width: 88
                 height: 36
                 fontSize: 14

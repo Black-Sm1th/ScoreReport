@@ -13,7 +13,7 @@ Rectangle {
     property color textColor: "#D9000000"
     property color placeholderColor: "#40000000"
     property int fontSize: 16
-    property string placeholderText: "请输入..."
+    property string placeholderText: qsTr("请输入...")
     property int borderWidth: 1
     property int inputRadius: 8
     

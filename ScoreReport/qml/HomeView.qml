@@ -24,7 +24,7 @@ Rectangle {
             width: parent.width
             height: 32
             Text {
-                text: "请选择评分方案"
+                text: qsTr("请选择评分方案")
                 color: "#000000"
                 font.family: "Alibaba PuHuiTi 3.0"
                 font.weight: Font.Bold
@@ -163,14 +163,14 @@ Rectangle {
                         currentPageChanged(2) // TNM页面索引
                         $tnmManager.startAnalysis()
                     }else{
-                        messageManager.warning("剪贴板为空，请先复制内容")
+                        messageManager.warning(qsTr("剪贴板为空，请先复制内容"))
                     }
                 }else if(title === "RENAL"){
                     if($renalManager.checkClipboard()){
                         currentPageChanged(0) // TNM页面索引
                         $renalManager.startAnalysis()
                     }else{
-                        messageManager.warning("剪贴板为空，请先复制内容")
+                        messageManager.warning(qsTr("剪贴板为空，请先复制内容"))
                     }
                 }
                 else if(title === "CHAT"){
@@ -183,7 +183,7 @@ Rectangle {
                     currentPageChanged(4)
                 }
                 else{
-                    messageManager.warning("该功能暂未开放")
+                    messageManager.warning(qsTr("该功能暂未开放"))
                 }
             }
         }

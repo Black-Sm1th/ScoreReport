@@ -296,7 +296,7 @@ Rectangle {
                                 font.family: "Alibaba PuHuiTi 3.0"
                                 font.pixelSize: 16
                                 color: "#D9000000"
-                                text: "CCLS评分："
+                                text: qsTr("CCLS评分：")
                                 anchors.verticalCenter: parent.verticalCenter
                             }
                             
@@ -355,7 +355,7 @@ Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.right: resetBtn.left
                 anchors.rightMargin: 12
-                text: "终止"
+                text: qsTr("终止")
                 width: 88
                 height: 36
                 radius: 4
@@ -376,7 +376,7 @@ Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.right: parent.right
                 anchors.rightMargin: 24
-                text: "重置"
+                text: qsTr("重置")
                 width: 88
                 height: 36
                 radius: 4
@@ -396,7 +396,7 @@ Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.left: parent.left
                 anchors.leftMargin: 24
-                text: "再次评分"
+                text: qsTr("再次评分")
                 width: 88
                 height: 36
                 radius: 4
@@ -415,7 +415,7 @@ Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.left: rescore.right
                 anchors.leftMargin: 12
-                text: "重选方案"
+                text: qsTr("重选方案")
                 width: 88
                 height: 36
                 radius: 4
@@ -435,7 +435,7 @@ Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.right: parent.right
                 anchors.rightMargin: 24
-                text: "复制"
+                text: qsTr("复制")
                 width: 88
                 height: 36
                 radius: 4

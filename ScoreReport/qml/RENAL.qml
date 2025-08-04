@@ -247,7 +247,7 @@ Rectangle {
                             font.family: "Alibaba PuHuiTi 3.0"
                             font.pixelSize: 16
                             color: "#D9000000"
-                            text: "请选择肿瘤大小。"
+                            text: qsTr("请选择肿瘤大小。")
                         }
                     }
                     TextButtonGroup {
@@ -280,7 +280,7 @@ Rectangle {
                             font.family: "Alibaba PuHuiTi 3.0"
                             font.pixelSize: 16
                             color: "#D9000000"
-                            text: "请选择肿瘤的外凸率。"
+                            text: qsTr("请选择肿瘤的外凸率。")
                         }
                     }
                     TextButtonGroup {
@@ -313,7 +313,7 @@ Rectangle {
                             font.family: "Alibaba PuHuiTi 3.0"
                             font.pixelSize: 16
                             color: "#D9000000"
-                            text: "请选择肿瘤与肾窦及肾脏集合系统之间的关系。"
+                            text: qsTr("请选择肿瘤与肾窦及肾脏集合系统之间的关系。")
                         }
                     }
                     TextButtonGroup {
@@ -346,7 +346,7 @@ Rectangle {
                             font.family: "Alibaba PuHuiTi 3.0"
                             font.pixelSize: 16
                             color: "#D9000000"
-                            text: "请选择肿瘤沿肾脏纵轴的位置。"
+                            text: qsTr("请选择肿瘤沿肾脏纵轴的位置。")
                         }
                     }
                     TextButtonGroup {
@@ -390,7 +390,7 @@ Rectangle {
                             font.weight: Font.Bold
                             font.pixelSize: 16
                             color: "#D9000000"
-                            text: "RENAL评分："
+                            text: qsTr("RENAL评分：")
                             anchors.verticalCenter: parent.verticalCenter
                         }
 
@@ -448,7 +448,7 @@ Rectangle {
                 anchors.right: stopBtn.left
                 anchors.rightMargin: 12
                 visible: !$renalManager.isAnalyzing && !$renalManager.isCompleted && $renalManager.missingFieldsList.length > 0
-                text: "重置"
+                text: qsTr("重置")
                 width: 88
                 height: 36
                 radius: 4
@@ -468,7 +468,7 @@ Rectangle {
                 anchors.right: parent.right
                 anchors.rightMargin: 24
                 visible: $renalManager.isAnalyzing || (!$renalManager.isAnalyzing && !$renalManager.isCompleted)
-                text: "终止"
+                text: qsTr("终止")
                 width: 88
                 height: 36
                 radius: 4
@@ -490,7 +490,7 @@ Rectangle {
                 anchors.left: parent.left
                 anchors.leftMargin: 24
                 visible: !$renalManager.isAnalyzing && $renalManager.isCompleted
-                text: "粘贴并评分"
+                text: qsTr("粘贴并评分")
                 width: 88
                 height: 36
                 radius: 4
@@ -510,7 +510,7 @@ Rectangle {
                 anchors.left: resetBtn.right
                 anchors.leftMargin: 12
                 visible: !$renalManager.isAnalyzing && $renalManager.isCompleted
-                text: "重选方案"
+                text: qsTr("重选方案")
                 width: 88
                 height: 36
                 radius: 4
@@ -531,7 +531,7 @@ Rectangle {
                 anchors.right: parent.right
                 anchors.rightMargin: 24
                 visible: !$renalManager.isAnalyzing && $renalManager.isCompleted
-                text: "复制"
+                text: qsTr("复制")
                 width: 88
                 height: 36
                 radius: 4

@@ -79,7 +79,7 @@ Rectangle {
                                     visible: modelData.type === "thinking"
                                     
                                     Text {
-                                        text: "思考中"
+                                        text: qsTr("思考中")
                                          font.weight: Font.Bold
                                         font.family: "Alibaba PuHuiTi 3.0"
                                         font.pixelSize: 16
@@ -134,7 +134,7 @@ Rectangle {
                                         }
                                         
                                         Text {
-                                            text: "再次生成"
+                                            text: qsTr("再次生成")
                                             font.family: "Alibaba PuHuiTi 3.0"
                                             font.pixelSize: 14
                                             color: "#73000000"
@@ -171,7 +171,7 @@ Rectangle {
                                         }
                                         
                                         Text {
-                                            text: "复制"
+                                            text: qsTr("复制")
                                             font.family: "Alibaba PuHuiTi 3.0"
                                             font.pixelSize: 14
                                             color: "#73000000"
@@ -293,7 +293,7 @@ Rectangle {
                                 TextArea {
                                     id: messageInput
                                     width: parent.width
-                                    placeholderText: "发送消息..."
+                                    placeholderText: qsTr("发送消息...")
                                     font.family: "Alibaba PuHuiTi 3.0"
                                     font.pixelSize: 16
                                     color: "#D9000000"
