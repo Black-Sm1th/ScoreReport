@@ -8,6 +8,8 @@
 #include <QSettings>
 #include <QVariantList>
 #include <QVariantMap>
+#include <QCursor>
+#include <QPoint>
 #include "CommonFunc.h"
 #include "GlobalTextMonitor.h"
 class ApiManager;
@@ -41,6 +43,7 @@ signals:
     void loginResult(bool success, const QString& message);
     void logoutSuccess();
     void registResult(bool success, const QString& message);
+    void textSelectionDetected(const QString& text, int mouseX, int mouseY);
 
 private slots:
     void onRegistResponse(bool success, const QString& message, const QJsonObject& data);

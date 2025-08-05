@@ -118,6 +118,11 @@ ApplicationWindow {
             property bool isDragging: false
             cursorShape: Qt.PointingHandCursor
             onPressed: {
+                // 任何点击都先隐藏右键菜单（除了右键点击自己）
+                if (mouse.button === Qt.LeftButton && contextMenu.visible) {
+                    contextMenu.hide()
+                }
+                
                 if (mouse.button === Qt.LeftButton) {
                     lastMousePos = Qt.point(mouse.x, mouse.y)
                     isDragging = false
@@ -434,6 +439,17 @@ ApplicationWindow {
                 samples: 32
                 transparentBorder: true
             }
+            
+            // 鼠标区域，处理点击对话框内容时隐藏右键菜单
+            MouseArea {
+                anchors.fill: parent
+                z: -1
+                onPressed: {
+                    if (contextMenu.visible) {
+                        contextMenu.hide()
+                    }
+                }
+            }
 
             // 监听页面切换，重新计算位置
             onCurrentIndexChanged: {
@@ -485,6 +501,11 @@ ApplicationWindow {
                         z: 0  // 确保在其他控件之下
                         
                         onPressed: {
+                            // 点击对话框头部时隐藏右键菜单
+                            if (contextMenu.visible) {
+                                contextMenu.hide()
+                            }
+                            
                             if (mouse.button === Qt.LeftButton) {
                                 lastMousePos = Qt.point(mouse.x, mouse.y)
                                 isDragging = false
@@ -565,6 +586,11 @@ ApplicationWindow {
 
                         // 选择变化回调
                         onSelectionChanged: function(index) {
+                            // 点击按钮组时隐藏右键菜单
+                            if (contextMenu.visible) {
+                                contextMenu.hide()
+                            }
+                            
                             if($loginManager.currentUserName === ""){
                                 dialogMessageBox.warning("请先登录！")
                                 return
@@ -608,6 +634,10 @@ ApplicationWindow {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
+                                // 点击关闭按钮时隐藏右键菜单
+                                if (contextMenu.visible) {
+                                    contextMenu.hide()
+                                }
                                 scoreDialog.visible = false
                                 scoreDialog.isFirstShow = true
                             }
@@ -700,18 +730,301 @@ ApplicationWindow {
         }
     }
     
+    // 评分方式选择对话框
+    Window {
+        id: scoringMethodDialog
+        width: Screen.width
+        height: Screen.height
+        x: 0
+        y: 0
+        visible: false
+        flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
+        color: "transparent"
+        opacity: 0
+        
+        // 透明度动画
+        Behavior on opacity {
+            NumberAnimation {
+                duration: 200
+                easing.type: Easing.OutQuad
+            }
+        }
+        
+        // 全屏点击区域，点击任何地方都关闭对话框
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {
+                // 点击评分方式对话框时隐藏右键菜单
+                if (contextMenu.visible) {
+                    contextMenu.hide()
+                }
+                scoringMethodDialog.hideDialog()
+            }
+        }
+        
+        // 1.5秒延迟显示定时器
+        Timer {
+            id: showDelayTimer
+            interval: 1000
+            repeat: false
+            onTriggered: {
+                scoringMethodDialog.showDialog()
+            }
+        }
+        
+        // 3秒自动隐藏定时器
+        Timer {
+            id: autoHideTimer
+            interval: 3000
+            repeat: false
+            onTriggered: {
+                scoringMethodDialog.hideDialog()
+            }
+        }
+        
+        // 存储鼠标位置
+        property int lastMouseX: 0
+        property int lastMouseY: 0
+        
+        // 监听划词信号
+        Connections {
+            target: $loginManager
+            function onTextSelectionDetected(text, mouseX, mouseY) {
+                if (text && text.length > 0 && $loginManager.isLoggedIn) {
+                    // 保存鼠标位置
+                    scoringMethodDialog.lastMouseX = mouseX
+                    scoringMethodDialog.lastMouseY = mouseY
+                    if (scoringMethodDialog.visible && scoringMethodDialog.opacity > 0) {
+                        // 如果选择框已经显示，重新开始3秒倒计时
+                        autoHideTimer.restart()
+                    } else {
+                        // 如果选择框未显示，1秒后显示
+                        showDelayTimer.restart()
+                        autoHideTimer.stop()
+                    }
+                }
+            }
+        }
+        
+        function showDialog() {
+            visible = true
+            opacity = 1
+            autoHideTimer.start()
+        }
+        
+        function hideDialog() {
+            opacity = 0
+            visible = false
+            showDelayTimer.stop()
+            autoHideTimer.stop()
+        }
+        
+        Rectangle {
+            id: scoringMethodContent
+            width: 200
+            height: 100
+            color: "white"
+            radius: 16
+            scale: scoringMethodDialog.opacity
+            z: 1  // 确保内容区域在全屏MouseArea之上
+            
+            // 根据鼠标位置动态定位
+            x: {
+                var spacing = 10  // 与鼠标位置的间距
+                var newX = scoringMethodDialog.lastMouseX - width / 2  // 水平居中对齐鼠标位置
+                
+                // 确保不超出屏幕边界
+                if (newX < 10) {
+                    return 10  // 左边界
+                } else if (newX + width > Screen.width - 10) {
+                    return Screen.width - width - 10  // 右边界
+                }
+                return newX
+            }
+            
+            y: {
+                var spacing = 10  // 与鼠标位置的间距
+                var newY = scoringMethodDialog.lastMouseY - height - spacing  // 显示在鼠标上方
+                
+                // 垂直方向调整
+                if (newY < 10) {
+                    // 如果上方空间不够，显示在鼠标下方
+                    newY = scoringMethodDialog.lastMouseY + spacing
+                    // 如果下方也放不下，就放在屏幕中央
+                    if (newY + height > Screen.height - 10) {
+                        newY = (Screen.height - height) / 2
+                    }
+                }
+                
+                // 确保不超出下边界
+                if (newY + height > Screen.height - 10) {
+                    newY = Screen.height - height - 10
+                }
+                
+                return newY
+            }
+            
+            // 缩放动画
+            Behavior on scale {
+                NumberAnimation {
+                    duration: 200
+                    easing.type: Easing.OutBack
+                }
+            }
+            
+            // 位置动画
+            Behavior on x {
+                NumberAnimation {
+                    duration: 150
+                    easing.type: Easing.OutQuad
+                }
+            }
+            
+            Behavior on y {
+                NumberAnimation {
+                    duration: 150
+                    easing.type: Easing.OutQuad
+                }
+            }
+            
+            // 阻止点击事件传播到父级
+            MouseArea {
+                anchors.fill: parent
+                // 空的onClicked，阻止事件传播
+                onClicked: {
+                    // 点击评分方式对话框内容时隐藏右键菜单
+                    if (contextMenu.visible) {
+                        contextMenu.hide()
+                    }
+                }
+            }
+            
+            layer.enabled: true
+            layer.effect: DropShadow {
+                horizontalOffset: 0
+                verticalOffset: 4
+                radius: 16
+                color: "#40000000"
+                samples: 32
+                transparentBorder: true
+            }
+            
+            Column {
+                anchors.centerIn: parent
+                spacing: 20
+                
+                // 标题
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    font.family: "Alibaba PuHuiTi 3.0"
+                    font.pixelSize: 16
+                    font.weight: Font.Medium
+                    color: "#D9000000"
+                    text: qsTr("请选择评分方式")
+                }
+                
+                // 按钮组
+                Row {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    spacing: 20
+                    
+                    // TNM按钮
+                    Rectangle {
+                        width: 100
+                        height: 40
+                        color: tnmMouseArea.containsMouse ? "#E8F4FD" : "#F8F9FA"
+                        border.color: tnmMouseArea.containsMouse ? "#1890FF" : "#D9D9D9"
+                        border.width: 1
+                        radius: 8
+                        
+                        Text {
+                            anchors.centerIn: parent
+                            font.family: "Alibaba PuHuiTi 3.0"
+                            font.pixelSize: 14
+                            color: tnmMouseArea.containsMouse ? "#1890FF" : "#666666"
+                            text: "TNM"
+                        }
+                        
+                        MouseArea {
+                            id: tnmMouseArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            
+                            onClicked: {
+                                scoringMethodDialog.hideDialog()
+                                // 切换到主页面并选择TNM评分
+                                contentRect.currentIndex = 0
+                                contentRect.currentScore = 2  // TNM对应索引2
+                                if(!scoreDialog.visible){
+                                    scoreDialog.showDialog()
+                                }
+                            }
+                        }
+                    }
+                    
+                    // RENAL按钮
+                    Rectangle {
+                        width: 100
+                        height: 40
+                        color: renalMouseArea.containsMouse ? "#E8F4FD" : "#F8F9FA"
+                        border.color: renalMouseArea.containsMouse ? "#1890FF" : "#D9D9D9"
+                        border.width: 1
+                        radius: 8
+                        
+                        Text {
+                            anchors.centerIn: parent
+                            font.family: "Alibaba PuHuiTi 3.0"
+                            font.pixelSize: 14
+                            color: renalMouseArea.containsMouse ? "#1890FF" : "#666666"
+                            text: "RENAL"
+                        }
+                        
+                        MouseArea {
+                            id: renalMouseArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            
+                            onClicked: {
+                                // 点击RENAL按钮时隐藏右键菜单
+                                if (contextMenu.visible) {
+                                    contextMenu.hide()
+                                }
+                                scoringMethodDialog.hideDialog()
+                                // 切换到主页面并选择RENAL评分
+                                contentRect.currentIndex = 0
+                                contentRect.currentScore = 0  // RENAL对应索引0
+                                if(!scoreDialog.visible){
+                                    scoreDialog.showDialog()
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
     // 右键菜单
     Window {
         id: contextMenu
         width: menuBackground.width
         height: menuColumn.height
         visible: false
-        flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Popup
+        flags: Qt.FramelessWindowHint | Qt.Popup
         color: "transparent"
         
         // 失去焦点时自动隐藏
         onActiveFocusItemChanged: {
-            if (!activeFocusItem) {
+            if (!activeFocusItem && visible) {
+                hide()
+            }
+        }
+        
+        // 监听窗口激活状态变化
+        onActiveChanged: {
+            if (!active && visible) {
                 hide()
             }
         }
@@ -756,17 +1069,15 @@ ApplicationWindow {
             height: parent.height
             color: "#FFFFFF"
             radius: 8
-            border.color: "#E0E0E0"
-            border.width: 1
             
             // 添加阴影效果
             layer.enabled: true
             layer.effect: DropShadow {
                 horizontalOffset: 0
-                verticalOffset: 2
-                radius: 8
-                samples: 16
-                color: "#20000000"
+                verticalOffset: 0
+                radius: 16
+                color: "#1F1A1A1A"
+                samples: 32
             }
             
             Column {

@@ -92,13 +92,6 @@ void LanguageManager::loadTranslation(const QString& language)
         // 通知QML引擎重新翻译
         if (m_engine) {
             m_engine->retranslate();
-            // 强制刷新所有根对象
-            for (auto obj : m_engine->rootObjects()) {
-                if (obj) {
-                    // 发送语言变化信号，强制界面更新
-                    QMetaObject::invokeMethod(obj, "forceActiveFocus", Qt::QueuedConnection);
-                }
-            }
         }
     } else {
         qDebug() << "Failed to load translation for language:" << language;

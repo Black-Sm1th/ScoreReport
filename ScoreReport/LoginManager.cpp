@@ -216,6 +216,10 @@ void LoginManager::onRegistResponse(bool success, const QString& message, const 
 void LoginManager::onTextSelected(const QString& text)
 {
     qDebug() << "text: " << text;
+    
+    // 获取当前鼠标位置
+    QPoint mousePos = QCursor::pos();
+    emit textSelectionDetected(text.trimmed(), mousePos.x(), mousePos.y());
 }
 
 void LoginManager::loadUserList()
@@ -254,6 +258,7 @@ QVariantMap LoginManager::findUserInList(const QString& userId)
         if (userMap.value("userId").toString() == userId) {
             return userMap;
         }
+
     }
     
     return QVariantMap();
