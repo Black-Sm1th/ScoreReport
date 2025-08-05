@@ -1,6 +1,7 @@
 ﻿#include "LoginManager.h"
 #include "ApiManager.h"
-
+#include <QClipboard>
+#include <QGuiApplication>
 LoginManager::LoginManager(QObject* parent)
     : QObject(parent)
     , m_apiManager(nullptr)
@@ -17,6 +18,7 @@ LoginManager::LoginManager(QObject* parent)
     setisRegistering(false);
     setrememberPassword(false);
     setuserList(QVariantList());
+    setshowDialogOnTextSelection(true);  // 默认显示弹窗
     m_selector = new GlobalTextMonitor();
     connect(m_selector, &GlobalTextMonitor::textSelected,
         this, &LoginManager::onTextSelected);
@@ -59,7 +61,11 @@ void LoginManager::onLoginResponse(bool success, const QString& message, const Q
         setisLoggedIn(true);
         setisAdding(false);
         setisChangingUser(false);
-        m_selector->startMonitoring();
+        
+        // 只有当弹窗设置为开启时才启动文本监控
+        if (getshowDialogOnTextSelection()) {
+            m_selector->startMonitoring();
+        }
         // 添加用户到列表（这里需要从UI获取密码，暂时先用空字符串占位）
         // 实际的密码会在UI层的loginResult处理中调用addUserToList
     } else {
@@ -119,12 +125,14 @@ void LoginManager::loadSavedCredentials()
     QString username = m_settings->value("username", "").toString();
     QString password = m_settings->value("password", "").toString();
     bool remember = m_settings->value("rememberPassword", false).toBool();
+    bool showDialog = m_settings->value("showDialogOnTextSelection", true).toBool();
     
     setsavedUsername(username);
     setsavedPassword(remember ? password : "");
     setrememberPassword(remember);
+    setshowDialogOnTextSelection(showDialog);
     
-    qDebug() << "[LoginManager] Loaded saved credentials, username:" << username << "remember:" << remember;
+    qDebug() << "[LoginManager] Loaded saved credentials, username:" << username << "remember:" << remember << "showDialog:" << showDialog;
 }
 
 
@@ -208,6 +216,12 @@ void LoginManager::stopMonitoring()
     delete m_selector;
 }
 
+void LoginManager::copyToClipboard(const QString& text)
+{
+    QClipboard* clipboard = QGuiApplication::clipboard();
+    clipboard->setText(text);
+}
+
 void LoginManager::onRegistResponse(bool success, const QString& message, const QJsonObject& data)
 {
     emit registResult(success, message);
@@ -262,4 +276,29 @@ QVariantMap LoginManager::findUserInList(const QString& userId)
     }
     
     return QVariantMap();
+}
+
+void LoginManager::saveShowDialogSetting(bool showDialog)
+{
+    if (!m_settings) {
+        return;
+    }
+    
+    bool oldSetting = getshowDialogOnTextSelection();
+    setshowDialogOnTextSelection(showDialog);
+    m_settings->setValue("showDialogOnTextSelection", showDialog);
+    m_settings->sync();
+    
+    // 如果用户已登录且设置发生了变化，相应地启动或停止监控
+    if (getisLoggedIn() && oldSetting != showDialog) {
+        if (showDialog) {
+            // 设置改为true，启动监控
+            m_selector->startMonitoring();
+            qDebug() << "[LoginManager] Started text monitoring due to setting change";
+        } else {
+            // 设置改为false，停止监控
+            m_selector->stopMonitoring();
+            qDebug() << "[LoginManager] Stopped text monitoring due to setting change";
+        }
+    }
 }

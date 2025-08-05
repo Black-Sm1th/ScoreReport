@@ -28,6 +28,7 @@ class LoginManager : public QObject
     QUICK_PROPERTY(bool, isChangingUser)
     QUICK_PROPERTY(bool, isAdding)
     QUICK_PROPERTY(bool, isRegistering)
+    QUICK_PROPERTY(bool, showDialogOnTextSelection)
     SINGLETON_CLASS(LoginManager)
 
 public:
@@ -39,6 +40,8 @@ public:
     Q_INVOKABLE void removeUserFromList(const QString& userId);
     Q_INVOKABLE bool registAccount(const QString& userAccount, const QString& userPassword, const QString& checkPassword);
     Q_INVOKABLE void stopMonitoring();
+    Q_INVOKABLE void copyToClipboard(const QString& text);
+    Q_INVOKABLE void saveShowDialogSetting(bool showDialog);
 signals:
     void loginResult(bool success, const QString& message);
     void logoutSuccess();
