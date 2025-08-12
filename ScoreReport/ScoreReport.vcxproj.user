@@ -5,8 +5,12 @@
   </PropertyGroup>
   <PropertyGroup Label="QtSettings" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <QtLastBackgroundBuild>2025-08-05T03:05:03.5673401Z</QtLastBackgroundBuild>
+    <QtTouchProperty>
+    </QtTouchProperty>
   </PropertyGroup>
   <PropertyGroup Label="QtSettings" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <QtLastBackgroundBuild>2025-08-05T03:05:03.6148671Z</QtLastBackgroundBuild>
+    <QtTouchProperty>
+    </QtTouchProperty>
   </PropertyGroup>
 </Project>

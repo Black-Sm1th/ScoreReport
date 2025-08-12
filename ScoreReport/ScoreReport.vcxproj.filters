@@ -82,6 +82,12 @@
     <QtMoc Include="GlobalTextMonitor.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="LanguageManager.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="UCLSCTSScorer.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CommonFunc.h">
@@ -95,5 +101,23 @@
     <ClCompile Include="GlobalTextMonitor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="LanguageManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="UCLSCTSScorer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <QtTranslation Include="translations\ScoreReport_en_US.ts">
+      <Filter>Translation Files</Filter>
+    </QtTranslation>
+    <QtTranslation Include="translations\ScoreReport_zh_CN.ts">
+      <Filter>Translation Files</Filter>
+    </QtTranslation>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="translations\ScoreReport_en_US.qm" />
+    <None Include="translations\ScoreReport_zh_CN.qm" />
   </ItemGroup>
 </Project>
