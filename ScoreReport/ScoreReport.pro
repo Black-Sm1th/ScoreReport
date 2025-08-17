@@ -39,7 +39,7 @@ RESOURCES += qml.qrc
 
 # 翻译文件配置
 TRANSLATIONS += translations/ScoreReport_zh_CN.ts \
-                translations/ScoreReport_en_US.ts
+    translations/ScoreReport_en.ts
 
 # 配置Qt版本和模块
 QT += quick qml widgets

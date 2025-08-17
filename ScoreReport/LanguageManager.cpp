@@ -7,11 +7,11 @@ LanguageManager::LanguageManager(QObject *parent)
     : QObject(parent)
     , m_translator(new QTranslator(this))
     , m_engine(nullptr)
-    , m_currentLanguage("zh_CN")
+    , m_currentLanguage("zh")
     , m_settings(new QSettings("ScoreReport", "Language", this))
 {
     // 初始化可用语言列表
-    m_availableLanguages << "zh_CN" << "en_US";
+    m_availableLanguages << "zh" << "en";
     
     // 加载保存的语言设置
     loadLanguageSettings();
@@ -68,9 +68,9 @@ void LanguageManager::setCurrentLanguage(const QString& language)
 
 QString LanguageManager::getLanguageDisplayName(const QString& language) const
 {
-    if (language == "zh_CN") {
+    if (language == "zh") {
         return QString::fromLocal8Bit("中文");
-    } else if (language == "en_US") {
+    } else if (language == "en") {
         return "English";
     }
     return language;
@@ -107,7 +107,7 @@ void LanguageManager::saveLanguageSettings()
 
 void LanguageManager::loadLanguageSettings()
 {
-    QString savedLanguage = m_settings->value("currentLanguage", "zh_CN").toString();
+    QString savedLanguage = m_settings->value("currentLanguage", "zh").toString();
     if (m_availableLanguages.contains(savedLanguage)) {
         m_currentLanguage = savedLanguage;
     }

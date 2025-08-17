@@ -1161,10 +1161,10 @@ ApplicationWindow {
                         onClicked: {
                             if (languageManager) {
                                 // 切换语言：如果当前是中文，切换到英文；如果是英文，切换到中文
-                                if (languageManager.currentLanguage === "zh_CN") {
-                                    languageManager.setCurrentLanguage("en_US")
+                                if (languageManager.currentLanguage === "zh") {
+                                    languageManager.setCurrentLanguage("en")
                                 } else {
-                                    languageManager.setCurrentLanguage("zh_CN")
+                                    languageManager.setCurrentLanguage("zh")
                                 }
                             }
                             contextMenu.hide()

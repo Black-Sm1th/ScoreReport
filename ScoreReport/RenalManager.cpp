@@ -9,6 +9,7 @@ RenalManager::RenalManager(QObject *parent)
 {
     m_apiManager = GET_SINGLETON(ApiManager);
     m_loginManager = GET_SINGLETON(LoginManager);
+    m_languageManager = GET_SINGLETON(LanguageManager);
     QObject::connect(m_apiManager, &ApiManager::renalAiQualityScoreResponse, this, &RenalManager::onRenalAiQualityScoreResponse);
     setisAnalyzing(false);
     setisCompleted(false);
@@ -43,7 +44,7 @@ void RenalManager::startAnalysis()
         return;
     }
     setisAnalyzing(true);
-    m_apiManager->getRenalAiQualityScore(currentChatId, userId, getclipboardContent());
+    m_apiManager->getRenalAiQualityScore(currentChatId, userId, getclipboardContent(), m_languageManager->currentLanguage());
 }
 
 void RenalManager::endAnalysis()
@@ -71,7 +72,7 @@ void RenalManager::submitContent(const QString& inputContents)
     setclipboardContent(finalContent);
     // 设置分析状态并调用API
     setisAnalyzing(true);
-    m_apiManager->getRenalAiQualityScore(currentChatId, userId, finalContent);
+    m_apiManager->getRenalAiQualityScore(currentChatId, userId, finalContent, m_languageManager->currentLanguage());
 }
 
 void RenalManager::pasteAnalysis()

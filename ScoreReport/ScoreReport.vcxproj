@@ -105,8 +105,8 @@
     <ClCompile Include="TNMManager.cpp" />
     <ClCompile Include="UCLSCTSScorer.cpp" />
     <ClCompile Include="UCLSMRSManager.cpp" />
-    <None Include="translations\ScoreReport_en_US.qm" />
-    <None Include="translations\ScoreReport_zh_CN.qm" />
+    <None Include="translations\ScoreReport_en.qm" />
+    <None Include="translations\ScoreReport_zh.qm" />
     <QtRcc Include="qml.qrc" />
     <None Include="main.qml" />
   </ItemGroup>
@@ -133,8 +133,8 @@
     <QtMoc Include="RenalManager.h" />
   </ItemGroup>
   <ItemGroup>
-    <QtTranslation Include="translations\ScoreReport_en_US.ts" />
-    <QtTranslation Include="translations\ScoreReport_zh_CN.ts" />
+    <QtTranslation Include="translations\ScoreReport_en.ts" />
+    <QtTranslation Include="translations\ScoreReport_zh.ts" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

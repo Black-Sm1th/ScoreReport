@@ -4,8 +4,8 @@
 本项目已添加完整的多语言支持，支持中文和英文界面切换。
 
 ## 支持的语言
-- 中文 (zh_CN) - 默认语言
-- 英文 (en_US)
+- 中文 (zh) - 默认语言
+- 英文 (en)
 
 ## 如何切换语言
 
@@ -18,14 +18,14 @@
 ```cpp
 // 在C++代码中
 auto* languageManager = GET_SINGLETON(LanguageManager);
-languageManager->setCurrentLanguage("en_US"); // 切换到英文
-languageManager->setCurrentLanguage("zh_CN"); // 切换到中文
+languageManager->setCurrentLanguage("en"); // 切换到英文
+languageManager->setCurrentLanguage("zh"); // 切换到中文
 ```
 
 ```qml
 // 在QML代码中
-languageManager.setCurrentLanguage("en_US") // 切换到英文
-languageManager.setCurrentLanguage("zh_CN") // 切换到中文
+languageManager.setCurrentLanguage("en") // 切换到英文
+languageManager.setCurrentLanguage("zh") // 切换到中文
 ```
 
 ## 语言设置保存
@@ -56,12 +56,12 @@ lupdate ScoreReport.pro
 ```
 
 ### 2. 编辑翻译文件
-编辑 `translations/ScoreReport_zh_CN.ts` 和 `translations/ScoreReport_en_US.ts` 文件，添加对应的翻译。
+编辑 `translations/ScoreReport_zh.ts` 和 `translations/ScoreReport_en.ts` 文件，添加对应的翻译。
 
 ### 3. 编译翻译文件
 ```bash
-lrelease translations/ScoreReport_zh_CN.ts -qm translations/ScoreReport_zh_CN.qm
-lrelease translations/ScoreReport_en_US.ts -qm translations/ScoreReport_en_US.qm
+lrelease translations/ScoreReport_zh.ts -qm translations/ScoreReport_zh.qm
+lrelease translations/ScoreReport_en.ts -qm translations/ScoreReport_en.qm
 ```
 
 ## 文件结构
@@ -70,10 +70,10 @@ ScoreReport/
 ├── LanguageManager.h          # 语言管理器头文件
 ├── LanguageManager.cpp        # 语言管理器实现
 ├── translations/
-│   ├── ScoreReport_zh_CN.ts   # 中文翻译源文件
-│   ├── ScoreReport_zh_CN.qm   # 中文编译后翻译文件
-│   ├── ScoreReport_en_US.ts   # 英文翻译源文件
-│   └── ScoreReport_en_US.qm   # 英文编译后翻译文件
+│   ├── ScoreReport_zh.ts   # 中文翻译源文件
+│   ├── ScoreReport_zh.qm   # 中文编译后翻译文件
+│   ├── ScoreReport_en.ts   # 英文翻译源文件
+│   └── ScoreReport_en.qm   # 英文编译后翻译文件
 ├── translations.qrc           # 翻译资源文件
 └── qml/
     └── components/

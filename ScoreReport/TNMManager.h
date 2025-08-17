@@ -8,7 +8,7 @@
 #include "CommonFunc.h"
 #include "ApiManager.h"
 #include "LoginManager.h"
-
+#include "LanguageManager.h"
 class TNMManager : public QObject
 {
     Q_OBJECT
@@ -44,6 +44,7 @@ private:
     QClipboard *m_clipboard;
     ApiManager* m_apiManager;
     LoginManager* m_loginManager;
+    LanguageManager* m_languageManager;
     QString currentChatId;
     QString resultText;
 };

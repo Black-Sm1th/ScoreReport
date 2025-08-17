@@ -138,13 +138,15 @@ void ApiManager::registerUser(const QString& userAccount, const QString& userPas
  * 发送TNM内容到AI服务进行质量评分。
  * 请求类型标记为 "tnm-ai-score"，结果会通过 tnmAiQualityScoreResponse 信号返回。
  */
-void ApiManager::getTnmAiQualityScore(const QString& chatId, const QString& userId, const QString& content)
+void ApiManager::getTnmAiQualityScore(const QString& chatId, const QString& userId, const QString& content, const QString& language, const QString& diagnoseType)
 {
     QJsonObject requestData;
     requestData["userId"] = userId;
     requestData["chatId"] = chatId;
     requestData["type"] = "TNM";
     requestData["content"] = content;
+    requestData["language"] = language;
+    requestData["diagnoseType"] = diagnoseType;
     
     makePostRequest("/admin/Ai/get/aiQualityScore", requestData, "tnm-ai-score");
 }
@@ -157,13 +159,14 @@ void ApiManager::getTnmAiQualityScore(const QString& chatId, const QString& user
  * 发送RENAL内容到AI服务进行质量评分。
  * 请求类型标记为 "renal-ai-score"，结果会通过 renalAiQualityScoreResponse 信号返回。
  */
-void ApiManager::getRenalAiQualityScore(const QString& chatId, const QString& userId, const QString& content)
+void ApiManager::getRenalAiQualityScore(const QString& chatId, const QString& userId, const QString& content, const QString& language)
 {
     QJsonObject requestData;
     requestData["userId"] = userId;
     requestData["chatId"] = chatId;
     requestData["type"] = "RENAL";
     requestData["content"] = content;
+    requestData["language"] = language;
     
     makePostRequest("/admin/Ai/get/aiQualityScore", requestData, "renal-ai-score");
 }

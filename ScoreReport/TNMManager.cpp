@@ -7,6 +7,7 @@ TNMManager::TNMManager(QObject *parent)
     , m_apiManager(nullptr)
     , m_loginManager(nullptr)
 {
+    m_languageManager = GET_SINGLETON(LanguageManager);
     m_apiManager = GET_SINGLETON(ApiManager);
     m_loginManager = GET_SINGLETON(LoginManager);
     QObject::connect(m_apiManager, &ApiManager::tnmAiQualityScoreResponse, this, &TNMManager::onTnmAiQualityScoreResponse);
@@ -45,7 +46,7 @@ void TNMManager::startAnalysis()
         return;
     }
     setisAnalyzing(true);
-    m_apiManager->getTnmAiQualityScore(currentChatId, userId, getclipboardContent());
+    m_apiManager->getTnmAiQualityScore(currentChatId, userId, getclipboardContent(), m_languageManager->currentLanguage());
 }
 
 void TNMManager::endAnalysis()
@@ -78,7 +79,7 @@ void TNMManager::submitContent(const QVariantList& inputContents)
     setclipboardContent(finalContent);
     // 设置分析状态并调用API
     setisAnalyzing(true);
-    m_apiManager->getTnmAiQualityScore(currentChatId, userId, finalContent);
+    m_apiManager->getTnmAiQualityScore(currentChatId, userId, finalContent, m_languageManager->currentLanguage());
 }
 
 void TNMManager::pasteAnalysis()

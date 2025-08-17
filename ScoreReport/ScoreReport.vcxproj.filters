@@ -109,15 +109,15 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <QtTranslation Include="translations\ScoreReport_en_US.ts">
+    <QtTranslation Include="translations\ScoreReport_en.ts">
       <Filter>Translation Files</Filter>
     </QtTranslation>
-    <QtTranslation Include="translations\ScoreReport_zh_CN.ts">
+    <QtTranslation Include="translations\ScoreReport_zh.ts">
       <Filter>Translation Files</Filter>
     </QtTranslation>
   </ItemGroup>
   <ItemGroup>
-    <None Include="translations\ScoreReport_en_US.qm" />
-    <None Include="translations\ScoreReport_zh_CN.qm" />
+    <None Include="translations\ScoreReport_en.qm" />
+    <None Include="translations\ScoreReport_zh.qm" />
   </ItemGroup>
 </Project>

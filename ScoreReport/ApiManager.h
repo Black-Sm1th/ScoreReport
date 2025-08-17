@@ -60,7 +60,7 @@ public:
      * 
      * 发送TNM内容到AI服务进行质量评分，结果通过 tnmAiQualityScoreResponse 信号返回
      */
-    void getTnmAiQualityScore(const QString& chatId, const QString& userId, const QString& content);
+    void getTnmAiQualityScore(const QString& chatId, const QString& userId, const QString& content, const QString& language, const QString& diagnoseType = "renal_tumor");
     
     /**
      * @brief 获取RENAL AI质量评分
@@ -69,7 +69,7 @@ public:
      * 
      * 发送RENAL内容到AI服务进行质量评分，结果通过 renalAiQualityScoreResponse 信号返回
      */
-    void getRenalAiQualityScore(const QString& chatId, const QString& userId, const QString& content);
+    void getRenalAiQualityScore(const QString& chatId, const QString& userId, const QString& content, const QString& language);
     
     /**
      * @brief 流式AI问答接口
