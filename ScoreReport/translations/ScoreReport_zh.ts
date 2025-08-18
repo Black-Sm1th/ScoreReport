@@ -222,6 +222,218 @@
         <source>复制</source>
         <translation>复制</translation>
     </message>
+    <message>
+        <source>nasopharyngeal_carcinoma</source>
+        <translation>鼻咽癌</translation>
+    </message>
+    <message>
+        <source>nasal_sinus_tumor</source>
+        <translation>鼻腔和鼻窦肿瘤</translation>
+    </message>
+    <message>
+        <source>hpv_opc</source>
+        <translation>HPV 相关性(P16+)口咽癌</translation>
+    </message>
+    <message>
+        <source>oral_cancer</source>
+        <translation>唇和口腔癌</translation>
+    </message>
+    <message>
+        <source>major_salivary_gland_tumor</source>
+        <translation>大涎腺肿瘤</translation>
+    </message>
+    <message>
+        <source>laryngeal_cancer</source>
+        <translation>喉癌</translation>
+    </message>
+    <message>
+        <source>oropharyngeal_hypopharyngeal_cancer</source>
+        <translation>口咽(P16-)和喉咽癌</translation>
+    </message>
+
+    <!-- 眼部肿瘤 -->
+    <message>
+        <source>uveal_melanoma</source>
+        <translation>葡萄膜黑色素瘤</translation>
+    </message>
+    <message>
+        <source>retinoblastoma</source>
+        <translation>视网膜母细胞瘤</translation>
+    </message>
+    <message>
+        <source>eyelid_carcinoma</source>
+        <translation>眼睑癌</translation>
+    </message>
+
+    <!-- 甲状腺肿瘤 -->
+    <message>
+        <source>thyroid_tumor_differentiated</source>
+        <translation>甲状腺肿瘤(分化性癌)</translation>
+    </message>
+    <message>
+        <source>thyroid_tumor_anaplastic</source>
+        <translation>甲状腺肿瘤(未分化癌)</translation>
+    </message>
+    <message>
+        <source>thyroid_medullary_carcinoma</source>
+        <translation>甲状腺髓样癌</translation>
+    </message>
+
+    <!-- 胸部肿瘤 -->
+    <message>
+        <source>lung_cancer</source>
+        <translation>肺癌</translation>
+    </message>
+    <message>
+        <source>breast_cancer</source>
+        <translation>乳腺癌</translation>
+    </message>
+    <message>
+        <source>thymic_tumor</source>
+        <translation>胸腺肿瘤</translation>
+    </message>
+    <message>
+        <source>malignant_pleural_mesothelioma</source>
+        <translation>恶性胸膜间皮瘤</translation>
+    </message>
+
+    <!-- 消化系统肿瘤 -->
+    <message>
+        <source>liver_cancer</source>
+        <translation>肝癌</translation>
+    </message>
+    <message>
+        <source>intrahepatic_cholangiocarcinoma</source>
+        <translation>肝内胆管细胞癌</translation>
+    </message>
+    <message>
+        <source>gallbladder_cancer</source>
+        <translation>胆囊癌</translation>
+    </message>
+    <message>
+        <source>vater_ampulla_cancer</source>
+        <translation>Vater壶腹癌</translation>
+    </message>
+    <message>
+        <source>hilar_cholangiocarcinoma</source>
+        <translation>肝门胆管癌</translation>
+    </message>
+    <message>
+        <source>distal_cholangiocarcinoma</source>
+        <translation>远端胆管癌</translation>
+    </message>
+    <message>
+        <source>gastric_cancer</source>
+        <translation>胃癌</translation>
+    </message>
+    <message>
+        <source>pancreatic_cancer</source>
+        <translation>胰腺癌</translation>
+    </message>
+    <message>
+        <source>colorectal_cancer</source>
+        <translation>结直肠癌</translation>
+    </message>
+    <message>
+        <source>appendiceal_tumor</source>
+        <translation>阑尾肿瘤</translation>
+    </message>
+    <message>
+        <source>small_intestine_cancer</source>
+        <translation>小肠癌</translation>
+    </message>
+    <message>
+        <source>anal_tumor</source>
+        <translation>肛门肿瘤</translation>
+    </message>
+
+    <!-- 泌尿系统肿瘤 -->
+    <message>
+        <source>renal_tumor</source>
+        <translation>肾肿瘤</translation>
+    </message>
+    <message>
+        <source>renal_pelvis_ureter_cancer</source>
+        <translation>肾盂和输尿管癌</translation>
+    </message>
+    <message>
+        <source>bladder_cancer</source>
+        <translation>膀胱癌</translation>
+    </message>
+    <message>
+        <source>urethral_cancer</source>
+        <translation>尿道癌</translation>
+    </message>
+
+    <!-- 生殖系统肿瘤 -->
+    <message>
+        <source>penile_cancer</source>
+        <translation>阴茎癌</translation>
+    </message>
+    <message>
+        <source>cervical_tumor</source>
+        <translation>宫颈肿瘤</translation>
+    </message>
+    <message>
+        <source>ovarian_tumor</source>
+        <translation>卵巢、输卵管肿瘤和原发性腹膜癌</translation>
+    </message>
+    <message>
+        <source>endometrial_tumor</source>
+        <translation>子宫体肿瘤</translation>
+    </message>
+    <message>
+        <source>vaginal_cancer</source>
+        <translation>阴道癌</translation>
+    </message>
+    <message>
+        <source>vulvar_cancer</source>
+        <translation>女性外阴癌</translation>
+    </message>
+
+    <!-- 其他肿瘤 -->
+    <message>
+        <source>melanoma</source>
+        <translation>皮肤恶性黑色素细胞瘤</translation>
+    </message>
+    <message>
+        <source>leiomyosarcoma</source>
+        <translation>子宫体肉瘤(平滑肌肉瘤/子宫内膜间质肉瘤)</translation>
+    </message>
+    <message>
+        <source>adenosarcoma</source>
+        <translation>子宫体肉瘤(腺肉瘤)</translation>
+    </message>
+
+    <!-- 神经内分泌肿瘤 -->
+    <message>
+        <source>colorectal_neuroendocrine_tumor</source>
+        <translation>结肠、直肠神经内分泌肿瘤</translation>
+    </message>
+    <message>
+        <source>jejunum_ileum_neuroendocrine_tumor</source>
+        <translation>空肠回肠神经内分泌肿瘤</translation>
+    </message>
+    <message>
+        <source>appendix_neuroendocrine_tumor</source>
+        <translation>阑尾神经内分泌肿瘤</translation>
+    </message>
+    <message>
+        <source>adrenal_neuroendocrine_tumor</source>
+        <translation>肾上腺神经内分泌肿瘤</translation>
+    </message>
+    <message>
+        <source>duodenum_vater_neuroendocrine_tumor</source>
+        <translation>十二指肠和Vater 壶腹神经内分泌肿瘤</translation>
+    </message>
+    <message>
+        <source>stomach_neuroendocrine_tumor</source>
+        <translation>胃神经内分泌肿瘤</translation>
+    </message>
+    <message>
+        <source>pancreatic_neuroendocrine_tumor</source>
+        <translation>胰腺神经内分泌肿瘤</translation>
+    </message>
 </context>
 <context>
     <name>UCLSCTS</name>

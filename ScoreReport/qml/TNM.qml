@@ -126,6 +126,12 @@ Rectangle {
                     color: "#D9000000"
                     anchors.verticalCenter: parent.verticalCenter
                     text: {
+                        if($tnmManager.isDetectingCancer){
+                            return "癌症类型检测中" + getDots()
+                        }
+                        if($tnmManager.showCancerSelection){
+                            return "请选择癌症类型"
+                        }
                         if($tnmManager.isAnalyzing){
                             return "TNM分析中" + getDots()
                         }
@@ -139,12 +145,106 @@ Rectangle {
                     }
                 }
             }
+            
+            // 癌种选择界面
+            Rectangle {
+                width: parent.width - 48
+                height: cancerColumn.height + 32
+                visible: $tnmManager.showCancerSelection
+                color: "#FFF8E1"
+                radius: 8
+                border.color: "#FFE082"
+                border.width: 1
+                
+                Column {
+                    id: cancerColumn
+                    anchors.centerIn: parent
+                    spacing: 12
+                    width: parent.width - 36
+                    
+                    Text {
+                        font.family: "Alibaba PuHuiTi 3.0"
+                        font.weight: Font.Bold
+                        font.pixelSize: 16
+                        color: "#D9000000"
+                        text: qsTr("检测到可能的癌症类型，请选择：")
+                        width: parent.width
+                        wrapMode: Text.Wrap
+                    }
+                    
+                    // 癌种选择列表
+                    Repeater {
+                        model: $tnmManager.cancerTypes
+                        delegate: Rectangle {
+                            width: parent.width
+                            height: 48
+                            color: cancerMouseArea.containsMouse ? "#FFFDE7" : "#FFFFFF"
+                            radius: 6
+                            border.color: "#E0E0E0"
+                            border.width: 1
+                            
+                            Row {
+                                anchors.left: parent.left
+                                anchors.leftMargin: 12
+                                anchors.verticalCenter: parent.verticalCenter
+                                spacing: 8
+                                
+                                Text {
+                                    font.family: "Alibaba PuHuiTi 3.0"
+                                    font.weight: Font.Medium
+                                    font.pixelSize: 15
+                                    color: "#D9000000"
+                                    text: qsTr(modelData.name) || ""
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+                            }
+                            
+                            MouseArea {
+                                id: cancerMouseArea
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onClicked: {
+                                    $tnmManager.selectCancerType(modelData.name || "")
+                                }
+                            }
+                        }
+                    }
+                    
+                    // 跳过选择按钮
+                    Rectangle {
+                        width: parent.width
+                        height: 40
+                        color: skipMouseArea.containsMouse ? "#F5F5F5" : "#FAFAFA"
+                        radius: 6
+                        border.color: "#E0E0E0"
+                        border.width: 1
+                        
+                        Text {
+                            anchors.centerIn: parent
+                            font.family: "Alibaba PuHuiTi 3.0"
+                            font.pixelSize: 14
+                            color: "#666666"
+                            text: qsTr("跳过选择，直接进行TNM分析")
+                        }
+                        
+                        MouseArea {
+                            id: skipMouseArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            onClicked: {
+                                $tnmManager.skipCancerSelection()
+                            }
+                        }
+                    }
+                }
+            }
+            
             Repeater {
                 model: $tnmManager.tipList.length
                 delegate: Rectangle {
                     width:parent.width - 48
                     height: 52 + 12 + 148
-                    visible:!$tnmManager.isAnalyzing && !$tnmManager.isCompleted
+                    visible:!$tnmManager.isAnalyzing && !$tnmManager.isCompleted && !$tnmManager.isDetectingCancer && !$tnmManager.showCancerSelection
                     Rectangle{
                         color: "#ECF3FF"
                         radius: 8
@@ -407,7 +507,7 @@ Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.right: parent.right
                 anchors.rightMargin: 24
-                visible: $tnmManager.isAnalyzing
+                visible: $tnmManager.isAnalyzing || $tnmManager.isDetectingCancer
                 text: qsTr("终止")
                 width: 88
                 height: 36
@@ -429,7 +529,7 @@ Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.left: parent.left
                 anchors.leftMargin: 24
-                visible: !$tnmManager.isAnalyzing && !$tnmManager.isCompleted
+                visible: !$tnmManager.isAnalyzing && !$tnmManager.isCompleted && !$tnmManager.isDetectingCancer && !$tnmManager.showCancerSelection
                 text: qsTr("终止")
                 width: 88
                 height: 36
@@ -450,7 +550,7 @@ Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.left: stopBtn.right
                 anchors.leftMargin: 12
-                visible: !$tnmManager.isAnalyzing && !$tnmManager.isCompleted
+                visible: !$tnmManager.isAnalyzing && !$tnmManager.isCompleted && !$tnmManager.isDetectingCancer && !$tnmManager.showCancerSelection
                 text: qsTr("重置")
                 width: 88
                 height: 36
@@ -469,7 +569,7 @@ Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.right: parent.right
                 anchors.rightMargin: 24
-                visible: !$tnmManager.isAnalyzing && !$tnmManager.isCompleted
+                visible: !$tnmManager.isAnalyzing && !$tnmManager.isCompleted && !$tnmManager.isDetectingCancer && !$tnmManager.showCancerSelection
                 text: qsTr("提交")
                 width: 88
                 height: 36

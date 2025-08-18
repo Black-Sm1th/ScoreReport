@@ -239,6 +239,218 @@
         <source>复制</source>
         <translation>Copy</translation>
     </message>
+    <message>
+        <source>nasopharyngeal_carcinoma</source>
+        <translation>Nasopharyngeal Carcinoma</translation>
+    </message>
+    <message>
+        <source>nasal_sinus_tumor</source>
+        <translation>Nasal Cavity and Paranasal Sinus Tumors</translation>
+    </message>
+    <message>
+        <source>hpv_opc</source>
+        <translation>HPV-Related (P16+) Oropharyngeal Cancer</translation>
+    </message>
+    <message>
+        <source>oral_cancer</source>
+        <translation>Lip and Oral Cavity Cancer</translation>
+    </message>
+    <message>
+        <source>major_salivary_gland_tumor</source>
+        <translation>Major Salivary Gland Tumors</translation>
+    </message>
+    <message>
+        <source>laryngeal_cancer</source>
+        <translation>Laryngeal Cancer</translation>
+    </message>
+    <message>
+        <source>oropharyngeal_hypopharyngeal_cancer</source>
+        <translation>Oropharyngeal (P16-) and Hypopharyngeal Cancer</translation>
+    </message>
+
+    <!-- Eye Cancers -->
+    <message>
+        <source>uveal_melanoma</source>
+        <translation>Uveal Melanoma</translation>
+    </message>
+    <message>
+        <source>retinoblastoma</source>
+        <translation>Retinoblastoma</translation>
+    </message>
+    <message>
+        <source>eyelid_carcinoma</source>
+        <translation>Eyelid Carcinoma</translation>
+    </message>
+
+    <!-- Thyroid Cancers -->
+    <message>
+        <source>thyroid_tumor_differentiated</source>
+        <translation>Thyroid Tumor (Differentiated Cancer)</translation>
+    </message>
+    <message>
+        <source>thyroid_tumor_anaplastic</source>
+        <translation>Thyroid Tumor (Anaplastic Cancer)</translation>
+    </message>
+    <message>
+        <source>thyroid_medullary_carcinoma</source>
+        <translation>Thyroid Medullary Carcinoma</translation>
+    </message>
+
+    <!-- Chest Cancers -->
+    <message>
+        <source>lung_cancer</source>
+        <translation>Lung Cancer</translation>
+    </message>
+    <message>
+        <source>breast_cancer</source>
+        <translation>Breast Cancer</translation>
+    </message>
+    <message>
+        <source>thymic_tumor</source>
+        <translation>Thymic Tumors</translation>
+    </message>
+    <message>
+        <source>malignant_pleural_mesothelioma</source>
+        <translation>Malignant Pleural Mesothelioma</translation>
+    </message>
+
+    <!-- Digestive System Cancers -->
+    <message>
+        <source>liver_cancer</source>
+        <translation>Liver Cancer</translation>
+    </message>
+    <message>
+        <source>intrahepatic_cholangiocarcinoma</source>
+        <translation>Intrahepatic Cholangiocarcinoma</translation>
+    </message>
+    <message>
+        <source>gallbladder_cancer</source>
+        <translation>Gallbladder Cancer</translation>
+    </message>
+    <message>
+        <source>vater_ampulla_cancer</source>
+        <translation>Vater Ampulla Cancer</translation>
+    </message>
+    <message>
+        <source>hilar_cholangiocarcinoma</source>
+        <translation>Hilar Cholangiocarcinoma</translation>
+    </message>
+    <message>
+        <source>distal_cholangiocarcinoma</source>
+        <translation>Distal Cholangiocarcinoma</translation>
+    </message>
+    <message>
+        <source>gastric_cancer</source>
+        <translation>Gastric Cancer</translation>
+    </message>
+    <message>
+        <source>pancreatic_cancer</source>
+        <translation>Pancreatic Cancer</translation>
+    </message>
+    <message>
+        <source>colorectal_cancer</source>
+        <translation>Colorectal Cancer</translation>
+    </message>
+    <message>
+        <source>appendiceal_tumor</source>
+        <translation>Appendiceal Tumors</translation>
+    </message>
+    <message>
+        <source>small_intestine_cancer</source>
+        <translation>Small Intestine Cancer</translation>
+    </message>
+    <message>
+        <source>anal_tumor</source>
+        <translation>Anal Tumors</translation>
+    </message>
+
+    <!-- Urinary System Cancers -->
+    <message>
+        <source>renal_tumor</source>
+        <translation>Renal Tumors</translation>
+    </message>
+    <message>
+        <source>renal_pelvis_ureter_cancer</source>
+        <translation>Renal Pelvis and Ureter Cancer</translation>
+    </message>
+    <message>
+        <source>bladder_cancer</source>
+        <translation>Bladder Cancer</translation>
+    </message>
+    <message>
+        <source>urethral_cancer</source>
+        <translation>Urethral Cancer</translation>
+    </message>
+
+    <!-- Reproductive System Cancers -->
+    <message>
+        <source>penile_cancer</source>
+        <translation>Penile Cancer</translation>
+    </message>
+    <message>
+        <source>cervical_tumor</source>
+        <translation>Cervical Tumors</translation>
+    </message>
+    <message>
+        <source>ovarian_tumor</source>
+        <translation>Ovarian, Fallopian Tube Tumors and Primary Peritoneal Cancer</translation>
+    </message>
+    <message>
+        <source>endometrial_tumor</source>
+        <translation>Endometrial Tumors</translation>
+    </message>
+    <message>
+        <source>vaginal_cancer</source>
+        <translation>Vaginal Cancer</translation>
+    </message>
+    <message>
+        <source>vulvar_cancer</source>
+        <translation>Vulvar Cancer</translation>
+    </message>
+
+    <!-- Other Cancers -->
+    <message>
+        <source>melanoma</source>
+        <translation>Cutaneous Malignant Melanoma</translation>
+    </message>
+    <message>
+        <source>leiomyosarcoma</source>
+        <translation>Uterine Sarcoma (Leiomyosarcoma/Endometrial Stromal Sarcoma)</translation>
+    </message>
+    <message>
+        <source>adenosarcoma</source>
+        <translation>Uterine Sarcoma (Adenosarcoma)</translation>
+    </message>
+
+    <!-- Neuroendocrine Tumors -->
+    <message>
+        <source>colorectal_neuroendocrine_tumor</source>
+        <translation>Colorectal Neuroendocrine Tumors</translation>
+    </message>
+    <message>
+        <source>jejunum_ileum_neuroendocrine_tumor</source>
+        <translation>Jejunum and Ileum Neuroendocrine Tumors</translation>
+    </message>
+    <message>
+        <source>appendix_neuroendocrine_tumor</source>
+        <translation>Appendix Neuroendocrine Tumors</translation>
+    </message>
+    <message>
+        <source>adrenal_neuroendocrine_tumor</source>
+        <translation>Adrenal Neuroendocrine Tumors</translation>
+    </message>
+    <message>
+        <source>duodenum_vater_neuroendocrine_tumor</source>
+        <translation>Duodenum and Vater Ampulla Neuroendocrine Tumors</translation>
+    </message>
+    <message>
+        <source>stomach_neuroendocrine_tumor</source>
+        <translation>Gastric Neuroendocrine Tumors</translation>
+    </message>
+    <message>
+        <source>pancreatic_neuroendocrine_tumor</source>
+        <translation>Pancreatic Neuroendocrine Tumors</translation>
+    </message>
 </context>
 <context>
     <name>RENAL</name>

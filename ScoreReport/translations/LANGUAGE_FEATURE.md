@@ -50,34 +50,14 @@ QString text = tr("需要翻译的文本");
 
 ## 更新翻译文件
 
-### 1. 提取翻译字符串
-```bash
-lupdate ScoreReport.pro
-```
-
-### 2. 编辑翻译文件
+### 1. 编辑翻译文件
 编辑 `translations/ScoreReport_zh.ts` 和 `translations/ScoreReport_en.ts` 文件，添加对应的翻译。
 
-### 3. 编译翻译文件
+### 2. 编译翻译文件
 ```bash
-lrelease translations/ScoreReport_zh.ts -qm translations/ScoreReport_zh.qm
-lrelease translations/ScoreReport_en.ts -qm translations/ScoreReport_en.qm
-```
-
-## 文件结构
-```
-ScoreReport/
-├── LanguageManager.h          # 语言管理器头文件
-├── LanguageManager.cpp        # 语言管理器实现
-├── translations/
-│   ├── ScoreReport_zh.ts   # 中文翻译源文件
-│   ├── ScoreReport_zh.qm   # 中文编译后翻译文件
-│   ├── ScoreReport_en.ts   # 英文翻译源文件
-│   └── ScoreReport_en.qm   # 英文编译后翻译文件
-├── translations.qrc           # 翻译资源文件
-└── qml/
-    └── components/
-        └── LanguageSelector.qml # 语言选择器组件（可选）
+translations文件夹下
+lrelease ScoreReport_zh.ts -qm ScoreReport_zh.qm
+lrelease ScoreReport_en.ts -qm ScoreReport_en.qm
 ```
 
 ## 技术实现要点
@@ -96,6 +76,5 @@ LanguageManager 使用单例模式，确保全局只有一个语言管理实例�
 
 ## 注意事项
 1. 所有界面文本都应使用 `qsTr()` 或 `tr()` 函数包装
-2. 添加新字符串后需要运行 `lupdate` 更新翻译文件
-3. 修改翻译后需要运行 `lrelease` 重新编译
-4. 翻译文件使用 UTF-8 编码，支持各种语言字符 
+2. 修改翻译后需要运行 `lrelease` 重新编译
+3. 翻译文件使用 UTF-8 编码，支持各种语言字符 

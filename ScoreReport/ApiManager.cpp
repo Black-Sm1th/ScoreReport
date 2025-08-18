@@ -294,6 +294,23 @@ void ApiManager::getQualityList(const QString& type, const QString& title, const
 }
 
 /**
+ * @brief 获取癌症肿瘤分类信息接口实现
+ * @param content 待分析的内容
+ * @param language 语言设置（zh或en）
+ * 
+ * 发送癌症肿瘤分类请求到AI服务的 /admin/Ai/cancerDiagnoseType 端点。
+ * 请求类型标记为 "cancer-diagnose-type"，结果会通过 cancerDiagnoseTypeResponse 信号返回。
+ */
+void ApiManager::getCancerDiagnoseType(const QString& content, const QString& language)
+{
+    QJsonObject requestData;
+    requestData["content"] = content;
+    requestData["language"] = language;
+    
+    makePostRequest("/admin/Ai/cancerDiagnoseType", requestData, "cancer-diagnose-type");
+}
+
+/**
  * @brief 流式数据就绪槽函数实现
  * 
  * 当流式聊天接口有新数据可读时调用此函数。
@@ -428,6 +445,8 @@ void ApiManager::onNetworkReply(QNetworkReply* reply)
                 emit addQualityRecordResponse(success, message, data);
             } else if (requestType == "get-quality-list") {
                 emit getQualityListResponse(success, message, data);
+            } else if (requestType == "cancer-diagnose-type") {
+                emit cancerDiagnoseTypeResponse(success, message, data);
             } else if (requestType == "stream-chat") {
                 // 流式聊天完成，发送完成信号
                 QString chatId = m_streamChatIds.value(reply, "");
@@ -463,6 +482,8 @@ void ApiManager::onNetworkReply(QNetworkReply* reply)
                 emit addQualityRecordResponse(false, errorString, QJsonObject());
             } else if (requestType == "get-quality-list") {
                 emit getQualityListResponse(false, errorString, QJsonObject());
+            } else if (requestType == "cancer-diagnose-type") {
+                emit cancerDiagnoseTypeResponse(false, errorString, QJsonObject());
             } else if (requestType == "stream-chat") {
                 // 流式聊天错误，发送错误完成信号
                 QString chatId = m_streamChatIds.value(reply, "");

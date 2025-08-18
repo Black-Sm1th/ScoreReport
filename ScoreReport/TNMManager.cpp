@@ -11,6 +11,7 @@ TNMManager::TNMManager(QObject *parent)
     m_apiManager = GET_SINGLETON(ApiManager);
     m_loginManager = GET_SINGLETON(LoginManager);
     QObject::connect(m_apiManager, &ApiManager::tnmAiQualityScoreResponse, this, &TNMManager::onTnmAiQualityScoreResponse);
+    QObject::connect(m_apiManager, &ApiManager::cancerDiagnoseTypeResponse, this, &TNMManager::onCancerDiagnoseTypeResponse);
     setisAnalyzing(false);
     setisCompleted(false);
     setclipboardContent("");
@@ -21,6 +22,11 @@ TNMManager::TNMManager(QObject *parent)
     setTConclusion("");
     setNConclusion("");
     setMConclusion("");
+    // 初始化癌种相关属性
+    setisDetectingCancer(false);
+    setshowCancerSelection(false);
+    setcancerTypes(QVariantList());
+    setselectedCancerType("");
     currentChatId = "";
     resultText = "";
     setsourceText(QString::fromLocal8Bit("评分依据：AJCC/UICC联合制定\n版本时间：第八版（2021年发布，2025年适用）"));
@@ -45,8 +51,15 @@ void TNMManager::startAnalysis()
     if (userId.isEmpty() || userId == "-1") {
         return;
     }
-    setisAnalyzing(true);
-    m_apiManager->getTnmAiQualityScore(currentChatId, userId, getclipboardContent(), m_languageManager->currentLanguage());
+    
+    // 重置癌种相关状态
+    setshowCancerSelection(false);
+    setcancerTypes(QVariantList());
+    setselectedCancerType("");
+    
+    // 先进行癌种检测
+    setisDetectingCancer(true);
+    m_apiManager->getCancerDiagnoseType(getclipboardContent(), m_languageManager->currentLanguage());
 }
 
 void TNMManager::endAnalysis()
@@ -56,6 +69,13 @@ void TNMManager::endAnalysis()
     }
     resetAllParams();
     m_apiManager->abortRequestsByType("tnm-ai-score");
+    m_apiManager->abortRequestsByType("cancer-diagnose-type");
+    
+    // 重置癌种相关状态
+    setisDetectingCancer(false);
+    setshowCancerSelection(false);
+    setcancerTypes(QVariantList());
+    setselectedCancerType("");
 }
 
 void TNMManager::submitContent(const QVariantList& inputContents)
@@ -79,7 +99,7 @@ void TNMManager::submitContent(const QVariantList& inputContents)
     setclipboardContent(finalContent);
     // 设置分析状态并调用API
     setisAnalyzing(true);
-    m_apiManager->getTnmAiQualityScore(currentChatId, userId, finalContent, m_languageManager->currentLanguage());
+    m_apiManager->getTnmAiQualityScore(currentChatId, userId, finalContent, m_languageManager->currentLanguage(),getselectedCancerType());
 }
 
 void TNMManager::pasteAnalysis()
@@ -106,8 +126,52 @@ void TNMManager::resetAllParams()
     setTConclusion("");
     setNConclusion("");
     setMConclusion("");
+    // 重置癌种相关状态
+    setisDetectingCancer(false);
+    setshowCancerSelection(false);
+    setcancerTypes(QVariantList());
+    setselectedCancerType("");
     currentChatId = "";
     resultText = "";
+}
+
+/**
+ * @brief 选择癌种并开始TNM分析
+ * @param cancerType 用户选择的癌种
+ */
+void TNMManager::selectCancerType(const QString& cancerType)
+{
+    setselectedCancerType(cancerType);
+    setshowCancerSelection(false);
+    
+    // 开始TNM分析
+    QString userId = m_loginManager->getcurrentUserId();
+    if (userId.isEmpty() || userId == "-1") {
+        return;
+    }
+    
+    setisAnalyzing(true);
+    m_apiManager->getTnmAiQualityScore(currentChatId, userId, getclipboardContent(), 
+                                     m_languageManager->currentLanguage(), cancerType);
+}
+
+/**
+ * @brief 跳过癌种选择，直接进行TNM分析
+ */
+void TNMManager::skipCancerSelection()
+{
+    setselectedCancerType("");
+    setshowCancerSelection(false);
+    
+    // 开始TNM分析
+    QString userId = m_loginManager->getcurrentUserId();
+    if (userId.isEmpty() || userId == "-1") {
+        return;
+    }
+    
+    setisAnalyzing(true);
+    m_apiManager->getTnmAiQualityScore(currentChatId, userId, getclipboardContent(), 
+                                     m_languageManager->currentLanguage());
 }
 
 void TNMManager::onTnmAiQualityScoreResponse(bool success, const QString& message, const QJsonObject& data)
@@ -165,4 +229,42 @@ void TNMManager::copyToClipboard()
 {
     QClipboard* clipboard = QGuiApplication::clipboard();
     clipboard->setText(resultText);
+}
+
+/**
+ * @brief 处理癌症诊断类型响应
+ * @param success 是否成功
+ * @param message 响应消息
+ * @param data 响应数据
+ */
+void TNMManager::onCancerDiagnoseTypeResponse(bool success, const QString& message, const QJsonObject& data)
+{
+    setisDetectingCancer(false);
+    
+    if (success) {
+        qDebug() << "[TNMManager] Cancer diagnose response data:" << data;
+        QJsonArray cancerArray = data.value("types").toArray();
+        QVariantList cancerList;
+        for (const QJsonValue& value : cancerArray) {
+            QString cancerObj = value.toString();
+            QVariantMap cancerMap;
+            cancerMap["name"] = cancerObj;
+            cancerList.append(cancerMap);
+        }
+        
+        if (cancerList.isEmpty()) {
+            // 没有检测到相关癌种，直接进行TNM分析
+            qDebug() << "[TNMManager] No cancer types detected, proceed with TNM analysis";
+            skipCancerSelection();
+        } else {
+            // 显示癌种选择界面
+            setcancerTypes(cancerList);
+            setshowCancerSelection(true);
+            qDebug() << "[TNMManager] Cancer types detected:" << cancerList.size();
+        }
+    } else {
+        qWarning() << "[TNMManager] Cancer diagnosis failed:" << message;
+        // 癌种检测失败，直接进行TNM分析
+        skipCancerSelection();
+    }
 }

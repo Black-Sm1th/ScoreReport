@@ -119,6 +119,15 @@ public:
                        int current = 1, int pageSize = 10);
     
     /**
+     * @brief 获取癌症肿瘤分类信息
+     * @param content 待分析的内容
+     * @param language 语言设置（zh或en）
+     * 
+     * 发送癌症肿瘤分类请求到AI服务，结果通过 cancerDiagnoseTypeResponse 信号返回
+     */
+    void getCancerDiagnoseType(const QString& content, const QString& language);
+    
+    /**
      * @brief 终止所有正在进行的网络请求
      * 
      * 立即终止所有活跃的POST/GET请求，已发送的请求会被中断。
@@ -209,6 +218,14 @@ signals:
      * @param data 列表数据
      */
     void getQualityListResponse(bool success, const QString& message, const QJsonObject& data);
+    
+    /**
+     * @brief 癌症肿瘤分类响应信号
+     * @param success 是否请求成功
+     * @param message 服务器返回的消息
+     * @param data 分类数据
+     */
+    void cancerDiagnoseTypeResponse(bool success, const QString& message, const QJsonObject& data);
     
     /**
      * @brief 网络错误信号
