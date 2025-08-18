@@ -56,7 +56,7 @@ Rectangle {
     Timer {
         id: dotTimer
         interval: 500  // 每500ms切换一次
-        running: $tnmManager.isAnalyzing
+        running: $tnmManager.isAnalyzing || $tnmManager.isDetectingCancer
         repeat: true
         onTriggered: {
             dotCount = (dotCount % 3) + 1
@@ -127,10 +127,10 @@ Rectangle {
                     anchors.verticalCenter: parent.verticalCenter
                     text: {
                         if($tnmManager.isDetectingCancer){
-                            return "癌症类型检测中" + getDots()
+                            return "肿瘤类型检测中" + getDots()
                         }
                         if($tnmManager.showCancerSelection){
-                            return "请选择癌症类型"
+                            return "请选择肿瘤类型"
                         }
                         if($tnmManager.isAnalyzing){
                             return "TNM分析中" + getDots()
@@ -151,10 +151,8 @@ Rectangle {
                 width: parent.width - 48
                 height: cancerColumn.height + 32
                 visible: $tnmManager.showCancerSelection
-                color: "#FFF8E1"
+                color: "#ECF3FF"
                 radius: 8
-                border.color: "#FFE082"
-                border.width: 1
                 
                 Column {
                     id: cancerColumn
@@ -167,7 +165,7 @@ Rectangle {
                         font.weight: Font.Bold
                         font.pixelSize: 16
                         color: "#D9000000"
-                        text: qsTr("检测到可能的癌症类型，请选择：")
+                        text: qsTr("检测到可能的肿瘤类型，请选择：")
                         width: parent.width
                         wrapMode: Text.Wrap
                     }
@@ -177,34 +175,26 @@ Rectangle {
                         model: $tnmManager.cancerTypes
                         delegate: Rectangle {
                             width: parent.width
-                            height: 48
-                            color: cancerMouseArea.containsMouse ? "#FFFDE7" : "#FFFFFF"
-                            radius: 6
+                            height: 40
+                            color: cancerMouseArea.containsMouse ? "#F5F5F5" : "#FFFFFF"
+                            radius: 8
                             border.color: "#E0E0E0"
                             border.width: 1
-                            
-                            Row {
-                                anchors.left: parent.left
-                                anchors.leftMargin: 12
+                            Text {
+                                anchors.centerIn: parent
+                                font.family: "Alibaba PuHuiTi 3.0"
+                                font.pixelSize: 14
+                                color: "#D9000000"
+                                text: qsTr(modelData.name)
                                 anchors.verticalCenter: parent.verticalCenter
-                                spacing: 8
-                                
-                                Text {
-                                    font.family: "Alibaba PuHuiTi 3.0"
-                                    font.weight: Font.Medium
-                                    font.pixelSize: 15
-                                    color: "#D9000000"
-                                    text: qsTr(modelData.name) || ""
-                                    anchors.verticalCenter: parent.verticalCenter
-                                }
                             }
-                            
                             MouseArea {
                                 id: cancerMouseArea
                                 anchors.fill: parent
                                 hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
                                 onClicked: {
-                                    $tnmManager.selectCancerType(modelData.name || "")
+                                    $tnmManager.selectCancerType(modelData.name)
                                 }
                             }
                         }
@@ -214,8 +204,8 @@ Rectangle {
                     Rectangle {
                         width: parent.width
                         height: 40
-                        color: skipMouseArea.containsMouse ? "#F5F5F5" : "#FAFAFA"
-                        radius: 6
+                        color: skipMouseArea.containsMouse ? "#F5F5F5" : "#FFFFFF"
+                        radius: 8
                         border.color: "#E0E0E0"
                         border.width: 1
                         
@@ -223,14 +213,15 @@ Rectangle {
                             anchors.centerIn: parent
                             font.family: "Alibaba PuHuiTi 3.0"
                             font.pixelSize: 14
-                            color: "#666666"
-                            text: qsTr("跳过选择，直接进行TNM分析")
+                            color: "#D9000000"
+                            text: qsTr("跳过选择，默认使用肾肿瘤标准")
                         }
                         
                         MouseArea {
                             id: skipMouseArea
                             anchors.fill: parent
                             hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
                             onClicked: {
                                 $tnmManager.skipCancerSelection()
                             }
