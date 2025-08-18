@@ -395,7 +395,7 @@ Rectangle {
                                 font.pixelSize: 16
                                 color: "#A6000000"
                                 width: parent.width - 24
-                                wrapMode: Text.WrapAnywhere
+                                wrapMode: Text.Wrap
                                 text: $tnmManager.TConclusion
                             }
                         }
@@ -427,7 +427,7 @@ Rectangle {
                                 font.pixelSize: 16
                                 color: "#A6000000"
                                 width: parent.width - 24
-                                wrapMode: Text.WrapAnywhere
+                                wrapMode: Text.Wrap
                                 text: $tnmManager.NConclusion
                             }
                         }
@@ -459,7 +459,7 @@ Rectangle {
                                 font.pixelSize: 16
                                 color: "#A6000000"
                                 width: parent.width - 24
-                                wrapMode: Text.WrapAnywhere
+                                wrapMode: Text.Wrap
                                 text: $tnmManager.MConclusion
                             }
                         }
