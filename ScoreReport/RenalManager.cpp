@@ -21,7 +21,7 @@ RenalManager::RenalManager(QObject *parent)
     setmissingFieldsList(QVariantList());
     currentChatId = "";
     resultText = "";
-    setsourceText(QString::fromLocal8Bit("评分依据：Kutikov RENAL评分系统\n版本时间：原始版（2009年发布）"));
+    setsourceText(QString::fromUtf8("评分依据：Kutikov RENAL评分系统\n版本时间：原始版（2009年发布）"));
 }
 
 bool RenalManager::checkClipboard()
@@ -113,13 +113,13 @@ void RenalManager::onRenalAiQualityScoreResponse(bool success, const QString& me
             setisCompleted(true);
             setinCompleteInfo("");
             setrenalScorer(QString::number(detailData.value("total_score").toInt()));
-            QString title = QString::fromLocal8Bit("RENAL评分：") + getrenalScorer() + QString::fromLocal8Bit("分");
-            QString result = detailData.value("complexity").toString() + QString::fromLocal8Bit("。") + detailData.value("recommendation").toString() + QString::fromLocal8Bit("\n");
-            result += QString::fromLocal8Bit("R：") + detailData.value("basis").toObject().value("R").toString() + QString::fromLocal8Bit("\n");
-            result += QString::fromLocal8Bit("E：") + detailData.value("basis").toObject().value("E").toString() + QString::fromLocal8Bit("\n");
-            result += QString::fromLocal8Bit("N：") + detailData.value("basis").toObject().value("N").toString() + QString::fromLocal8Bit("\n");
-            result += QString::fromLocal8Bit("A：") + detailData.value("basis").toObject().value("A").toString() + QString::fromLocal8Bit("\n");
-            result += QString::fromLocal8Bit("L：") + detailData.value("basis").toObject().value("L").toString();
+            QString title = QString::fromUtf8("RENAL评分：") + getrenalScorer() + QString::fromUtf8("分");
+            QString result = detailData.value("complexity").toString() + QString::fromUtf8("。") + detailData.value("recommendation").toString() + QString::fromUtf8("\n");
+            result += QString::fromUtf8("R：") + detailData.value("basis").toObject().value("R").toString() + QString::fromUtf8("\n");
+            result += QString::fromUtf8("E：") + detailData.value("basis").toObject().value("E").toString() + QString::fromUtf8("\n");
+            result += QString::fromUtf8("N：") + detailData.value("basis").toObject().value("N").toString() + QString::fromUtf8("\n");
+            result += QString::fromUtf8("A：") + detailData.value("basis").toObject().value("A").toString() + QString::fromUtf8("\n");
+            result += QString::fromUtf8("L：") + detailData.value("basis").toObject().value("L").toString();
             setrenalResult(result);
             resultText = title;
             resultText += "\n";
@@ -134,7 +134,7 @@ void RenalManager::onRenalAiQualityScoreResponse(bool success, const QString& me
             QVariantList list;
             QString content = "";
             for (const QJsonValue& value : missing_fields) {
-                content += value.toString() + QString::fromLocal8Bit("：");
+                content += value.toString() + QString::fromUtf8("：");
                 content += detailData.value("basis").toObject().value(value.toString()).toString();
                 if (missing_fields.last() != value) {
                     content += "\n";

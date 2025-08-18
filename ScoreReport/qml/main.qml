@@ -1141,7 +1141,7 @@ ApplicationWindow {
                             font.family: "Alibaba PuHuiTi 3.0"
                             font.pixelSize: 14
                             color: languageMouseArea.containsMouse ? "#007ACC" : "#666666"
-                            text: qsTr("语言") + " (" + (languageManager ? languageManager.getLanguageDisplayName(languageManager.currentLanguage) : "中文") + ")"
+                            text: qsTr("语言") + " (" + (languageManager ? qsTr(languageManager.getLanguageDisplayName(languageManager.currentLanguage)) : qsTr("中文")) + ")"
 
                             Behavior on color {
                                 ColorAnimation {

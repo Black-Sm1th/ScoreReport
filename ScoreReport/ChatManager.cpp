@@ -77,7 +77,7 @@ void ChatManager::resetWithWelcomeMessage()
     setlastUserMessage("");
     
     // 添加欢迎消息
-    addAiMessage(QString::fromLocal8Bit("您好，我是您的AI辅助助手。请您随时提出问题，我将尽最大努力为您提供有价值的信息支持。"));
+    addAiMessage(QString::fromUtf8("您好，我是您的AI辅助助手。请您随时提出问题，我将尽最大努力为您提供有价值的信息支持。"));
 }
 
 void ChatManager::regenerateLastResponse()

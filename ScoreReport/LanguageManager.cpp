@@ -69,7 +69,7 @@ void LanguageManager::setCurrentLanguage(const QString& language)
 QString LanguageManager::getLanguageDisplayName(const QString& language) const
 {
     if (language == "zh") {
-        return QString::fromLocal8Bit("中文");
+        return QString::fromUtf8("中文");
     } else if (language == "en") {
         return "English";
     }
