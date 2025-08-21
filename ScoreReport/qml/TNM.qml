@@ -130,7 +130,7 @@ Rectangle {
                             return "肿瘤类型检测中" + getDots()
                         }
                         if($tnmManager.showCancerSelection){
-                            return "请选择肿瘤类型"
+                            return $tnmManager.cancerTypes.length !== 0 ? "请选择肿瘤类型：" : "未识别到肿瘤类型！"
                         }
                         if($tnmManager.isAnalyzing){
                             return "TNM分析中" + getDots()
@@ -159,16 +159,6 @@ Rectangle {
                     anchors.centerIn: parent
                     spacing: 12
                     width: parent.width - 36
-                    
-                    Text {
-                        font.family: "Alibaba PuHuiTi 3.0"
-                        font.weight: Font.Bold
-                        font.pixelSize: 16
-                        color: "#D9000000"
-                        text: qsTr("检测到可能的肿瘤类型，请选择：")
-                        width: parent.width
-                        wrapMode: Text.Wrap
-                    }
                     
                     // 癌种选择列表
                     Repeater {
@@ -498,7 +488,7 @@ Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.right: parent.right
                 anchors.rightMargin: 24
-                visible: $tnmManager.isAnalyzing || $tnmManager.isDetectingCancer
+                visible: $tnmManager.isAnalyzing || $tnmManager.isDetectingCancer || $tnmManager.showCancerSelection
                 text: qsTr("终止")
                 width: 88
                 height: 36

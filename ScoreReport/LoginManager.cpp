@@ -18,7 +18,7 @@ LoginManager::LoginManager(QObject* parent)
     setisRegistering(false);
     setrememberPassword(false);
     setuserList(QVariantList());
-    setshowDialogOnTextSelection(true);  // 默认显示弹窗
+    setshowDialogOnTextSelection(false);  // 默认不显示弹窗
     m_selector = new GlobalTextMonitor();
     connect(m_selector, &GlobalTextMonitor::textSelected,
         this, &LoginManager::onTextSelected);
@@ -125,7 +125,7 @@ void LoginManager::loadSavedCredentials()
     QString username = m_settings->value("username", "").toString();
     QString password = m_settings->value("password", "").toString();
     bool remember = m_settings->value("rememberPassword", false).toBool();
-    bool showDialog = m_settings->value("showDialogOnTextSelection", true).toBool();
+    bool showDialog = m_settings->value("showDialogOnTextSelection", false).toBool();
     
     setsavedUsername(username);
     setsavedPassword(remember ? password : "");

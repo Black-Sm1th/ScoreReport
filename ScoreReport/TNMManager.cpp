@@ -251,17 +251,9 @@ void TNMManager::onCancerDiagnoseTypeResponse(bool success, const QString& messa
             cancerMap["name"] = cancerObj;
             cancerList.append(cancerMap);
         }
-        
-        if (cancerList.isEmpty()) {
-            // 没有检测到相关癌种，直接进行TNM分析
-            qDebug() << "[TNMManager] No cancer types detected, proceed with TNM analysis";
-            skipCancerSelection();
-        } else {
-            // 显示癌种选择界面
-            setcancerTypes(cancerList);
-            setshowCancerSelection(true);
-            qDebug() << "[TNMManager] Cancer types detected:" << cancerList.size();
-        }
+        // 显示癌种选择界面
+        setcancerTypes(cancerList);
+        setshowCancerSelection(true);
     } else {
         qWarning() << "[TNMManager] Cancer diagnosis failed:" << message;
         // 癌种检测失败，直接进行TNM分析
