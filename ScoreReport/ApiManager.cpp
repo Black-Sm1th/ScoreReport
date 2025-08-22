@@ -69,7 +69,7 @@ void ApiManager::makePostRequest(const QString& endpoint, const QJsonObject& dat
     }
     
     QByteArray body = QJsonDocument(data).toJson();
-    qDebug() << "[ApiManager] POST request body:" << body;
+    qDebug() << "[ApiManager] POST request body:" << QString::fromLocal8Bit(body);
     
     QNetworkReply* reply = m_networkManager->post(request, body);
     m_activeReplies.insert(reply);  // 跟踪活跃的请求
@@ -415,7 +415,7 @@ void ApiManager::onNetworkReply(QNetworkReply* reply)
     if (reply->error() == QNetworkReply::NoError) {
         // 网络请求成功，解析响应数据
         QByteArray responseData = reply->readAll();
-        qDebug() << "[ApiManager] Response data:" << responseData;
+        qDebug() << "[ApiManager] Response data:" << QString::fromLocal8Bit(responseData);
         
         QJsonDocument doc = QJsonDocument::fromJson(responseData);
         if (!doc.isObject()) {
