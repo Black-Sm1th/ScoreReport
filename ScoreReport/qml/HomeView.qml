@@ -24,6 +24,7 @@ Rectangle {
             width: parent.width
             height: 32
             Text {
+                id:chooseText
                 text: qsTr("请选择评分方案")
                 color: "#000000"
                 font.family: "Alibaba PuHuiTi 3.0"
@@ -31,11 +32,13 @@ Rectangle {
                 font.pixelSize: 16
                 anchors.verticalCenter: parent.verticalCenter
             }
-
+            Rectangle{
+                height: 32
+                width:parent.width - chooseText.width - tabSwitcher.width
+            }
             TabSwitcher {
                 id: tabSwitcher
                 anchors.verticalCenter: parent.verticalCenter
-                anchors.right: parent.right
             }
         }
 
@@ -47,6 +50,7 @@ Rectangle {
 
         // 评分方案网格
         Grid {
+            id: kidney
             width: parent.width
             columns: 3
             columnSpacing: 12
@@ -95,6 +99,7 @@ Rectangle {
 
         Grid {
             width: parent.width
+            height: kidney.height
             columns: 3
             columnSpacing: 12
             rowSpacing: 12

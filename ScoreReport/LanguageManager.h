@@ -33,7 +33,6 @@ public:
 
 signals:
     void currentLanguageChanged();
-    void languageChanged(); // 用于通知QML重新翻译
 
 private:
     void loadTranslation(const QString& language);

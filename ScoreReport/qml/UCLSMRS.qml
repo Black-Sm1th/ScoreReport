@@ -362,7 +362,6 @@ Rectangle {
 
                         // 疑似病症
                         Text {
-                            anchors.bottom: totalScore.bottom
                             font.family: "Alibaba PuHuiTi 3.0"
                             font.pixelSize: 16
                             visible: detailedDiagnosis !== ""
@@ -391,7 +390,6 @@ Rectangle {
                         }
 
                         Text {
-                            anchors.bottom: totalScore.bottom
                             font.family: "Alibaba PuHuiTi 3.0"
                             font.pixelSize: 12
                             color: "#73000000"

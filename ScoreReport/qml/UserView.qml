@@ -10,19 +10,10 @@ Rectangle {
     height: loginForm.height
     color: "transparent"
     property var messageManager: null
-    property int languageVersion: 0
 
     // 添加键盘焦点支持
     focus: true
     
-    // 监听语言变化
-    Connections {
-        target: languageManager
-        function onLanguageChanged() {
-            console.log("UserView: Language changed, updating UI...")
-            languageVersion++
-        }
-    }
     Keys.onReturnPressed: {
         if ((!$loginManager.isLoggedIn || ($loginManager.isChangingUser && $loginManager.isAdding)) && !$loginManager.isRegistering) {
             loginButton.clicked()
@@ -94,7 +85,7 @@ Rectangle {
             visible: (!$loginManager.isLoggedIn || ($loginManager.isChangingUser && $loginManager.isAdding)) && !$loginManager.isRegistering
             y:32
             Text {
-                text: languageVersion >= 0 ? qsTr("登录账号") : ""
+                text: qsTr("登录账号")
                 font.family: "Alibaba PuHuiTi 3.0"
                 font.pixelSize: 16
                 color: "#D9000000"

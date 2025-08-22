@@ -7,30 +7,12 @@ import "./components"
 ApplicationWindow {
     id: mainWindow
     visible: true
-
-    // 监听语言变化，强制重新渲染
-    property int languageVersion: 0
-
-    Connections {
-        target: languageManager
-        function onLanguageChanged() {
-            console.log("Language changed, forcing UI update...")
-            mainWindow.languageVersion++
-            // 强制重新渲染所有text元素
-            Qt.callLater(function() {
-                mainWindow.visible = false
-                mainWindow.visible = true
-            })
-        }
-    }
-
     // 全局快捷键：Ctrl+F12 打开截图功能
     Shortcut {
         sequence: "Ctrl+F12"
         context: Qt.ApplicationShortcut   // 全应用范围
         enabled: $loginManager.isLoggedIn
         onActivated: {
-            console.log("Ctrl+F12 快捷键被按下，启动截图功能")
             if ($loginManager.isLoggedIn) {
                 $loginManager.performScreenshotOCR()
             }
@@ -748,10 +730,8 @@ ApplicationWindow {
     // 评分方式选择对话框
     Window {
         id: scoringMethodDialog
-        width: Screen.width
-        height: Screen.height
-        x: 0
-        y: 0
+        width: scoringMethodContent.width + 40  // 内容宽度 + 边距
+        height: scoringMethodContent.height + 40  // 内容高度 + 边距
         visible: false
         flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
         color: "transparent"
@@ -765,15 +745,17 @@ ApplicationWindow {
             }
         }
 
-        // 全屏点击区域，点击任何地方都关闭对话框
-        MouseArea {
-            anchors.fill: parent
-            onClicked: {
-                // 点击评分方式对话框时隐藏右键菜单
-                if (contextMenu.visible) {
-                    contextMenu.hide()
-                }
-                scoringMethodDialog.hideDialog()
+        // 失去焦点时自动隐藏
+        onActiveFocusItemChanged: {
+            if (!activeFocusItem && visible) {
+                hideDialog()
+            }
+        }
+
+        // 监听窗口激活状态变化
+        onActiveChanged: {
+            if (!active && visible) {
+                hideDialog()
             }
         }
 
@@ -801,31 +783,87 @@ ApplicationWindow {
         property int lastMouseX: 0
         property int lastMouseY: 0
         property string currentText: ""
+        property string lastProcessedText: ""  // 记录上次处理的文本，防止重复处理
+
+        // 防抖定时器，防止短时间内重复触发
+        Timer {
+            id: debounceTimer
+            interval: 300  // 300ms防抖间隔
+            repeat: false
+            onTriggered: {
+                // 执行实际的弹窗显示逻辑
+                if (scoringMethodDialog.visible && scoringMethodDialog.opacity > 0) {
+                    // 如果选择框已经显示，重新开始3秒倒计时
+                    autoHideTimer.restart()
+                } else {
+                    // 如果选择框未显示，1秒后显示
+                    showDelayTimer.restart()
+                    autoHideTimer.stop()
+                }
+            }
+        }
+
         // 监听划词信号
         Connections {
             target: $loginManager
             function onTextSelectionDetected(text, mouseX, mouseY) {
                 if (text && text.length > 0 && $loginManager.isLoggedIn && $loginManager.showDialogOnTextSelection) {
-                    // 保存鼠标位置
+                    // 检查是否与上次处理的文本相同，避免重复处理
+                    if (text === scoringMethodDialog.lastProcessedText) {
+                        return
+                    }
+
+                    // 保存鼠标位置和文本
                     scoringMethodDialog.lastMouseX = mouseX
                     scoringMethodDialog.lastMouseY = mouseY
                     scoringMethodDialog.currentText = text
-                    if (scoringMethodDialog.visible && scoringMethodDialog.opacity > 0) {
-                        // 如果选择框已经显示，重新开始3秒倒计时
-                        autoHideTimer.restart()
-                    } else {
-                        // 如果选择框未显示，1秒后显示
-                        showDelayTimer.restart()
-                        autoHideTimer.stop()
-                    }
+                    scoringMethodDialog.lastProcessedText = text
+
+                    // 使用防抖定时器，避免短时间内重复触发
+                    debounceTimer.restart()
                 }
             }
         }
 
         function showDialog() {
+            // 计算弹窗位置
+            updateDialogPosition()
             visible = true
             opacity = 1
             autoHideTimer.start()
+            // 请求焦点，这样失去焦点时可以自动隐藏
+            requestActivate()
+        }
+
+        function updateDialogPosition() {
+            var spacing = 10  // 与鼠标位置的间距
+            var newX = lastMouseX - width / 2  // 水平居中对齐鼠标位置
+            var newY = lastMouseY - height - spacing  // 显示在鼠标上方
+
+            // 确保不超出屏幕边界
+            if (newX < 10) {
+                newX = 10  // 左边界
+            } else if (newX + width > Screen.width - 10) {
+                newX = Screen.width - width - 10  // 右边界
+            }
+
+            // 垂直方向调整
+            if (newY < 10) {
+                // 如果上方空间不够，显示在鼠标下方
+                newY = lastMouseY + spacing
+                // 如果下方也放不下，就放在屏幕中央
+                if (newY + height > Screen.height - 10) {
+                    newY = (Screen.height - height) / 2
+                }
+            }
+
+            // 确保不超出下边界
+            if (newY + height > Screen.height - 10) {
+                newY = Screen.height - height - 10
+            }
+
+            x = newX
+            y = newY
         }
 
         function hideDialog() {
@@ -833,6 +871,9 @@ ApplicationWindow {
             visible = false
             showDelayTimer.stop()
             autoHideTimer.stop()
+            debounceTimer.stop()
+            // 清理上次处理的文本记录，允许相同文本再次触发
+            lastProcessedText = ""
         }
 
         Rectangle {
@@ -842,43 +883,7 @@ ApplicationWindow {
             color: "white"
             radius: 16
             scale: scoringMethodDialog.opacity
-            z: 1  // 确保内容区域在全屏MouseArea之上
-
-            // 根据鼠标位置动态定位
-            x: {
-                var spacing = 10  // 与鼠标位置的间距
-                var newX = scoringMethodDialog.lastMouseX - width / 2  // 水平居中对齐鼠标位置
-
-                // 确保不超出屏幕边界
-                if (newX < 10) {
-                    return 10  // 左边界
-                } else if (newX + width > Screen.width - 10) {
-                    return Screen.width - width - 10  // 右边界
-                }
-                return newX
-            }
-
-            y: {
-                var spacing = 10  // 与鼠标位置的间距
-                var newY = scoringMethodDialog.lastMouseY - height - spacing  // 显示在鼠标上方
-
-                // 垂直方向调整
-                if (newY < 10) {
-                    // 如果上方空间不够，显示在鼠标下方
-                    newY = scoringMethodDialog.lastMouseY + spacing
-                    // 如果下方也放不下，就放在屏幕中央
-                    if (newY + height > Screen.height - 10) {
-                        newY = (Screen.height - height) / 2
-                    }
-                }
-
-                // 确保不超出下边界
-                if (newY + height > Screen.height - 10) {
-                    newY = Screen.height - height - 10
-                }
-
-                return newY
-            }
+            anchors.centerIn: parent
 
             // 缩放动画
             Behavior on scale {
@@ -888,25 +893,9 @@ ApplicationWindow {
                 }
             }
 
-            // 位置动画
-            Behavior on x {
-                NumberAnimation {
-                    duration: 150
-                    easing.type: Easing.OutQuad
-                }
-            }
-
-            Behavior on y {
-                NumberAnimation {
-                    duration: 150
-                    easing.type: Easing.OutQuad
-                }
-            }
-
-            // 阻止点击事件传播到父级
+            // 简单的鼠标处理
             MouseArea {
                 anchors.fill: parent
-                // 空的onClicked，阻止事件传播
                 onClicked: {
                     // 点击评分方式对话框内容时隐藏右键菜单
                     if (contextMenu.visible) {
@@ -1641,11 +1630,7 @@ ApplicationWindow {
             }
         }
 
-        // 窗口级别的键盘事件处理
-        Keys.onEscapePressed: {
-            console.log("窗口级ESC键被按下，取消截图选择")
-            cancelSelection()
-        }
+
 
         function startSelection() {
             // 获取屏幕尺寸
@@ -1667,7 +1652,9 @@ ApplicationWindow {
         }
 
         function finishSelection() {
+            // 立即隐藏窗口，避免蒙层继续阻挡鼠标事件
             visible = false
+            isSelecting = false
 
             var selX = Math.min(startX, endX)
             var selY = Math.min(startY, endY)
@@ -1675,32 +1662,88 @@ ApplicationWindow {
             var selHeight = Math.abs(endY - startY)
 
             if (selWidth > 10 && selHeight > 10) {
-                $loginManager.processScreenshotArea(selX, selY, selWidth, selHeight)
+                // 使用延迟调用，确保窗口完全隐藏后再处理截图
+                Qt.callLater(function() {
+                    $loginManager.processScreenshotArea(selX, selY, selWidth, selHeight)
+                })
             }
         }
 
         function cancelSelection() {
-            console.log("取消截图选择")
             isSelecting = false
             visible = false
+            // 重置选择区域
+            startX = 0
+            startY = 0
+            endX = 0
+            endY = 0
         }
 
-        Rectangle {
+        // 使用四个矩形来创建带透明选中区域的遮罩
+        Item {
             anchors.fill: parent
-            color: "#80000000"  // 半透明黑色遮罩
             focus: true  // 确保能接收键盘事件
-
+            // 窗口级别的键盘事件处理
+            Keys.onEscapePressed: {
+                cancelSelection()
+            }
             Component.onCompleted: {
                 forceActiveFocus()
             }
 
-            // 选择区域 - 透明区域显示原始内容
+            // 计算选中区域的坐标
+            property int selX: screenshotSelector.isSelecting ? Math.min(screenshotSelector.startX, screenshotSelector.endX) : 0
+            property int selY: screenshotSelector.isSelecting ? Math.min(screenshotSelector.startY, screenshotSelector.endY) : 0
+            property int selWidth: screenshotSelector.isSelecting ? Math.abs(screenshotSelector.endX - screenshotSelector.startX) : 0
+            property int selHeight: screenshotSelector.isSelecting ? Math.abs(screenshotSelector.endY - screenshotSelector.startY) : 0
+
+            // 上方遮罩
+            Rectangle {
+                x: 0
+                y: 0
+                width: parent.width
+                height: parent.selY
+                color: "#80000000"
+                visible: screenshotSelector.isSelecting && height > 0
+            }
+
+            // 下方遮罩
+            Rectangle {
+                x: 0
+                y: parent.selY + parent.selHeight
+                width: parent.width
+                height: parent.height - y
+                color: "#80000000"
+                visible: screenshotSelector.isSelecting && height > 0
+            }
+
+            // 左侧遮罩
+            Rectangle {
+                x: 0
+                y: parent.selY
+                width: parent.selX
+                height: parent.selHeight
+                color: "#80000000"
+                visible: screenshotSelector.isSelecting && width > 0
+            }
+
+            // 右侧遮罩
+            Rectangle {
+                x: parent.selX + parent.selWidth
+                y: parent.selY
+                width: parent.width - x
+                height: parent.selHeight
+                color: "#80000000"
+                visible: screenshotSelector.isSelecting && width > 0
+            }
+
+            // 选中区域边框（透明区域）
             Rectangle {
                 id: selectionRect
-                x: screenshotSelector.isSelecting ? Math.min(screenshotSelector.startX, screenshotSelector.endX) : 0
-                y: screenshotSelector.isSelecting ? Math.min(screenshotSelector.startY, screenshotSelector.endY) : 0
-                width: screenshotSelector.isSelecting ? Math.abs(screenshotSelector.endX - screenshotSelector.startX) : 0
-                height: screenshotSelector.isSelecting ? Math.abs(screenshotSelector.endY - screenshotSelector.startY) : 0
+                x: parent.selX
+                y: parent.selY
+                width: parent.selWidth
+                height: parent.selHeight
                 color: "transparent"
                 border.color: "#00AAFF"
                 border.width: 2
@@ -1725,6 +1768,13 @@ ApplicationWindow {
                         z: -1
                     }
                 }
+            }
+
+            // 未开始选择时的全屏遮罩
+            Rectangle {
+                anchors.fill: parent
+                color: "#80000000"
+                visible: !screenshotSelector.isSelecting
             }
 
             MouseArea {
@@ -1767,7 +1817,6 @@ ApplicationWindow {
 
                 // MouseArea级别的键盘事件处理
                 Keys.onEscapePressed: {
-                    console.log("MouseArea级ESC键被按下，取消截图选择")
                     screenshotSelector.cancelSelection()
                 }
             }
@@ -1777,7 +1826,6 @@ ApplicationWindow {
                 sequence: "Escape"
                 enabled: screenshotSelector.visible
                 onActivated: {
-                    console.log("Shortcut ESC键被按下，取消截图选择")
                     screenshotSelector.cancelSelection()
                 }
             }

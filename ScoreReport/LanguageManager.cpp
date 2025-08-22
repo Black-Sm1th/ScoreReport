@@ -55,14 +55,9 @@ void LanguageManager::setCurrentLanguage(const QString& language)
         loadTranslation(language);
         
         emit currentLanguageChanged();
-        emit languageChanged();
         
         // 强制QML重新加载（作为最后手段）
-        qDebug() << "Language changed to:" << language << "forcing QML reload...";
-        if (m_engine) {
-            // 清除组件缓存，强制重新加载
-            m_engine->clearComponentCache();
-        }
+        qDebug() << "[LanguageManager] Language changed to:" << language;
     }
 }
 
@@ -86,7 +81,7 @@ void LanguageManager::loadTranslation(const QString& language)
     
     // 加载翻译文件
     if (m_translator->load(translationPath)) {
-        qDebug() << "Translation loaded successfully for language:" << language;
+        qDebug() << "[LanguageManager] Translation loaded successfully for language:" << language;
         QGuiApplication::installTranslator(m_translator);
         
         // 通知QML引擎重新翻译
@@ -94,8 +89,8 @@ void LanguageManager::loadTranslation(const QString& language)
             m_engine->retranslate();
         }
     } else {
-        qDebug() << "Failed to load translation for language:" << language;
-        qDebug() << "Translation path:" << translationPath;
+        qDebug() << "[LanguageManager] Failed to load translation for language:" << language;
+        qDebug() << "[LanguageManager] Translation path:" << translationPath;
     }
 }
 
