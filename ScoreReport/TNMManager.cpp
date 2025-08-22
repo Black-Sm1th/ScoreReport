@@ -179,7 +179,6 @@ void TNMManager::onTnmAiQualityScoreResponse(bool success, const QString& messag
     setisAnalyzing(false);
     
     if (success) {
-        qDebug() << "[TNMManager] Response data:" << data;
         QJsonObject detailData = data.value("data").toObject();
         QString status = detailData.value("status").toString();
         if (status == "success") {
@@ -242,7 +241,6 @@ void TNMManager::onCancerDiagnoseTypeResponse(bool success, const QString& messa
     setisDetectingCancer(false);
     
     if (success) {
-        qDebug() << "[TNMManager] Cancer diagnose response data:" << data;
         QJsonArray cancerArray = data.value("types").toArray();
         QVariantList cancerList;
         for (const QJsonValue& value : cancerArray) {

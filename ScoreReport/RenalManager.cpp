@@ -106,7 +106,6 @@ void RenalManager::onRenalAiQualityScoreResponse(bool success, const QString& me
     setisAnalyzing(false);
     
     if (success) {
-        qDebug() << "[RenalManager] Response data:" << data;
         QJsonObject detailData = data.value("data").toObject();
         QString status = detailData.value("status").toString();
         if (status == "success") {
