@@ -24,6 +24,19 @@ ApplicationWindow {
         }
     }
 
+    // 全局快捷键：Ctrl+F12 打开截图功能
+    Shortcut {
+        sequence: "Ctrl+F12"
+        context: Qt.ApplicationShortcut   // 全应用范围
+        enabled: $loginManager.isLoggedIn
+        onActivated: {
+            console.log("Ctrl+F12 快捷键被按下，启动截图功能")
+            if ($loginManager.isLoggedIn) {
+                $loginManager.performScreenshotOCR()
+            }
+        }
+    }
+
     // 全局鼠标区域，用于隐藏右键菜单
     MouseArea {
         anchors.fill: parent
@@ -1259,6 +1272,97 @@ ApplicationWindow {
                     color: "#E0E0E0"
                 }
 
+                // 截图识字选项
+                Rectangle {
+                    width: contentArea.width + 24
+                    height: 40
+                    color: ocrMouseArea.containsMouse && $loginManager.isLoggedIn ? "#F5F5F5" : "transparent"
+                    radius: 6
+
+                    Row {
+                        anchors.left: parent.left
+                        anchors.leftMargin: 12
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 8
+
+                        // 截图识字图标
+                        Rectangle {
+                            width: 16
+                            height: 16
+                            anchors.verticalCenter: parent.verticalCenter
+                            color: "transparent"
+
+                            // 简单的截图图标
+                            Canvas {
+                                id: canvas
+                                anchors.fill: parent
+                                onPaint: {
+                                    var ctx = getContext("2d")
+                                    ctx.clearRect(0, 0, width, height)
+                                    var iconColor = $loginManager.isLoggedIn ? "#007ACC" : "#CCCCCC"
+                                    ctx.strokeStyle = iconColor
+                                    ctx.lineWidth = 1.5
+                                    ctx.lineCap = "round"
+
+                                    // 绘制相机图标
+                                    ctx.strokeRect(2, 4, 12, 8)
+                                    ctx.fillStyle = iconColor
+                                    ctx.fillRect(6, 6, 4, 4)
+                                    // 绘制镜头
+                                    ctx.strokeRect(1, 2, 2, 2)
+                                }
+
+                                // 监听登录状态变化重新绘制
+                                Connections {
+                                    target: $loginManager
+                                    function onIsLoggedInChanged() {
+                                        canvas.requestPaint()
+                                    }
+                                }
+                            }
+                        }
+
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            font.family: "Alibaba PuHuiTi 3.0"
+                            font.pixelSize: 14
+                            color: $loginManager.isLoggedIn ?
+                                   (ocrMouseArea.containsMouse ? "#007ACC" : "#666666") :
+                                   "#CCCCCC"
+                            text: qsTr("截图识字")
+
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: 150
+                                    easing.type: Easing.OutQuad
+                                }
+                            }
+                        }
+                    }
+
+                    MouseArea {
+                        id: ocrMouseArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: $loginManager.isLoggedIn ? Qt.PointingHandCursor : Qt.ForbiddenCursor
+
+                        onClicked: {
+                            contextMenu.hide()
+                            if ($loginManager.isLoggedIn) {
+                                $loginManager.performScreenshotOCR()
+                            }
+                        }
+                    }
+                }
+
+                // 分隔线
+                Rectangle {
+                    width: parent.width - 16
+                    height: 1
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    color: "#E0E0E0"
+                }
+
                 Rectangle {
                     width: parent.width
                     height: 40
@@ -1328,6 +1432,365 @@ ApplicationWindow {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    // OCR结果对话框
+    Window {
+        id: ocrResultDialog
+        width: 600
+        height: 500
+        visible: false
+        flags: Qt.Dialog | Qt.WindowCloseButtonHint
+        title: qsTr("截图识字结果")
+
+        // 设置对话框在屏幕中央
+        Component.onCompleted: {
+            x = (Screen.width - width) / 2
+            y = (Screen.height - height) / 2
+        }
+
+        onVisibleChanged: {
+            if (visible) {
+                x = (Screen.width - width) / 2
+                y = (Screen.height - height) / 2
+            }
+        }
+
+        property string ocrText: ""
+
+        // 监听OCR结果信号
+        Connections {
+            target: $loginManager
+            function onScreenshotOCRResult(text) {
+                ocrResultDialog.ocrText = text
+                ocrResultDialog.show()
+                ocrResultDialog.raise()
+                ocrResultDialog.requestActivate()
+            }
+            function onStartScreenshotSelection() {
+                screenshotSelector.startSelection()
+            }
+        }
+
+        Rectangle {
+            anchors.fill: parent
+            color: "#FFFFFF"
+
+            Column {
+                anchors.fill: parent
+                anchors.margins: 20
+                spacing: 15
+
+                Text {
+                    width: parent.width
+                    font.family: "Alibaba PuHuiTi 3.0"
+                    font.pixelSize: 16
+                    font.bold: true
+                    color: "#D9000000"
+                    text: qsTr("识别结果：")
+
+                    // 添加拖动功能的MouseArea
+                    MouseArea {
+                        anchors.fill: parent
+                        acceptedButtons: Qt.LeftButton
+                        z: -1  // 确保不干扰文本选择
+
+                        property point lastMousePos
+                        property bool isDragging: false
+
+                        onPressed: {
+                            // 只有在没有选中文本时才允许拖动
+                            lastMousePos = Qt.point(mouse.x, mouse.y)
+                            isDragging = false
+                        }
+                        onPositionChanged: {
+                            if (pressed && pressedButtons & Qt.LeftButton) {
+                                var dx = mouse.x - lastMousePos.x
+                                var dy = mouse.y - lastMousePos.y
+
+                                // 如果移动距离超过阈值，开始拖动
+                                if (!isDragging && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
+                                    isDragging = true
+                                    ocrResultDialog.startSystemMove()
+                                }
+                            }
+                        }
+                        onReleased: {
+                            isDragging = false
+                        }
+                    }
+                }
+
+                ScrollView {
+                    width: parent.width
+                    height: parent.height - 80
+
+                    TextArea {
+                        id: ocrTextArea
+                        width: parent.width
+                        text: ocrResultDialog.ocrText
+                        font.family: "Alibaba PuHuiTi 3.0"
+                        font.pixelSize: 14
+                        color: "#D9000000"
+                        wrapMode: TextArea.Wrap
+                        selectByMouse: true
+
+                        background: Rectangle {
+                            color: "#F8F9FA"
+                            border.color: "#E0E0E0"
+                            border.width: 1
+                            radius: 4
+                        }
+                    }
+                }
+
+                Row {
+                    spacing: 10
+                    CustomButton {
+                        width: 80
+                        height: 32
+                        backgroundColor: "#5792FF"
+                        text: "RENAL"
+                        onClicked: {
+                            // 切换到主页面并选择RENAL评分
+                            scoreDialog.resetAllValue()
+                            contentRect.currentIndex = 0
+                            contentRect.currentScore = 0  // RENAL对应索引0
+                            $loginManager.copyToClipboard(ocrTextArea.text)
+                            if($renalManager.checkClipboard()){
+                                $renalManager.startAnalysis()
+                            }else{
+                                messageManager.warning(qsTr("剪贴板为空，请先复制内容"))
+                            }
+                            if(!scoreDialog.visible){
+                                scoreDialog.showDialog()
+                            }
+                        }
+                    }
+                    CustomButton {
+                        width: 80
+                        height: 32
+                        text:"TNM"
+                        backgroundColor: "#FF490D"
+                        onClicked: {
+                            // 切换到主页面并选择TNM评分
+                            scoreDialog.resetAllValue()
+                            contentRect.currentIndex = 0
+                            contentRect.currentScore = 2  // TNM对应索引2
+                            $loginManager.copyToClipboard(ocrTextArea.text)
+                            if($tnmManager.checkClipboard()){
+                                $tnmManager.startAnalysis()
+                            }else{
+                                messageManager.warning(qsTr("剪贴板为空，请先复制内容"))
+                            }
+                            if(!scoreDialog.visible){
+                                scoreDialog.showDialog()
+                            }
+                        }
+                    }
+                    Rectangle{
+                        width: ocrResultDialog.width - 400
+                        height: 32
+                    }
+                    CustomButton {
+                        width: 80
+                        height: 32
+                        text:"复制"
+                        backgroundColor: "#006BFF"
+                        onClicked: {
+                            $loginManager.copyToClipboard(ocrTextArea.text)
+                            messageManager.success(qsTr("已复制到剪贴板"))
+                        }
+                    }
+                    CustomButton {
+                        width: 80
+                        height: 32
+                        text:"关闭"
+                        backgroundColor: "#FF5132"
+                        onClicked: {
+                            ocrResultDialog.close()
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // 截图选择器
+    Window {
+        id: screenshotSelector
+        visible: false
+        flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool
+        color: "transparent"
+
+        property bool isSelecting: false
+        property int startX: 0
+        property int startY: 0
+        property int endX: 0
+        property int endY: 0
+
+        // 窗口显示时获得焦点
+        onVisibleChanged: {
+            if (visible) {
+                // 延迟一点确保窗口完全显示后再获得焦点
+                Qt.callLater(function() {
+                    screenshotSelector.requestActivate()
+                })
+            }
+        }
+
+        // 窗口级别的键盘事件处理
+        Keys.onEscapePressed: {
+            console.log("窗口级ESC键被按下，取消截图选择")
+            cancelSelection()
+        }
+
+        function startSelection() {
+            // 获取屏幕尺寸
+            var screen = Qt.application.screens[0]
+            width = screen.width
+            height = screen.height
+            x = screen.virtualX
+            y = screen.virtualY
+
+            isSelecting = false
+            startX = 0
+            startY = 0
+            endX = 0
+            endY = 0
+
+            visible = true
+            raise()
+            requestActivate()
+        }
+
+        function finishSelection() {
+            visible = false
+
+            var selX = Math.min(startX, endX)
+            var selY = Math.min(startY, endY)
+            var selWidth = Math.abs(endX - startX)
+            var selHeight = Math.abs(endY - startY)
+
+            if (selWidth > 10 && selHeight > 10) {
+                $loginManager.processScreenshotArea(selX, selY, selWidth, selHeight)
+            }
+        }
+
+        function cancelSelection() {
+            console.log("取消截图选择")
+            isSelecting = false
+            visible = false
+        }
+
+        Rectangle {
+            anchors.fill: parent
+            color: "#80000000"  // 半透明黑色遮罩
+            focus: true  // 确保能接收键盘事件
+
+            Component.onCompleted: {
+                forceActiveFocus()
+            }
+
+            // 选择区域 - 透明区域显示原始内容
+            Rectangle {
+                id: selectionRect
+                x: screenshotSelector.isSelecting ? Math.min(screenshotSelector.startX, screenshotSelector.endX) : 0
+                y: screenshotSelector.isSelecting ? Math.min(screenshotSelector.startY, screenshotSelector.endY) : 0
+                width: screenshotSelector.isSelecting ? Math.abs(screenshotSelector.endX - screenshotSelector.startX) : 0
+                height: screenshotSelector.isSelecting ? Math.abs(screenshotSelector.endY - screenshotSelector.startY) : 0
+                color: "transparent"
+                border.color: "#00AAFF"
+                border.width: 2
+                visible: screenshotSelector.isSelecting
+
+                // 选择区域的尺寸显示
+                Text {
+                    anchors.bottom: parent.top
+                    anchors.left: parent.left
+                    anchors.bottomMargin: 5
+                    color: "#FFFFFF"
+                    font.family: "Alibaba PuHuiTi 3.0"
+                    font.pixelSize: 12
+                    text: parent.width + " × " + parent.height
+                    visible: parent.width > 50 && parent.height > 20
+
+                    Rectangle {
+                        anchors.fill: parent
+                        anchors.margins: -2
+                        color: "#80000000"
+                        radius: 2
+                        z: -1
+                    }
+                }
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.CrossCursor
+                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                focus: true
+
+                onPressed: {
+                    // 确保获得焦点
+                    forceActiveFocus()
+
+                    if (mouse.button === Qt.RightButton) {
+                        // 右键直接取消
+                        screenshotSelector.cancelSelection()
+                        return
+                    }
+
+                    if (mouse.button === Qt.LeftButton) {
+                        screenshotSelector.isSelecting = true
+                        screenshotSelector.startX = mouse.x
+                        screenshotSelector.startY = mouse.y
+                        screenshotSelector.endX = mouse.x
+                        screenshotSelector.endY = mouse.y
+                    }
+                }
+
+                onPositionChanged: {
+                    if (screenshotSelector.isSelecting && pressedButtons & Qt.LeftButton) {
+                        screenshotSelector.endX = mouse.x
+                        screenshotSelector.endY = mouse.y
+                    }
+                }
+
+                onReleased: {
+                    if (mouse.button === Qt.LeftButton && screenshotSelector.isSelecting) {
+                        screenshotSelector.finishSelection()
+                    }
+                }
+
+                // MouseArea级别的键盘事件处理
+                Keys.onEscapePressed: {
+                    console.log("MouseArea级ESC键被按下，取消截图选择")
+                    screenshotSelector.cancelSelection()
+                }
+            }
+
+            // 使用Shortcut组件确保ESC键能被捕获
+            Shortcut {
+                sequence: "Escape"
+                enabled: screenshotSelector.visible
+                onActivated: {
+                    console.log("Shortcut ESC键被按下，取消截图选择")
+                    screenshotSelector.cancelSelection()
+                }
+            }
+
+            // 提示文字
+            Text {
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.margins: 20
+                color: "#FFFFFF"
+                font.family: "Alibaba PuHuiTi 3.0"
+                font.pixelSize: 16
+                text: qsTr("拖拽选择截图区域，右键或ESC键取消")
             }
         }
     }
