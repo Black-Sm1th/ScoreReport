@@ -1683,10 +1683,6 @@ ApplicationWindow {
         Item {
             anchors.fill: parent
             focus: true  // 确保能接收键盘事件
-            // 窗口级别的键盘事件处理
-            Keys.onEscapePressed: {
-                cancelSelection()
-            }
             Component.onCompleted: {
                 forceActiveFocus()
             }

@@ -144,6 +144,4 @@ void HistoryManager::parseHistoryData(const QJsonObject& data)
             m_records.append(record);
         }
     }
-
-    qDebug() << "[HistoryManager] Parsed" << records.size() << "records.";
 }
