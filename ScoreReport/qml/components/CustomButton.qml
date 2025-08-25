@@ -14,7 +14,7 @@ Rectangle {
     property string text: qsTr("按钮")
     property int borderWidth: 1
     property int buttonRadius: 8
-    
+    property bool containsMouse: mouseArea.containsMouse
     // hover和pressed状态的颜色
     property color hoverBackgroundColor: Qt.lighter(backgroundColor, 1.1)
     property color pressedBackgroundColor: Qt.darker(backgroundColor, 1.1)

@@ -26,12 +26,17 @@ LoginManager::LoginManager(QObject* parent)
     setuserList(QVariantList());
     setshowDialogOnTextSelection(false);  // 默认不显示弹窗
     m_selector = new GlobalTextMonitor();
+    m_mouseListener = new GlobalMouseListener();
     connect(m_selector, &GlobalTextMonitor::textSelected,
         this, &LoginManager::onTextSelected);
-
+    connect(m_mouseListener, &GlobalMouseListener::mouseEvent,
+        this, &LoginManager::onMouseEvent);
     // 初始化QSettings
     m_settings = new QSettings("ScoreReport", "LoginCredentials", this);
-    
+    m_timer = new QTimer();
+    m_timer->setSingleShot(true);
+    connect(m_timer, &QTimer::timeout,
+        this, &LoginManager::onTimeout);
     m_apiManager = GET_SINGLETON(ApiManager);
     connect(m_apiManager, &ApiManager::loginResponse,
         this, &LoginManager::onLoginResponse);
@@ -235,11 +240,21 @@ void LoginManager::onRegistResponse(bool success, const QString& message, const 
 
 void LoginManager::onTextSelected(const QString& text)
 {
-    qDebug() << "text: " << text;
-    
     // 获取当前鼠标位置
+    m_currentStr = text.trimmed();
+    m_timer->start(800);
+}
+
+void LoginManager::onMouseEvent(GlobalMouseListener::MouseButton button, int delta, QPoint pos)
+{
+    m_timer->stop();
+    emit mouseEvent();
+}
+
+void LoginManager::onTimeout()
+{
     QPoint mousePos = QCursor::pos();
-    emit textSelectionDetected(text.trimmed(), mousePos.x(), mousePos.y());
+    emit textSelectionDetected(m_currentStr, mousePos.x(), mousePos.y());
 }
 
 void LoginManager::loadUserList()
@@ -388,4 +403,14 @@ void LoginManager::processScreenshotArea(int x, int y, int width, int height)
 
     // 发出识别结果信号
     emit screenshotOCRResult(recognizedText);
+}
+
+void LoginManager::changeMouseStatus(bool type)
+{
+    if (!type) {
+        m_mouseListener->stop();
+    }
+    else {
+        m_mouseListener->start();
+    }
 }

@@ -109,6 +109,7 @@
       <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Filename).moc</QtMocFileName>
     </ClCompile>
     <ClCompile Include="ChatManager.cpp" />
+    <ClCompile Include="GlobalMouseListener.cpp" />
     <ClCompile Include="HistoryManager.cpp">
       <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">input</DynamicSource>
       <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Filename).moc</QtMocFileName>
@@ -147,6 +148,7 @@
     <QtMoc Include="ApiManager.h" />
   </ItemGroup>
   <ItemGroup>
+    <QtMoc Include="GlobalMouseListener.h" />
     <QtMoc Include="LanguageManager.h" />
     <QtMoc Include="UCLSCTSScorer.h" />
     <QtMoc Include="GlobalTextMonitor.h" />

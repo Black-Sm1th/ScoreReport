@@ -745,30 +745,6 @@ ApplicationWindow {
             }
         }
 
-        // 失去焦点时自动隐藏
-        onActiveFocusItemChanged: {
-            if (!activeFocusItem && visible) {
-                hideDialog()
-            }
-        }
-
-        // 监听窗口激活状态变化
-        onActiveChanged: {
-            if (!active && visible) {
-                hideDialog()
-            }
-        }
-
-        // 1.5秒延迟显示定时器
-        Timer {
-            id: showDelayTimer
-            interval: 1000
-            repeat: false
-            onTriggered: {
-                scoringMethodDialog.showDialog()
-            }
-        }
-
         // 3秒自动隐藏定时器
         Timer {
             id: autoHideTimer
@@ -784,24 +760,6 @@ ApplicationWindow {
         property int lastMouseY: 0
         property string currentText: ""
         property string lastProcessedText: ""  // 记录上次处理的文本，防止重复处理
-
-        // 防抖定时器，防止短时间内重复触发
-        Timer {
-            id: debounceTimer
-            interval: 300  // 300ms防抖间隔
-            repeat: false
-            onTriggered: {
-                // 执行实际的弹窗显示逻辑
-                if (scoringMethodDialog.visible && scoringMethodDialog.opacity > 0) {
-                    // 如果选择框已经显示，重新开始3秒倒计时
-                    autoHideTimer.restart()
-                } else {
-                    // 如果选择框未显示，1秒后显示
-                    showDelayTimer.restart()
-                    autoHideTimer.stop()
-                }
-            }
-        }
 
         // 监听划词信号
         Connections {
@@ -820,19 +778,24 @@ ApplicationWindow {
                     scoringMethodDialog.lastProcessedText = text
 
                     // 使用防抖定时器，避免短时间内重复触发
-                    debounceTimer.restart()
+                    scoringMethodDialog.showDialog()
                 }
+            }
+            function onMouseEvent(){
+                if(tnmBtn.containsMouse || renalBtn.containsMouse){
+                    return
+                }
+                scoringMethodDialog.hideDialog()
             }
         }
 
         function showDialog() {
             // 计算弹窗位置
+            $loginManager.changeMouseStatus(true)
             updateDialogPosition()
             visible = true
             opacity = 1
-            autoHideTimer.start()
-            // 请求焦点，这样失去焦点时可以自动隐藏
-            requestActivate()
+            autoHideTimer.restart()
         }
 
         function updateDialogPosition() {
@@ -867,11 +830,10 @@ ApplicationWindow {
         }
 
         function hideDialog() {
+            $loginManager.changeMouseStatus(false)
+            autoHideTimer.stop()
             opacity = 0
             visible = false
-            showDelayTimer.stop()
-            autoHideTimer.stop()
-            debounceTimer.stop()
             // 清理上次处理的文本记录，允许相同文本再次触发
             lastProcessedText = ""
         }
@@ -884,15 +846,6 @@ ApplicationWindow {
             radius: 16
             scale: scoringMethodDialog.opacity
             anchors.centerIn: parent
-
-            // 缩放动画
-            Behavior on scale {
-                NumberAnimation {
-                    duration: 200
-                    easing.type: Easing.OutBack
-                }
-            }
-
             // 简单的鼠标处理
             MouseArea {
                 anchors.fill: parent
@@ -916,7 +869,7 @@ ApplicationWindow {
 
             Column {
                 anchors.centerIn: parent
-                spacing: 20
+                spacing: 12
 
                 // 标题
                 Text {
@@ -931,92 +884,54 @@ ApplicationWindow {
                 // 按钮组
                 Row {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    spacing: 20
-
-                    // TNM按钮
-                    Rectangle {
-                        width: 70
-                        height: 40
-                        color: tnmMouseArea.containsMouse ? "#E8F4FD" : "#F8F9FA"
-                        border.color: tnmMouseArea.containsMouse ? "#1890FF" : "#D9D9D9"
-                        border.width: 1
-                        radius: 8
-
-                        Text {
-                            anchors.centerIn: parent
-                            font.family: "Alibaba PuHuiTi 3.0"
-                            font.pixelSize: 14
-                            color: tnmMouseArea.containsMouse ? "#1890FF" : "#666666"
-                            text: "TNM"
-                        }
-
-                        MouseArea {
-                            id: tnmMouseArea
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-
-                            onClicked: {
-                                scoringMethodDialog.hideDialog()
-                                // 切换到主页面并选择TNM评分
-                                scoreDialog.resetAllValue()
-                                contentRect.currentIndex = 0
-                                contentRect.currentScore = 2  // TNM对应索引2
-                                $loginManager.copyToClipboard(scoringMethodDialog.currentText)
-                                if($tnmManager.checkClipboard()){
-                                    $tnmManager.startAnalysis()
-                                }else{
-                                    messageManager.warning(qsTr("剪贴板为空，请先复制内容"))
-                                }
-                                if(!scoreDialog.visible){
-                                    scoreDialog.showDialog()
-                                }
+                    spacing: 8
+                    CustomButton {
+                        id:tnmBtn
+                        width: 80
+                        height: 32
+                        text:"TNM"
+                        backgroundColor: "#FF490D"
+                        onClicked: {
+                            scoringMethodDialog.hideDialog()
+                            // 切换到主页面并选择TNM评分
+                            scoreDialog.resetAllValue()
+                            contentRect.currentIndex = 0
+                            contentRect.currentScore = 2  // TNM对应索引2
+                            $loginManager.copyToClipboard(scoringMethodDialog.currentText)
+                            if($tnmManager.checkClipboard()){
+                                $tnmManager.startAnalysis()
+                            }else{
+                                messageManager.warning(qsTr("剪贴板为空，请先复制内容"))
+                            }
+                            if(!scoreDialog.visible){
+                                scoreDialog.showDialog()
                             }
                         }
                     }
-
-                    // RENAL按钮
-                    Rectangle {
-                        width: 70
-                        height: 40
-                        color: renalMouseArea.containsMouse ? "#E8F4FD" : "#F8F9FA"
-                        border.color: renalMouseArea.containsMouse ? "#1890FF" : "#D9D9D9"
-                        border.width: 1
-                        radius: 8
-
-                        Text {
-                            anchors.centerIn: parent
-                            font.family: "Alibaba PuHuiTi 3.0"
-                            font.pixelSize: 14
-                            color: renalMouseArea.containsMouse ? "#1890FF" : "#666666"
-                            text: "RENAL"
-                        }
-
-                        MouseArea {
-                            id: renalMouseArea
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-
-                            onClicked: {
-                                // 点击RENAL按钮时隐藏右键菜单
-                                if (contextMenu.visible) {
-                                    contextMenu.hide()
-                                }
-                                scoringMethodDialog.hideDialog()
-                                // 切换到主页面并选择RENAL评分
-                                scoreDialog.resetAllValue()
-                                contentRect.currentIndex = 0
-                                contentRect.currentScore = 0  // RENAL对应索引0
-                                $loginManager.copyToClipboard(scoringMethodDialog.currentText)
-                                if($renalManager.checkClipboard()){
-                                    $renalManager.startAnalysis()
-                                }else{
-                                    messageManager.warning(qsTr("剪贴板为空，请先复制内容"))
-                                }
-                                if(!scoreDialog.visible){
-                                    scoreDialog.showDialog()
-                                }
+                    CustomButton {
+                        id:renalBtn
+                        width: 80
+                        height: 32
+                        backgroundColor: "#5792FF"
+                        text: "RENAL"
+                        onClicked: {
+                            // 点击RENAL按钮时隐藏右键菜单
+                            if (contextMenu.visible) {
+                                contextMenu.hide()
+                            }
+                            scoringMethodDialog.hideDialog()
+                            // 切换到主页面并选择RENAL评分
+                            scoreDialog.resetAllValue()
+                            contentRect.currentIndex = 0
+                            contentRect.currentScore = 0  // RENAL对应索引0
+                            $loginManager.copyToClipboard(scoringMethodDialog.currentText)
+                            if($renalManager.checkClipboard()){
+                                $renalManager.startAnalysis()
+                            }else{
+                                messageManager.warning(qsTr("剪贴板为空，请先复制内容"))
+                            }
+                            if(!scoreDialog.visible){
+                                scoreDialog.showDialog()
                             }
                         }
                     }

@@ -12,6 +12,7 @@
 #include <QPoint>
 #include "CommonFunc.h"
 #include "GlobalTextMonitor.h"
+#include "GlobalMouseListener.h"
 class ApiManager;
 
 class LoginManager : public QObject
@@ -44,6 +45,7 @@ public:
     Q_INVOKABLE void saveShowDialogSetting(bool showDialog);
     Q_INVOKABLE void performScreenshotOCR();
     Q_INVOKABLE void processScreenshotArea(int x, int y, int width, int height);
+    Q_INVOKABLE void changeMouseStatus(bool type);
 signals:
     void loginResult(bool success, const QString& message);
     void logoutSuccess();
@@ -51,11 +53,13 @@ signals:
     void textSelectionDetected(const QString& text, int mouseX, int mouseY);
     void screenshotOCRResult(const QString& text);
     void startScreenshotSelection();
-
+    void mouseEvent();
 private slots:
     void onRegistResponse(bool success, const QString& message, const QJsonObject& data);
     void onLoginResponse(bool success, const QString& message, const QJsonObject& data);
     void onTextSelected(const QString& text);
+    void onMouseEvent(GlobalMouseListener::MouseButton button, int delta, QPoint pos);
+    void onTimeout();
 private:
     void loadUserList();
     void saveUserList();
@@ -63,6 +67,9 @@ private:
     GlobalTextMonitor* m_selector;
     ApiManager* m_apiManager;
     QSettings* m_settings;
+    GlobalMouseListener* m_mouseListener;
+    QTimer* m_timer;
+    QString m_currentStr = "";
 };
 
 #endif // LOGINMANAGER_H 
