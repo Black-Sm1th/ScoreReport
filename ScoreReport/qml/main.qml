@@ -767,10 +767,10 @@ ApplicationWindow {
     // 右键菜单
     Window {
         id: contextMenu
-        width: menuBackground.width
-        height: menuColumn.height
+        width: menuBackground.width + 15
+        height: menuBackground.height + 15
         visible: false
-        flags: Qt.FramelessWindowHint | Qt.Popup
+        flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
         color: "transparent"
 
         // 失去焦点时自动隐藏
@@ -791,7 +791,7 @@ ApplicationWindow {
         function showMenu(mouseX, mouseY) {
             // 计算菜单在屏幕上的位置
             // 悬浮窗的全局位置 + 鼠标在悬浮窗内的位置
-            var globalX = mainWindow.x + mouseX
+            var globalX = mainWindow.x + mouseX + 15
             var globalY = mainWindow.y + mouseY
 
             // 确保菜单不超出屏幕右边界
@@ -824,10 +824,10 @@ ApplicationWindow {
         Rectangle {
             id: menuBackground
             width: Math.max(Math.max(contentArea1.width, contentArea2.width), Math.max(contentArea3.width, contentArea4.width)) + 24
-            height: parent.height
+            height: menuColumn.height
             color: "#FFFFFF"
             radius: 8
-
+            anchors.centerIn: parent
             // 添加阴影效果
             layer.enabled: true
             layer.effect: DropShadow {
