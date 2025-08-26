@@ -338,44 +338,81 @@ void ApiManager::onStreamDataReady()
     qDebug() << "[ApiManager] Stream data received:" << dataString;
     
     // 处理SSE格式的数据
-    QStringList lines = dataString.split('\n');
+    // 按照SSE标准格式解析：event:xxx\ndata:xxx\n\n
+
     QString eventType = "";
-    
-    for (const QString& line : lines) {
-        // 处理 event: 行（这种行可以trim）
-        if (line.trimmed().startsWith("event:")) {
-            eventType = line.trimmed().mid(6).trimmed();
+
+    // 按双换行分割不同的SSE事件
+    QStringList events = dataString.split("\n\n", Qt::KeepEmptyParts);
+
+    for (const QString& event : events) {
+        if (event.trimmed().isEmpty()) {
             continue;
         }
-        
-        // 处理 data: 行（保持原始格式，不要trim）
-        if (line.startsWith("data:")) {
-            // 从 "data:" 后面开始取所有内容，保留空格
-            QString content = line.mid(5);
-            
-            if (content != "[DONE]") {
-                if (eventType == "message") {
-                    // 消息事件，直接发送文本内容（保留所有空格）
-                    qDebug() << "[ApiManager] Sending content:" << QStringLiteral("'%1'").arg(content) << "Length:" << content.length();
-                    emit streamChatResponse(content, chatId);
-                } else if (eventType == "complete") {
-                    // 完成事件，发送完成信号
-                    emit streamChatFinished(true, "聊天完成", chatId);
-                    // 清理chatId映射
-                    m_streamChatIds.remove(reply);
-                    return; // 完成后退出
-                } else {
-                    // 其他事件，尝试解析JSON数据
-                QJsonDocument doc = QJsonDocument::fromJson(content.toUtf8());
-                if (doc.isObject()) {
-                    QJsonObject obj = doc.object();
-                    QString text = obj.value("content").toString();
-                    if (!text.isEmpty()) {
-                        emit streamChatResponse(text, chatId);
-                    }
-                } else {
-                    // 如果不是JSON，直接发送文本内容（保留空格）
-                    emit streamChatResponse(content, chatId);
+
+        // 按单换行分割事件内的行
+        QStringList lines = event.split('\n', Qt::KeepEmptyParts);
+
+        for (const QString& line : lines) {
+            // 处理 event: 行
+            if (line.startsWith("event:")) {
+                eventType = line.mid(6).trimmed();
+                continue;
+            }
+
+            // 处理 data: 行
+            if (line.startsWith("data:")) {
+                QString content = line.mid(5); // 保留data:后的所有内容，包括空格
+
+                if (content != "[DONE]") {
+                    if (eventType == "message") {
+                        // 对于message事件，检查是否需要添加换行符
+                        // 如果原始数据中有四个\n（\n\n\n\n），说明内容需要换行
+                        // 这里通过检查当前事件后是否还有更多换行来判断
+                        QString finalContent = content;
+
+                        // 在原始dataString中查找当前data行的位置
+                        int dataLinePos = dataString.indexOf("data:" + content);
+                        if (dataLinePos != -1) {
+                            // 找到data行结束位置
+                            int dataLineEnd = dataLinePos + 5 + content.length();
+
+                            // 检查data行后连续的换行符数量
+                            int newlineCount = 0;
+                            int checkPos = dataLineEnd;
+                            while (checkPos < dataString.length() && dataString[checkPos] == '\n') {
+                                newlineCount++;
+                                checkPos++;
+                            }
+
+                            // 如果有超过2个换行符（标准SSE是\n\n结束），说明内容中包含换行
+                            if (newlineCount > 2) {
+                                // 添加相应数量的换行符到内容中
+                                int contentNewlines = newlineCount - 2;
+                                for (int i = 0; i < contentNewlines; i++) {
+                                    finalContent += "\n";
+                                }
+                            }
+                        }
+
+                        qDebug() << "[ApiManager] Sending content:" << QStringLiteral("'%1'").arg(finalContent) << "Length:" << finalContent.length();
+                        emit streamChatResponse(finalContent, chatId);
+                    } else if (eventType == "complete") {
+                        emit streamChatFinished(true, "聊天完成", chatId);
+                        m_streamChatIds.remove(reply);
+                        return;
+                    } else {
+                        // 其他事件类型，尝试解析JSON
+                        QJsonDocument doc = QJsonDocument::fromJson(content.toUtf8());
+                        if (doc.isObject()) {
+                            QJsonObject obj = doc.object();
+                            QString text = obj.value("content").toString();
+                            if (!text.isEmpty()) {
+                                emit streamChatResponse(text, chatId);
+                            }
+                        } else {
+                            emit streamChatResponse(content, chatId);
+                        }
                     }
                 }
             }

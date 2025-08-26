@@ -67,7 +67,7 @@ Rectangle {
                                     font.pixelSize: 16
                                     color: "#D9000000"
                                     wrapMode: Text.Wrap
-                                    textFormat: Text.PlainText
+                                    textFormat: Text.MarkdownText
                                     visible: modelData.type !== "thinking"
                                 }
                                 
