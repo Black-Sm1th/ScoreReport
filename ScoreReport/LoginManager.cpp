@@ -324,20 +324,6 @@ void LoginManager::saveShowDialogSetting(bool showDialog)
     }
 }
 
-void LoginManager::performScreenshotOCR()
-{
-    // 检查是否已登录
-    if (!getisLoggedIn()) {
-        qWarning() << "[LoginManager] User not logged in, cannot perform OCR";
-        return;
-    }
-
-    qDebug() << "[LoginManager] Starting screenshot OCR";
-
-    // 发出信号启动截图选择
-    emit startScreenshotSelection();
-}
-
 void LoginManager::processScreenshotArea(int x, int y, int width, int height)
 {
     qDebug() << "[LoginManager] Processing screenshot area:" << x << y << width << height;
@@ -374,35 +360,6 @@ void LoginManager::processScreenshotArea(int x, int y, int width, int height)
     }
 
     qDebug() << "[LoginManager] Screenshot saved to:" << screenshotPath;
-
-    // 使用OCR识别文字
-    OCRHelper ocr("language", {"chi_sim", "eng"});
-    if (!ocr.isReady()) {
-        qWarning() << "[LoginManager] OCR not ready";
-        // 如果OCR不可用，返回模拟文本
-        QString simulatedText = "这是模拟的OCR识别结果\n截图识字功能正常工作\n区域: " +
-                               QString("x:%1 y:%2 w:%3 h:%4").arg(x).arg(y).arg(width).arg(height) +
-                               "\n时间: " + QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
-        emit screenshotOCRResult(simulatedText);
-
-        // 清理临时文件
-        QFile::remove(screenshotPath);
-        return;
-    }
-
-    QString recognizedText = ocr.recognizeFromFile(screenshotPath);
-
-    // 清理临时文件
-    QFile::remove(screenshotPath);
-
-    if (recognizedText.isEmpty()) {
-        recognizedText = "未识别到文字内容";
-    }
-
-    qDebug() << "[LoginManager] OCR result:" << recognizedText;
-
-    // 发出识别结果信号
-    emit screenshotOCRResult(recognizedText);
 }
 
 void LoginManager::changeMouseStatus(bool type)

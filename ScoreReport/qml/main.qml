@@ -11,11 +11,8 @@ ApplicationWindow {
     Shortcut {
         sequence: "Ctrl+F12"
         context: Qt.ApplicationShortcut   // 全应用范围
-        enabled: $loginManager.isLoggedIn
         onActivated: {
-            if ($loginManager.isLoggedIn) {
-                $loginManager.performScreenshotOCR()
-            }
+            screenshotSelector.startSelection()
         }
     }
 
@@ -162,17 +159,14 @@ ApplicationWindow {
                         scoreDialog.showDialog()
                     }else{
                         scoreDialog.visible = false
-                        scoreDialog.isFirstShow = true
                     }
                 }
             }
 
             onReleased: {
-                // 拖动结束后重新启用位置动画
+                // 拖动结束后更新对话框位置
                 if (isDragging && scoreDialog.visible) {
-                    Qt.callLater(function() {
-                        scoreDialog.disablePositionAnimation = false
-                    })
+                    scoreDialog.updateDialogPosition()
                 }
             }
         }
@@ -220,52 +214,17 @@ ApplicationWindow {
             }
         }
 
-        // 位置更新防抖定时器
-        Timer {
-            id: positionUpdateTimer
-            interval: 16  // 减少到16ms，约一帧的时间，平衡响应性和稳定性
-            repeat: false
-            onTriggered: {
+        // 监听悬浮窗位置变化，自动更新对话框位置
+        Connections {
+            target: mainWindow
+            function onXChanged() {
                 if (scoreDialog.visible) {
                     scoreDialog.updateDialogPosition()
                 }
             }
-        }
-
-        // 初始位置计算定时器（用于第一次显示）
-        Timer {
-            id: initialPositionTimer
-            interval: 50  // 减少到50ms，更快响应
-            repeat: false
-            onTriggered: {
+            function onYChanged() {
                 if (scoreDialog.visible) {
                     scoreDialog.updateDialogPosition()
-                    // 确保显示
-                    if (scoreDialog.opacity === 0) {
-                        scoreDialog.opacity = 1
-                    }
-                    // 重新启用位置动画
-                    Qt.callLater(function() {
-                        scoreDialog.disablePositionAnimation = false
-                    })
-                }
-            }
-        }
-
-        // 高度变化专用定时器，无延迟快速更新
-        Timer {
-            id: heightChangeTimer
-            interval: 1  // 几乎立即执行
-            repeat: false
-            onTriggered: {
-                if (scoreDialog.visible) {
-                    // 暂时禁用位置动画
-                    scoreDialog.disablePositionAnimation = true
-                    scoreDialog.updateDialogPosition()
-                    // 重新启用动画
-                    Qt.callLater(function() {
-                        scoreDialog.disablePositionAnimation = false
-                    })
                 }
             }
         }
@@ -276,54 +235,8 @@ ApplicationWindow {
             anchors.fill: parent
         }
 
-        // 监听悬浮窗位置变化，自动更新对话框位置
-        Connections {
-            target: mainWindow
-            function onXChanged() {
-                if (scoreDialog.visible) {
-                    // 检查是否正在拖动，如果是则禁用动画
-                    if (mouseArea.isDragging || headerDragArea.isDragging) {
-                        scoreDialog.disablePositionAnimation = true
-                        scoreDialog.updateDialogPosition()
-                        // 拖动结束后重新启用动画
-                        Qt.callLater(function() {
-                            if (!mouseArea.isDragging && !headerDragArea.isDragging) {
-                                scoreDialog.disablePositionAnimation = false
-                            }
-                        })
-                    } else {
-                        // 使用防抖定时器延迟更新位置
-                        positionUpdateTimer.restart()
-                    }
-                }
-            }
-            function onYChanged() {
-                if (scoreDialog.visible) {
-                    // 检查是否正在拖动，如果是则禁用动画
-                    if (mouseArea.isDragging || headerDragArea.isDragging) {
-                        scoreDialog.disablePositionAnimation = true
-                        scoreDialog.updateDialogPosition()
-                        // 拖动结束后重新启用动画
-                        Qt.callLater(function() {
-                            if (!mouseArea.isDragging && !headerDragArea.isDragging) {
-                                scoreDialog.disablePositionAnimation = false
-                            }
-                        })
-                    } else {
-                        // 使用防抖定时器延迟更新位置
-                        positionUpdateTimer.restart()
-                    }
-                }
-            }
-        }
-
-        // 计算对话框位置的函数
+        // 计算对话框位置的函数 - 始终显示在上方
         function updateDialogPosition() {
-            // 如果内容高度还没有确定，跳过位置更新
-            if (contentRect.height <= 0) {
-                return
-            }
-
             // 如果窗口不可见，不需要更新位置
             if (!scoreDialog.visible) {
                 return
@@ -336,87 +249,27 @@ ApplicationWindow {
                         floatingWindow.height
                         )
 
-            var dialogHeight = height  // 使用实际窗口高度而不是contentRect高度
-            var contentHeight = contentRect.height  // 内容区域的实际高度
-            var spaceAbove = floatingRect.y
-            var spaceBelow = Screen.height - (floatingRect.y + floatingRect.height)
-
-            var newX, newY
-
-            // 默认优先显示在上方，如果上方空间不够再考虑下方
-            if (spaceAbove >= contentHeight + 20) {  // 内容高度 + 间距 + 阴影空间
-                // 显示在悬浮窗上方，内容区域右侧对齐（考虑阴影边距）
-                newX = floatingRect.x + floatingRect.width - (width - 10)
-                newY = floatingRect.y - contentHeight - 20  // 使用内容高度 + 间距 + 阴影空间
-            } else if (spaceBelow >= contentHeight + 20) {
-                // 显示在悬浮窗下方，内容区域右侧对齐（考虑阴影边距）
-                newX = floatingRect.x + floatingRect.width - (width - 10)
-                newY = floatingRect.y + floatingRect.height  // 窗口顶部紧贴悬浮窗，内容区域会自然距离10px（因为有10px上方阴影空间）
-            } else {
-                // 如果上下空间都不够，优先选择上方（允许出屏幕）
-                newX = floatingRect.x + floatingRect.width - (width - 10)
-                newY = floatingRect.y - contentHeight - 20
-            }
-
-            // scoreDialog允许出屏幕，只确保X坐标在合理范围内
+            // 始终显示在悬浮窗上方，内容区域右侧对齐
+            var newX = floatingRect.x + floatingRect.width - (width - 10)
+            var newY = floatingRect.y - height  // 悬浮窗上方，间距10px
+            // 确保X坐标在合理范围内
             newX = Math.max(-width + 100, Math.min(newX, Screen.width - 100))
-            // Y坐标允许出屏幕上方，但不允许完全超出下方
+            // Y坐标允许出屏幕上方
             newY = Math.min(newY, Screen.height - 50)
 
-            // 只在位置确实需要改变时才更新，减少阈值提高精确度
-            if (Math.abs(x - newX) > 0.5 || Math.abs(y - newY) > 0.5) {
-                x = newX
-                y = newY
+            x = newX
+            y = newY
+        }
+        // 监听高度变化，当内容加载完成后更新位置
+        onHeightChanged: {
+            if (scoreDialog.visible && height > 0) {
+                Qt.callLater(scoreDialog.updateDialogPosition)
             }
         }
-
-        property bool isFirstShow: true
-        property bool disablePositionAnimation: false
-
-        // 透明度动画
-        Behavior on opacity {
-            NumberAnimation {
-                duration: 150
-                easing.type: Easing.OutQuad
-            }
-        }
-
-        // 位置变化平滑动画
-        Behavior on x {
-            enabled: !scoreDialog.disablePositionAnimation
-            NumberAnimation {
-                duration: 80  // 减少动画时间，更快响应
-                easing.type: Easing.OutQuad
-            }
-        }
-
-        Behavior on y {
-            enabled: !scoreDialog.disablePositionAnimation
-            NumberAnimation {
-                duration: 80  // 减少动画时间，更快响应
-                easing.type: Easing.OutQuad
-            }
-        }
-
         function showDialog() {
-            if (contentRect.height <= 0 && isFirstShow) {
-                // 第一次显示且内容未渲染时，先隐藏显示进行预渲染
-                opacity = 0
-                visible = true
-                isFirstShow = false
-                // 禁用位置动画，避免第一次显示时的抖动
-                disablePositionAnimation = true
-                // 使用定时器等待内容完全渲染后再计算位置
-                initialPositionTimer.start()
-            } else {
-                // 后续显示或内容已渲染时，直接显示
-                visible = true
-                opacity = 1
-                // 立即更新位置，不使用延迟
-                updateDialogPosition()
-            }
+            visible = true
+            updateDialogPosition()
         }
-
         Rectangle {
             id: contentRect
             width: 520
@@ -447,36 +300,10 @@ ApplicationWindow {
                     }
                 }
             }
-
-            // 监听页面切换，重新计算位置
+            // 监听页面切换
             onCurrentIndexChanged: {
-                if (scoreDialog.visible) {
-                    // 页面切换时暂时禁用动画，避免抖动
-                    scoreDialog.disablePositionAnimation = true
-                    // 使用防抖定时器延迟更新位置，确保新页面内容已渲染
-                    positionUpdateTimer.restart()
-                    // 短暂延迟后重新启用动画
-                    Qt.callLater(function() {
-                        Qt.callLater(function() {
-                            scoreDialog.disablePositionAnimation = false
-                        })
-                    })
-                }
                 if(currentIndex == 1){
                     $historyManager.updateList()
-                }
-            }
-
-            // 监听高度变化，当内容加载完成后更新位置
-            onHeightChanged: {
-                if (scoreDialog.visible && height > 0) {
-                    // 使用高度变化专用定时器，快速且无抖动地更新位置
-                    heightChangeTimer.restart()
-
-                    // 如果是隐藏状态（第一次渲染），现在显示出来
-                    if (scoreDialog.opacity === 0) {
-                        scoreDialog.opacity = 1
-                    }
                 }
             }
             Column {
@@ -535,11 +362,9 @@ ApplicationWindow {
                         }
 
                         onReleased: {
-                            // 拖动结束后重新启用位置动画
+                            // 拖动结束后更新对话框位置
                             if (isDragging && scoreDialog.visible) {
-                                Qt.callLater(function() {
-                                    scoreDialog.disablePositionAnimation = false
-                                })
+                                scoreDialog.updateDialogPosition()
                             }
                         }
                     }
@@ -636,7 +461,6 @@ ApplicationWindow {
                                     contextMenu.hide()
                                 }
                                 scoreDialog.visible = false
-                                scoreDialog.isFirstShow = true
                             }
                         }
                     }
@@ -999,7 +823,7 @@ ApplicationWindow {
 
         Rectangle {
             id: menuBackground
-            width: contentArea.width + 24
+            width: Math.max(Math.max(contentArea1.width, contentArea2.width), Math.max(contentArea3.width, contentArea4.width)) + 24
             height: parent.height
             color: "#FFFFFF"
             radius: 8
@@ -1016,48 +840,32 @@ ApplicationWindow {
 
             Column {
                 id: menuColumn
-                width: contentArea.width + 24
-
+                width: parent.width
                 // 语言切换选项
                 Rectangle {
-                    width: contentArea.width + 24
+                    width: parent.width
                     height: 40
                     color: languageMouseArea.containsMouse ? "#F5F5F5" : "transparent"
                     radius: 6
 
                     Row {
+                        id: contentArea1
                         anchors.left: parent.left
                         anchors.leftMargin: 12
                         anchors.verticalCenter: parent.verticalCenter
                         spacing: 8
 
                         // 语言图标
-                        Rectangle {
-                            width: 16
-                            height: 16
+                        Image{
                             anchors.verticalCenter: parent.verticalCenter
-                            color: "transparent"
-
-                            // 简单的语言图标 (A文)
-                            Canvas {
-                                anchors.fill: parent
-                                onPaint: {
-                                    var ctx = getContext("2d")
-                                    ctx.clearRect(0, 0, width, height)
-                                    ctx.fillStyle = "#007ACC"
-                                    ctx.font = "bold 10px Arial"
-                                    ctx.textAlign = "center"
-                                    ctx.textBaseline = "middle"
-                                    ctx.fillText("语", 8, 8)
-                                }
-                            }
+                            source: "qrc:/image/language.png"
                         }
 
                         Text {
                             anchors.verticalCenter: parent.verticalCenter
                             font.family: "Alibaba PuHuiTi 3.0"
                             font.pixelSize: 14
-                            color: languageMouseArea.containsMouse ? "#007ACC" : "#666666"
+                            color: languageMouseArea.containsMouse ? "#006BFF" : "#D9000000"
                             text: qsTr("语言") + " (" + (languageManager ? qsTr(languageManager.getLanguageDisplayName(languageManager.currentLanguage)) : qsTr("中文")) + ")"
 
                             Behavior on color {
@@ -1099,50 +907,30 @@ ApplicationWindow {
 
                 // 弹窗控制选项
                 Rectangle {
-                    width: contentArea.width + 24
+                    width: parent.width
                     height: 40
                     color: dialogMouseArea.containsMouse ? "#F5F5F5" : "transparent"
                     radius: 6
 
                     Row {
-                        id: contentArea
+                        id: contentArea2
                         anchors.left: parent.left
                         anchors.leftMargin: 12
                         anchors.verticalCenter: parent.verticalCenter
                         spacing: 8
 
                         // 弹窗图标
-                        Rectangle {
-                            width: 16
-                            height: 16
+                        Image{
                             anchors.verticalCenter: parent.verticalCenter
-                            color: "transparent"
-
-                            // 简单的弹窗图标
-                            Canvas {
-                                anchors.fill: parent
-                                onPaint: {
-                                    var ctx = getContext("2d")
-                                    ctx.clearRect(0, 0, width, height)
-                                    ctx.strokeStyle = "#007ACC"
-                                    ctx.lineWidth = 1.5
-                                    ctx.lineCap = "round"
-
-                                    // 绘制弹窗图标（矩形边框）
-                                    ctx.strokeRect(2, 3, 12, 8)
-                                    // 绘制标题栏
-                                    ctx.fillStyle = "#007ACC"
-                                    ctx.fillRect(2, 3, 12, 2)
-                                }
-                            }
+                            source: "qrc:/image/popup.png"
                         }
 
                         Text {
                             anchors.verticalCenter: parent.verticalCenter
                             font.family: "Alibaba PuHuiTi 3.0"
                             font.pixelSize: 14
-                            color: dialogMouseArea.containsMouse ? "#007ACC" : "#666666"
-                            text: qsTr("弹窗提示") + " (" + ($loginManager.showDialogOnTextSelection ? qsTr("开启") : qsTr("关闭")) + ")"
+                            color: dialogMouseArea.containsMouse ? "#006BFF" : "#D9000000"
+                            text: qsTr("划词弹窗") + " (" + ($loginManager.showDialogOnTextSelection ? qsTr("开启") : qsTr("关闭")) + ")"
 
                             Behavior on color {
                                 ColorAnimation {
@@ -1178,62 +966,30 @@ ApplicationWindow {
 
                 // 截图识字选项
                 Rectangle {
-                    width: contentArea.width + 24
+                    width: parent.width
                     height: 40
-                    color: ocrMouseArea.containsMouse && $loginManager.isLoggedIn ? "#F5F5F5" : "transparent"
+                    color: ocrMouseArea.containsMouse ? "#F5F5F5" : "transparent"
                     radius: 6
 
                     Row {
+                        id: contentArea3
                         anchors.left: parent.left
                         anchors.leftMargin: 12
                         anchors.verticalCenter: parent.verticalCenter
                         spacing: 8
 
-                        // 截图识字图标
-                        Rectangle {
-                            width: 16
-                            height: 16
+                        // 截图图标
+                        Image{
                             anchors.verticalCenter: parent.verticalCenter
-                            color: "transparent"
-
-                            // 简单的截图图标
-                            Canvas {
-                                id: canvas
-                                anchors.fill: parent
-                                onPaint: {
-                                    var ctx = getContext("2d")
-                                    ctx.clearRect(0, 0, width, height)
-                                    var iconColor = $loginManager.isLoggedIn ? "#007ACC" : "#CCCCCC"
-                                    ctx.strokeStyle = iconColor
-                                    ctx.lineWidth = 1.5
-                                    ctx.lineCap = "round"
-
-                                    // 绘制相机图标
-                                    ctx.strokeRect(2, 4, 12, 8)
-                                    ctx.fillStyle = iconColor
-                                    ctx.fillRect(6, 6, 4, 4)
-                                    // 绘制镜头
-                                    ctx.strokeRect(1, 2, 2, 2)
-                                }
-
-                                // 监听登录状态变化重新绘制
-                                Connections {
-                                    target: $loginManager
-                                    function onIsLoggedInChanged() {
-                                        canvas.requestPaint()
-                                    }
-                                }
-                            }
+                            source: "qrc:/image/screenshoot.png"
                         }
 
                         Text {
                             anchors.verticalCenter: parent.verticalCenter
                             font.family: "Alibaba PuHuiTi 3.0"
                             font.pixelSize: 14
-                            color: $loginManager.isLoggedIn ?
-                                   (ocrMouseArea.containsMouse ? "#007ACC" : "#666666") :
-                                   "#CCCCCC"
-                            text: qsTr("截图识字")
+                            color: ocrMouseArea.containsMouse ? "#006BFF" : "#D9000000"
+                            text: qsTr("截图分析")
 
                             Behavior on color {
                                 ColorAnimation {
@@ -1248,13 +1004,10 @@ ApplicationWindow {
                         id: ocrMouseArea
                         anchors.fill: parent
                         hoverEnabled: true
-                        cursorShape: $loginManager.isLoggedIn ? Qt.PointingHandCursor : Qt.ForbiddenCursor
-
+                        cursorShape: Qt.PointingHandCursor
                         onClicked: {
                             contextMenu.hide()
-                            if ($loginManager.isLoggedIn) {
-                                $loginManager.performScreenshotOCR()
-                            }
+                            screenshotSelector.startSelection()
                         }
                     }
                 }
@@ -1274,44 +1027,23 @@ ApplicationWindow {
                     radius: 6
 
                     Row {
+                        id: contentArea4
                         anchors.left: parent.left
                         anchors.leftMargin: 12
                         anchors.verticalCenter: parent.verticalCenter
                         spacing: 8
 
                         // 退出图标
-                        Rectangle {
-                            width: 16
-                            height: 16
+                        Image{
                             anchors.verticalCenter: parent.verticalCenter
-                            color: "transparent"
-
-                            // 简单的退出图标 (X)
-                            Canvas {
-                                anchors.fill: parent
-                                onPaint: {
-                                    var ctx = getContext("2d")
-                                    ctx.clearRect(0, 0, width, height)
-                                    ctx.strokeStyle = "#FF4444"
-                                    ctx.lineWidth = 2
-                                    ctx.lineCap = "round"
-
-                                    // 绘制X
-                                    ctx.beginPath()
-                                    ctx.moveTo(4, 4)
-                                    ctx.lineTo(12, 12)
-                                    ctx.moveTo(12, 4)
-                                    ctx.lineTo(4, 12)
-                                    ctx.stroke()
-                                }
-                            }
+                            source: "qrc:/image/exit.png"
                         }
 
                         Text {
                             anchors.verticalCenter: parent.verticalCenter
                             font.family: "Alibaba PuHuiTi 3.0"
                             font.pixelSize: 14
-                            color: exitMouseArea.containsMouse ? "#FF4444" : "#666666"
+                            color: exitMouseArea.containsMouse ? "#FF5132" : "#D9000000"
                             text: qsTr("退出程序")
 
                             Behavior on color {
@@ -1339,189 +1071,6 @@ ApplicationWindow {
             }
         }
     }
-
-    // OCR结果对话框
-    Window {
-        id: ocrResultDialog
-        width: 600
-        height: 500
-        visible: false
-        flags: Qt.Dialog | Qt.WindowCloseButtonHint
-        title: qsTr("截图识字结果")
-
-        // 设置对话框在屏幕中央
-        Component.onCompleted: {
-            x = (Screen.width - width) / 2
-            y = (Screen.height - height) / 2
-        }
-
-        onVisibleChanged: {
-            if (visible) {
-                x = (Screen.width - width) / 2
-                y = (Screen.height - height) / 2
-            }
-        }
-
-        property string ocrText: ""
-
-        // 监听OCR结果信号
-        Connections {
-            target: $loginManager
-            function onScreenshotOCRResult(text) {
-                ocrResultDialog.ocrText = text
-                ocrResultDialog.show()
-                ocrResultDialog.raise()
-                ocrResultDialog.requestActivate()
-            }
-            function onStartScreenshotSelection() {
-                screenshotSelector.startSelection()
-            }
-        }
-
-        Rectangle {
-            anchors.fill: parent
-            color: "#FFFFFF"
-
-            Column {
-                anchors.fill: parent
-                anchors.margins: 20
-                spacing: 15
-
-                Text {
-                    width: parent.width
-                    font.family: "Alibaba PuHuiTi 3.0"
-                    font.pixelSize: 16
-                    font.bold: true
-                    color: "#D9000000"
-                    text: qsTr("识别结果：")
-
-                    // 添加拖动功能的MouseArea
-                    MouseArea {
-                        anchors.fill: parent
-                        acceptedButtons: Qt.LeftButton
-                        z: -1  // 确保不干扰文本选择
-
-                        property point lastMousePos
-                        property bool isDragging: false
-
-                        onPressed: {
-                            // 只有在没有选中文本时才允许拖动
-                            lastMousePos = Qt.point(mouse.x, mouse.y)
-                            isDragging = false
-                        }
-                        onPositionChanged: {
-                            if (pressed && pressedButtons & Qt.LeftButton) {
-                                var dx = mouse.x - lastMousePos.x
-                                var dy = mouse.y - lastMousePos.y
-
-                                // 如果移动距离超过阈值，开始拖动
-                                if (!isDragging && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
-                                    isDragging = true
-                                    ocrResultDialog.startSystemMove()
-                                }
-                            }
-                        }
-                        onReleased: {
-                            isDragging = false
-                        }
-                    }
-                }
-
-                ScrollView {
-                    width: parent.width
-                    height: parent.height - 80
-
-                    TextArea {
-                        id: ocrTextArea
-                        width: parent.width
-                        text: ocrResultDialog.ocrText
-                        font.family: "Alibaba PuHuiTi 3.0"
-                        font.pixelSize: 14
-                        color: "#D9000000"
-                        wrapMode: TextArea.Wrap
-                        selectByMouse: true
-
-                        background: Rectangle {
-                            color: "#F8F9FA"
-                            border.color: "#E0E0E0"
-                            border.width: 1
-                            radius: 4
-                        }
-                    }
-                }
-
-                Row {
-                    spacing: 10
-                    CustomButton {
-                        width: 80
-                        height: 32
-                        backgroundColor: "#5792FF"
-                        text: "RENAL"
-                        onClicked: {
-                            // 切换到主页面并选择RENAL评分
-                            scoreDialog.resetAllValue()
-                            contentRect.currentIndex = 0
-                            contentRect.currentScore = 0  // RENAL对应索引0
-                            $loginManager.copyToClipboard(ocrTextArea.text)
-                            if($renalManager.checkClipboard()){
-                                $renalManager.startAnalysis()
-                            }else{
-                                messageManager.warning(qsTr("剪贴板为空，请先复制内容"))
-                            }
-                            if(!scoreDialog.visible){
-                                scoreDialog.showDialog()
-                            }
-                        }
-                    }
-                    CustomButton {
-                        width: 80
-                        height: 32
-                        text:"TNM"
-                        backgroundColor: "#FF490D"
-                        onClicked: {
-                            // 切换到主页面并选择TNM评分
-                            scoreDialog.resetAllValue()
-                            contentRect.currentIndex = 0
-                            contentRect.currentScore = 2  // TNM对应索引2
-                            $loginManager.copyToClipboard(ocrTextArea.text)
-                            if($tnmManager.checkClipboard()){
-                                $tnmManager.startAnalysis()
-                            }else{
-                                messageManager.warning(qsTr("剪贴板为空，请先复制内容"))
-                            }
-                            if(!scoreDialog.visible){
-                                scoreDialog.showDialog()
-                            }
-                        }
-                    }
-                    Rectangle{
-                        width: ocrResultDialog.width - 400
-                        height: 32
-                    }
-                    CustomButton {
-                        width: 80
-                        height: 32
-                        text:"复制"
-                        backgroundColor: "#006BFF"
-                        onClicked: {
-                            $loginManager.copyToClipboard(ocrTextArea.text)
-                            messageManager.success(qsTr("已复制到剪贴板"))
-                        }
-                    }
-                    CustomButton {
-                        width: 80
-                        height: 32
-                        text:"关闭"
-                        backgroundColor: "#FF5132"
-                        onClicked: {
-                            ocrResultDialog.close()
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     // 截图选择器
     Window {
         id: screenshotSelector

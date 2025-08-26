@@ -43,7 +43,6 @@ public:
     Q_INVOKABLE void stopMonitoring();
     Q_INVOKABLE void copyToClipboard(const QString& text);
     Q_INVOKABLE void saveShowDialogSetting(bool showDialog);
-    Q_INVOKABLE void performScreenshotOCR();
     Q_INVOKABLE void processScreenshotArea(int x, int y, int width, int height);
     Q_INVOKABLE void changeMouseStatus(bool type);
 signals:
@@ -51,8 +50,6 @@ signals:
     void logoutSuccess();
     void registResult(bool success, const QString& message);
     void textSelectionDetected(const QString& text, int mouseX, int mouseY);
-    void screenshotOCRResult(const QString& text);
-    void startScreenshotSelection();
     void mouseEvent();
 private slots:
     void onRegistResponse(bool success, const QString& message, const QJsonObject& data);

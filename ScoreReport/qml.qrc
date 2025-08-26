@@ -58,5 +58,9 @@
         <file>translations/ScoreReport_en.ts</file>
         <file>translations/ScoreReport_zh.ts</file>
         <file>image/chatCopy.png</file>
+        <file>image/language.png</file>
+        <file>image/exit.png</file>
+        <file>image/popup.png</file>
+        <file>image/screenshoot.png</file>
     </qresource>
 </RCC>
