@@ -172,6 +172,8 @@ ApplicationWindow {
             onClicked: {
                 // 只处理左键点击，并且在没有拖动的情况下才响应
                 if (mouse.button === Qt.LeftButton && !isDragging) {
+                    // 打开独立的chat窗口
+                    chatWindow.show()
                 }
             }
             onReleased: {
@@ -571,6 +573,7 @@ ApplicationWindow {
                     id:chatView
                     visible: contentRect.currentIndex === 0 && contentRect.currentScore === 6
                     messageManager: dialogMessageBox
+                    chatManager: $chatManager
                     onExitScore: {
                         contentRect.currentScore = -1
                     }
@@ -1327,6 +1330,64 @@ ApplicationWindow {
                 font.family: "Alibaba PuHuiTi 3.0"
                 font.pixelSize: 16
                 text: qsTr("拖拽选择截图区域，右键或ESC键取消")
+            }
+        }
+    }
+
+    // 独立的Chat窗口
+    Window {
+        id: chatWindow
+        width: 520 + 20
+        height: chatWindowContent.height + 20 + 12
+        visible: false
+        flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
+        color: "transparent"
+        // 窗口居中显示
+        x: (Screen.width - width) / 2
+        y: (Screen.height - height) / 2
+
+        // 窗口阴影
+        DropShadow {
+            anchors.fill: chatWindowBackground
+            source: chatWindowBackground
+            horizontalOffset: 0
+            verticalOffset: 0
+            radius: 16
+            color: "#1F1A1A1A"
+            samples: 32
+        }
+
+        // 窗口内容背景
+        Rectangle {
+            id: chatWindowBackground
+            width: 520
+            height: chatWindowContent.height + 12
+            anchors.centerIn: parent
+            color: "#ffffff"
+            radius: 16
+            Column{
+                anchors.fill: parent
+                Rectangle{
+                    color: "transparent"
+                    height: 12
+                    width: parent.width
+                }
+                // 使用CHAT组件，指定使用独立的ChatManager
+                CHAT {
+                    id: chatWindowContent
+                    messageManager: chatWindowMessageBox
+                    chatManager: $independentChatManager  // 使用独立的ChatManager实例
+                    specialPage: true
+                    // 重写exitScore信号处理，关闭窗口而不是返回主界面
+                    onExitScore: {
+                        chatWindow.close()
+                    }
+                }
+            }
+            // 独立的消息组件
+            MessageBox {
+                id: chatWindowMessageBox
+                anchors.fill: parent
             }
         }
     }

@@ -13,16 +13,15 @@ ChatManager::ChatManager(QObject* parent)
     : QObject(parent)
     , m_isSending(false)
     , m_isThinking(false)
-    , m_isReceivingAi(false)
     , m_lastUserMessage("")
 {
     // 连接ApiManager的信号
     auto* apiManager = GET_SINGLETON(ApiManager);
-    connect(apiManager, &ApiManager::streamChatResponse, 
+    connect(apiManager, &ApiManager::streamChatResponse,
             this, &ChatManager::onStreamChatResponse);
-    connect(apiManager, &ApiManager::streamChatFinished, 
+    connect(apiManager, &ApiManager::streamChatFinished,
             this, &ChatManager::onStreamChatFinished);
-    
+
     // 初始化聊天ID
     m_currentChatId = CommonFunc::generateNumericUUID();
 }
@@ -44,7 +43,6 @@ void ChatManager::sendMessage(const QString& message)
     // 设置发送状态
     setisSending(true);
     setisThinking(true);
-    m_isReceivingAi = true;
     m_currentAiMessage.clear();
     
     // 添加思考中的占位消息
@@ -71,7 +69,6 @@ void ChatManager::resetWithWelcomeMessage()
     
     // 重置状态
     m_currentAiMessage.clear();
-    m_isReceivingAi = false;
     setisSending(false);
     setisThinking(false);
     setlastUserMessage("");
@@ -102,7 +99,6 @@ void ChatManager::regenerateLastResponse()
     // 设置发送状态
     setisSending(true);
     setisThinking(true);
-    m_isReceivingAi = true;
     m_currentAiMessage.clear();
     
     // 添加思考中的占位消息
@@ -146,7 +142,6 @@ void ChatManager::onStreamChatFinished(bool success, const QString& message, con
     // 重置状态
     setisSending(false);
     setisThinking(false);
-    m_isReceivingAi = false;
     
     if (!success) {
         // 如果失败，移除思考消息并添加错误消息
@@ -237,7 +232,21 @@ void ChatManager::updateLastAiMessage(const QString& additionalText)
 
 void ChatManager::endAnalysis()
 {
-    GET_SINGLETON(ApiManager)->abortRequestsByType("stream-chat");
+    // 只中断当前ChatManager实例的流式聊天请求
+    GET_SINGLETON(ApiManager)->abortStreamChatByChatId(m_currentChatId);
+    m_currentAiMessage.clear();
+    setisSending(false);
+    setisThinking(false);
+    QVariantList currentMessages = getmessages();
+    if (!currentMessages.isEmpty() && currentMessages.last().toMap()["type"] == "thinking") {
+        currentMessages.removeLast();
+        QVariantMap interruptMessage;
+        interruptMessage["type"] = "interrupt";
+        interruptMessage["content"] = "消息已中断！";
+        interruptMessage["timestamp"] = QDateTime::currentDateTime().toString("hh:mm");
+        currentMessages.append(interruptMessage);
+        setmessages(currentMessages);
+    }
 }
 
 void ChatManager::copyToClipboard(const QString& content)

@@ -51,8 +51,13 @@ int main(int argc, char *argv[])
     auto* uclsctsScorer = GET_SINGLETON(UCLSCTSScorer);
     engine.rootContext()->setContextProperty("$uclsctsScorer", uclsctsScorer);
 
-    auto* chatManager = GET_SINGLETON(ChatManager);
+    // 为主界面创建ChatManager实例
+    auto* chatManager = new ChatManager();
     engine.rootContext()->setContextProperty("$chatManager", chatManager);
+
+    // 为独立chat窗口创建单独的ChatManager实例
+    auto* independentChatManager = new ChatManager();
+    engine.rootContext()->setContextProperty("$independentChatManager", independentChatManager);
 
     // 初始化语言管理器
     auto* languageManager = GET_SINGLETON(LanguageManager);

@@ -138,10 +138,18 @@ public:
     /**
      * @brief 终止指定类型的网络请求
      * @param requestType 要终止的请求类型（如 "login", "tnm-ai-score"）
-     * 
+     *
      * 只终止匹配指定类型的活跃请求，其他请求继续执行。
      */
     void abortRequestsByType(const QString& requestType);
+
+    /**
+     * @brief 终止指定chatId的流式聊天请求
+     * @param chatId 要终止的聊天会话ID
+     *
+     * 只终止匹配指定chatId的流式聊天请求，其他聊天会话继续执行。
+     */
+    void abortStreamChatByChatId(const QString& chatId);
 
 signals:
     /**

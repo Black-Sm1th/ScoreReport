@@ -8,29 +8,30 @@
 
 /**
  * @brief 聊天管理器类 - 负责处理聊天功能
- * 
- * 这是一个单例类，提供聊天消息管理和API调用功能
+ *
+ * 提供聊天消息管理和API调用功能，支持多实例
  */
 class ChatManager : public QObject
 {
     Q_OBJECT
-    
+
     /// @brief 消息列表，供QML绑定
     QUICK_PROPERTY(QVariantList, messages)
-    
+
     /// @brief 是否正在发送消息
     QUICK_PROPERTY(bool, isSending)
-    
+
     /// @brief 是否显示思考中状态
     QUICK_PROPERTY(bool, isThinking)
-    
+
     /// @brief 当前聊天ID
     QUICK_PROPERTY(QString, currentChatId)
-    
+
     /// @brief 最后一条用户消息
     QUICK_PROPERTY(QString, lastUserMessage)
-    
-    SINGLETON_CLASS(ChatManager)
+
+public:
+    explicit ChatManager(QObject* parent = nullptr);
 
 public:
     /**
@@ -99,8 +100,5 @@ private:
     
     /// @brief 当前正在接收的AI消息内容
     QString m_currentAiMessage;
-    
-    /// @brief 是否正在接收AI消息
-    bool m_isReceivingAi;
 };
 

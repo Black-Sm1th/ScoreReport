@@ -7,10 +7,12 @@ import "./components"
 
 Rectangle {
     id: chatView
-    height: 754  // 630 + 124
+    height: messagesArea.visible ? 754 : 124  // 630 + 124
     width: parent.width
     color: "transparent"
     property var messageManager: null
+    property bool specialPage: false
+    property var chatManager: $chatManager  // 默认使用全局的ChatManager，可以被覆盖
     signal exitScore()
 
     Column {
@@ -24,7 +26,7 @@ Rectangle {
             width: parent.width
             height: 630 - 12
             color: "transparent"
-
+            visible: !specialPage || chatManager.messages.length > 0
             ScrollView {
                 id: scrollView
                 anchors.fill: parent
@@ -37,22 +39,22 @@ Rectangle {
                     // 使用Repeater显示消息
                     Repeater {
                         id: messagesRepeater
-                        model: $chatManager.messages
+                        model: chatManager.messages
                         // 消息气泡
                         delegate: Column {
                             id: messageItem
                             width: messageBubble.width
                             anchors.right: modelData.type === "user" ? parent.right : undefined
                             anchors.rightMargin: modelData.type === "user" ? 24 : 0
-                            anchors.left: (modelData.type === "ai" || modelData.type === "thinking") ? parent.left : undefined
-                            anchors.leftMargin: (modelData.type === "ai" || modelData.type === "thinking") ? 24 : 0
+                            anchors.left: (modelData.type === "ai" || modelData.type === "thinking" || modelData.type === "interrupt") ? parent.left : undefined
+                            anchors.leftMargin: (modelData.type === "ai" || modelData.type === "thinking" || modelData.type === "interrupt") ? 24 : 0
                             spacing: 8
                             
                             // 消息气泡
                             Rectangle {
                                 id: messageBubble
-                                width: modelData.type !== "thinking" ? messageContent.width : thinkingRow.width
-                                height: modelData.type !== "thinking" ? messageContent.height : thinkingRow.height
+                                width: (modelData.type !== "thinking" && modelData.type !== "interrupt") ? messageContent.width : thinkingRow.width
+                                height: (modelData.type !== "thinking" && modelData.type !== "interrupt") ? messageContent.height : thinkingRow.height
                                 color: modelData.type === "user" ? "#F5F5F5" : "transparent"
                                 radius: 12
                                 
@@ -61,14 +63,14 @@ Rectangle {
                                     id: messageContent
                                     anchors.centerIn: parent
                                     width: Math.min(implicitWidth, messagesColumn.width - 48)
-                                    text: modelData.type === "thinking" ? "" : modelData.content
+                                    text: (modelData.type === "thinking" || modelData.type === "interrupt") ? "" : modelData.content
                                     padding: modelData.type === "user" ? 12 : 0
                                     font.family: "Alibaba PuHuiTi 3.0"
                                     font.pixelSize: 16
                                     color: "#D9000000"
                                     wrapMode: Text.Wrap
                                     textFormat: Text.MarkdownText
-                                    visible: modelData.type !== "thinking"
+                                    visible: (modelData.type !== "thinking" && modelData.type !== "interrupt")
                                 }
                                 
                                 // 思考中动画
@@ -76,10 +78,10 @@ Rectangle {
                                     id: thinkingRow
                                     anchors.centerIn: parent
                                     spacing: 2
-                                    visible: modelData.type === "thinking"
+                                    visible: modelData.type === "thinking" || modelData.type === "interrupt"
                                     
                                     Text {
-                                        text: qsTr("思考中")
+                                        text: qsTr(modelData.content)
                                          font.weight: Font.Bold
                                         font.family: "Alibaba PuHuiTi 3.0"
                                         font.pixelSize: 16
@@ -89,7 +91,8 @@ Rectangle {
                                     Text {
                                         id: dots
                                         text: "."
-                                         font.weight: Font.Bold
+                                        font.weight: Font.Bold
+                                        visible: modelData.type === "thinking"
                                         font.family: "Alibaba PuHuiTi 3.0"
                                         font.pixelSize: 16
                                         color: "#D9000000"
@@ -114,7 +117,7 @@ Rectangle {
                             Row {
                                 id: actionButtons
                                 spacing: 4
-                                visible: modelData.type === "ai" && index === ($chatManager.messages.length - 1) && !$chatManager.isSending && index !== 0
+                                visible: modelData.type === "ai" && index === (chatManager.messages.length - 1) && !chatManager.isSending && index !== 0
                                 
                                 Rectangle {
                                     id: regenerateBtn
@@ -146,7 +149,7 @@ Rectangle {
                                         id: regenerateBtnArea
                                         anchors.fill: parent
                                         cursorShape: Qt.PointingHandCursor
-                                        onClicked: $chatManager.regenerateLastResponse()
+                                        onClicked: chatManager.regenerateLastResponse()
                                         hoverEnabled: true
                                         onPressed: parent.scale = 0.9
                                         onReleased: parent.scale = 1
@@ -184,7 +187,7 @@ Rectangle {
                                         anchors.fill: parent
                                         cursorShape: Qt.PointingHandCursor
                                         onClicked: {
-                                            $chatManager.copyToClipboard(modelData.content)
+                                            chatManager.copyToClipboard(modelData.content)
                                             messageManager.success("已复制！")
                                         }
                                         onPressed: parent.scale = 0.9
@@ -261,7 +264,7 @@ Rectangle {
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
-                                $chatManager.endAnalysis()
+                                chatManager.endAnalysis()
                                 exitScore()
                             }
                         }
@@ -293,13 +296,13 @@ Rectangle {
                                 TextArea {
                                     id: messageInput
                                     width: parent.width
-                                    placeholderText: qsTr("发送消息...")
+                                    placeholderText: $loginManager.isLoggedIn ? qsTr("发送消息...") : qsTr("请先登录后使用本功能！")
                                     font.family: "Alibaba PuHuiTi 3.0"
                                     font.pixelSize: 16
                                     color: "#D9000000"
                                     wrapMode: TextArea.Wrap
                                     selectByMouse: true
-                                    enabled: !$chatManager.isSending
+                                    enabled: !chatManager.isSending && $loginManager.isLoggedIn
                                     padding: 0
                                     Keys.onPressed: {
                                         if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter)) {
@@ -321,8 +324,8 @@ Rectangle {
                             id: sendButton
                             anchors.bottom: parent.bottom
                             anchors.bottomMargin: 12
-                            source: $chatManager.isSending || messageInput.text.trim().length === 0 ? "qrc:/image/sendDisable.png" : "qrc:/image/send.png"
-                            enabled: !$chatManager.isSending && messageInput.text.trim().length > 0
+                            source: chatManager.isSending || messageInput.text.trim().length === 0 ? "qrc:/image/sendDisable.png" : "qrc:/image/send.png"
+                            enabled: !chatManager.isSending && messageInput.text.trim().length > 0 && $loginManager.isLoggedIn
                             opacity: enabled && clickArea.containsMouse ? 0.8 : 1
                             MouseArea {
                                 id: clickArea
@@ -348,8 +351,8 @@ Rectangle {
     // 发送消息函数
     function sendMessage() {
         var message = messageInput.text.trim()
-        if (message.length > 0 && !$chatManager.isSending) {
-            $chatManager.sendMessage(message)
+        if (message.length > 0 && !chatManager.isSending) {
+            chatManager.sendMessage(message)
             messageInput.text = ""
         }
     }
@@ -358,10 +361,10 @@ Rectangle {
     function resetValue() {
         // 清空输入框
         messageInput.text = ""
-        
+
         // 重置聊天管理器并添加欢迎消息
-        $chatManager.resetWithWelcomeMessage()
-        
+        chatManager.resetWithWelcomeMessage(!specialPage)
+
         // 滚动到顶部
         if (scrollView.contentItem) {
             scrollView.contentItem.contentY = 0
@@ -370,7 +373,7 @@ Rectangle {
 
     // 监听消息变化，自动滚动到底部
     Connections {
-        target: $chatManager
+        target: chatManager
         function onMessagesChanged() {
             scrollToBottom.start()
         }

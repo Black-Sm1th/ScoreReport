@@ -592,3 +592,35 @@ void ApiManager::abortRequestsByType(const QString& requestType)
         }
     }
 }
+
+/**
+ * @brief 终止指定chatId的流式聊天请求
+ * @param chatId 要终止的聊天会话ID
+ *
+ * 只终止匹配指定chatId的流式聊天请求，其他聊天会话继续执行。
+ * 这样可以避免一个ChatManager实例影响其他实例的对话。
+ */
+void ApiManager::abortStreamChatByChatId(const QString& chatId)
+{
+    qDebug() << "[ApiManager] Aborting stream chat requests for chatId:" << chatId;
+
+    // 复制集合避免遍历时修改
+    QSet<QNetworkReply*> repliesToCheck = m_activeReplies;
+
+    for (QNetworkReply* reply : repliesToCheck) {
+        if (reply && reply->isRunning()) {
+            QString replyType = QString::fromUtf8(reply->request().rawHeader("X-Request-Type"));
+            QString replyChatId = m_streamChatIds.value(reply, "");
+
+            // 只中断匹配chatId的流式聊天请求
+            if (replyType == "stream-chat" && replyChatId == chatId) {
+                qDebug() << "[ApiManager] Aborting stream chat request:" << reply->url().toString()
+                         << "ChatId:" << replyChatId;
+                reply->abort();
+
+                // 清理对应的chatId映射
+                m_streamChatIds.remove(reply);
+            }
+        }
+    }
+}
