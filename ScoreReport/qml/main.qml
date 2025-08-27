@@ -3,6 +3,7 @@ import QtQuick.Window 2.2
 import QtQuick.Controls 2.2
 import QtQuick.Dialogs 1.2
 import QtGraphicalEffects 1.0
+import QtQuick 2.15
 import "./components"
 ApplicationWindow {
     id: mainWindow
@@ -43,7 +44,14 @@ ApplicationWindow {
 
     title: qsTr("悬浮助手")
 
-
+    Timer{
+        id: disabledTimer
+        interval: 1000
+        repeat: false
+        onTriggered: {
+            scoreDialog.visible = false
+        }
+    }
     DropShadow {
         id:floatingShaow
         anchors.fill: floatingWindow
@@ -63,7 +71,6 @@ ApplicationWindow {
         color: "#FFFFFF"
         anchors.centerIn: parent
         radius: 12
-
         // 悬浮窗图标/图片
         Image {
             id: floatingImage
@@ -127,7 +134,17 @@ ApplicationWindow {
                     }
                 }
             }
-
+            onEntered: {
+                disabledTimer.stop()
+                if(!scoreDialog.visible){
+                    scoreDialog.showDialog()
+                }
+            }
+            onExited: {
+                if(scoreDialog.isEntered == false){
+                    disabledTimer.start()
+                }
+            }
             onPositionChanged: {
                 if (pressed && pressedButtons & Qt.LeftButton) {
                     var dx = mouse.x - lastMousePos.x
@@ -155,14 +172,8 @@ ApplicationWindow {
             onClicked: {
                 // 只处理左键点击，并且在没有拖动的情况下才响应
                 if (mouse.button === Qt.LeftButton && !isDragging) {
-                    if(!scoreDialog.visible){
-                        scoreDialog.showDialog()
-                    }else{
-                        scoreDialog.visible = false
-                    }
                 }
             }
-
             onReleased: {
                 // 拖动结束后更新对话框位置
                 if (isDragging && scoreDialog.visible) {
@@ -180,6 +191,7 @@ ApplicationWindow {
         visible: false
         flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
         color: "transparent"
+        property bool isEntered: false
         function resetAllValue(){
             if(contentRect.currentScore !== -1){
                 if(contentRect.currentScore == 0){
@@ -234,7 +246,22 @@ ApplicationWindow {
             id: dialogMessageBox
             anchors.fill: parent
         }
-
+        HoverHandler {
+            id: hover
+            acceptedDevices: PointerDevice.Mouse
+            onHoveredChanged: {
+                if (hover.hovered){
+                    scoreDialog.isEntered = true
+                    disabledTimer.stop()
+                }
+                else {
+                    scoreDialog.isEntered = false
+                    if(!mouseArea.containsMouse){
+                        disabledTimer.start()
+                    }
+                }
+            }
+        }
         // 计算对话框位置的函数 - 始终显示在上方
         function updateDialogPosition() {
             // 如果窗口不可见，不需要更新位置
@@ -292,6 +319,7 @@ ApplicationWindow {
 
             // 鼠标区域，处理点击对话框内容时隐藏右键菜单
             MouseArea {
+                id:scoreDialogMouseArea
                 anchors.fill: parent
                 z: -1
                 onPressed: {

@@ -8,7 +8,7 @@ import "./components"
 // 历史记录界面
 Rectangle {
     width: parent.width
-    height: Math.min(contentColumn.height, 762)
+    height: Math.min(contentColumn.height, 754)
     property var messageManager: null
     signal toScorer()
     color: "transparent"
@@ -141,7 +141,7 @@ Rectangle {
         // 历史记录列表
         Rectangle {
             width: parent.width - 24
-            height: emptyType.visible ? Math.min(scrollView.contentHeight, 700) : 700
+            height: emptyType.visible ? Math.min(scrollView.contentHeight, 693) : 693
             color: "transparent"
             
             ScrollView {

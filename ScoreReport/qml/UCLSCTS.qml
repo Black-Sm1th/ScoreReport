@@ -28,7 +28,16 @@ Rectangle {
     property int splittingSign: -1              // 劈裂征
     
     property bool showResult: false
-    
+    Timer {
+        id: scrollToBottom
+        interval: 100
+        onTriggered: {
+            var maxY = Math.max(0, contentColumn.height - scrollView.height)
+            if (scrollView.contentItem) {
+                scrollView.contentItem.contentY = maxY
+            }
+        }
+    }
     Column {
         id: uclsctsColumn
         spacing: 20
@@ -37,19 +46,21 @@ Rectangle {
         anchors.top: parent.top
         
         ScrollView {
-            height: 900
-            anchors.horizontalCenter: parent.horizontalCenter
-            width: parent.width - 48
+            id: scrollView
+            height: 674
+            width: parent.width
             clip: true
             Column {
                 id: contentColumn
                 anchors.fill: parent
+                leftPadding: 24
+                rightPadding: 24
                 spacing: 12
                 
                 // 标题栏
                 Rectangle {
                     height: 32
-                    width: parent.width
+                    width: parent.width - 48
                     color: "transparent"
                     
                     Image {
@@ -76,7 +87,7 @@ Rectangle {
                 // 定量特征标题
                 Rectangle {
                     height: 32
-                    width: parent.width
+                    width: parent.width - 48
                     color: "transparent"
                     visible: currentStep >= 0 && !showResult
                     Image {
@@ -102,7 +113,7 @@ Rectangle {
                 
                 // 步骤1: 不强化区域衰减量绝对值小于45HU
                 Column {
-                    width: parent.width - 40
+                    width: parent.width - 40 - 48
                     spacing: 10
                     leftPadding: 40
                     visible: currentStep >= 0 && !showResult
@@ -129,13 +140,14 @@ Rectangle {
                             if (currentStep === 0) {
                                 nextStep()
                             }
+                            scrollToBottom.start()
                         }
                     }
                 }
                 
                 // 步骤2: 在皮髓质期病变强化程度最高
                 Column {
-                    width: parent.width - 40
+                    width: parent.width - 40 - 48
                     spacing: 10
                     leftPadding: 40
                     visible: currentStep >= 1 && $uclsctsScorer.needsOption(1, nonEnhancedAttenuation, maxEnhancementPhase, heterogeneousEnhancement, irregularShape, neovascularity) && !showResult
@@ -162,13 +174,14 @@ Rectangle {
                             if (currentStep === 1) {
                                 nextStep()
                             }
+                            scrollToBottom.start()
                         }
                     }
                 }
                 
                 // 步骤3: 绝对强化
                 Column {
-                    width: parent.width - 40
+                    width: parent.width - 40 - 48
                     spacing: 10
                     leftPadding: 40
                     visible: currentStep >= 2 && !showResult
@@ -195,13 +208,14 @@ Rectangle {
                             if (currentStep === 2) {
                                 nextStep()
                             }
+                            scrollToBottom.start()
                         }
                     }
                 }
                 
                 // 步骤4: 皮髓质期相对强化
                 Column {
-                    width: parent.width - 40
+                    width: parent.width - 40 - 48
                     spacing: 10
                     leftPadding: 40
                     visible: currentStep >= 3 && !showResult
@@ -228,14 +242,15 @@ Rectangle {
                             if (currentStep === 3) {
                                 nextStep()
                             }
+                            scrollToBottom.start()
                         }
                     }
                 }
                 
-                // 定量特征标题
+                // 定性特征标题
                 Rectangle {
                     height: 32
-                    width: parent.width
+                    width: parent.width - 48
                     color: "transparent"
                     visible: currentStep >= 4 && !showResult
                     Image {
@@ -255,13 +270,13 @@ Rectangle {
                         font.pixelSize: 16
                         color: "#D9000000"
                         anchors.verticalCenter: parent.verticalCenter
-                        text: qsTr("定量特征分析中")
+                        text: qsTr("定性特征分析中")
                     }
                 }
                 
                 // 步骤5: 非均匀强化
                 Column {
-                    width: parent.width - 40
+                    width: parent.width - 40 - 48
                     spacing: 10
                     leftPadding: 40
                     visible: currentStep >= 4 && !showResult
@@ -288,13 +303,14 @@ Rectangle {
                             if (currentStep === 4) {
                                 nextStep()
                             }
+                            scrollToBottom.start()
                         }
                     }
                 }
                 
                 // 步骤6: 不规则外形
                 Column {
-                    width: parent.width - 40
+                    width: parent.width - 40 - 48
                     spacing: 10
                     leftPadding: 40
                     visible: currentStep >= 5 && $uclsctsScorer.needsOption(5, nonEnhancedAttenuation, maxEnhancementPhase, heterogeneousEnhancement, irregularShape, neovascularity) && !showResult
@@ -321,13 +337,14 @@ Rectangle {
                             if (currentStep === 5) {
                                 nextStep()
                             }
+                            scrollToBottom.start()
                         }
                     }
                 }
                 
                 // 步骤7: 新生血管
                 Column {
-                    width: parent.width - 40
+                    width: parent.width - 40 - 48
                     spacing: 10
                     leftPadding: 40
                     visible: currentStep >= 6 && $uclsctsScorer.needsOption(6, nonEnhancedAttenuation, maxEnhancementPhase, heterogeneousEnhancement, irregularShape, neovascularity) && !showResult
@@ -354,13 +371,14 @@ Rectangle {
                             if (currentStep === 6) {
                                 nextStep()
                             }
+                            scrollToBottom.start()
                         }
                     }
                 }
                 
                 // 步骤8: 营养不良性钙化
                 Column {
-                    width: parent.width - 40
+                    width: parent.width - 40 - 48
                     spacing: 10
                     leftPadding: 40
                     visible: currentStep >= 7 && $uclsctsScorer.needsOption(7, nonEnhancedAttenuation, maxEnhancementPhase, heterogeneousEnhancement, irregularShape, neovascularity) && !showResult
@@ -387,13 +405,14 @@ Rectangle {
                             if (currentStep === 7) {
                                 nextStep()
                             }
+                            scrollToBottom.start()
                         }
                     }
                 }
                 
                 // 步骤9: 劈裂征
                 Column {
-                    width: parent.width - 40
+                    width: parent.width - 40 - 48
                     spacing: 10
                     leftPadding: 40
                     visible: currentStep >= 8 && !showResult
@@ -421,13 +440,14 @@ Rectangle {
                             if (currentStep === 8) {
                                 calculateFinalScore()
                             }
+                            scrollToBottom.start()
                         }
                     }
                 }
 
                 // 结果显示区域
                 Rectangle {
-                    width: parent.width
+                    width: parent.width - 48
                     height: resultColumn.height
                     visible: showResult
                     color: "#ECF3FF"

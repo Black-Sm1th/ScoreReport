@@ -44,11 +44,29 @@ Rectangle {
     
     // 省略号动画状态
     property int dotCount: 1
-    
+    Timer {
+        id: scrollToBottom
+        interval: 100
+        onTriggered: {
+            var maxY = Math.max(0, tnmColumnChild.height - scrollView.height)
+            if (scrollView.contentItem) {
+                scrollView.contentItem.contentY = maxY
+            }
+        }
+    }
     Connections{
         target: $tnmManager
         function onCheckFailed(){
             messageManager.warning("剪贴板为空，请先复制内容")
+        }
+        function onIsAnalyzingChanged(){
+            scrollToBottom.start()
+        }
+        function onIsCompletedChanged(){
+            scrollToBottom.start()
+        }
+        function onIsDetectingCancerChanged(){
+            scrollToBottom.start()
         }
     }
 
@@ -78,399 +96,412 @@ Rectangle {
         width: parent.width
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
-        Column {
+        Rectangle {
             width: parent.width
-            leftPadding: 24
-            rightPadding: 24
-            spacing: 12
-            TextArea {
-                id: contentText
-                leftPadding: 12
-                rightPadding: 12
-                topPadding: 12
-                bottomPadding: 12
-                text: $tnmManager.clipboardContent
-                font.family: "Alibaba PuHuiTi 3.0"
-                font.pixelSize: 16
-                color: "#D9000000"
-                readOnly: true
-                width: parent.width - 48
-                wrapMode: TextArea.Wrap
-                background: Rectangle {
-                    color: "#F5F5F5"
-                    radius: 12
-                }
-            }
-
-            // 标题栏
-            Rectangle {
-                height: 32
-                width: parent.width
-                color: "transparent"
-
-                Image {
-                    id: cclsImage
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 32
-                    height: 32
-                    source: "qrc:/image/TNM.png"
-                }
-
-                Text {
-                    id: cclsInfo
-                    anchors.left: cclsImage.right
-                    anchors.leftMargin: 8
-                    font.family: "Alibaba PuHuiTi 3.0"
-                    font.weight: Font.Bold
-                    font.pixelSize: 16
-                    color: "#D9000000"
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: {
-                        if($tnmManager.isDetectingCancer){
-                            return "肿瘤类型检测中" + getDots()
-                        }
-                        if($tnmManager.showCancerSelection){
-                            return $tnmManager.cancerTypes.length !== 0 ? "请选择肿瘤类型：" : "未识别到肿瘤类型！"
-                        }
-                        if($tnmManager.isAnalyzing){
-                            return "TNM分析中" + getDots()
-                        }
-                        if($tnmManager.isCompleted){
-                            return "已完成TNM分析！"
-                        }else if(!$tnmManager.isCompleted && $tnmManager.inCompleteInfo){
-                            return $tnmManager.inCompleteInfo
-                        }else{
-                            return ""
+            height: Math.min(scrollView.contentHeight, 674)
+            color: "transparent"
+            ScrollView {
+                id: scrollView
+                anchors.fill: parent
+                clip: true
+                contentWidth: width
+                contentHeight: tnmColumnChild.height
+                ScrollBar.vertical.policy: ScrollBar.AsNeeded
+                Column {
+                    id:tnmColumnChild
+                    width: parent.width
+                    leftPadding: 24
+                    rightPadding: 24
+                    spacing: 12
+                    TextArea {
+                        id: contentText
+                        leftPadding: 12
+                        rightPadding: 12
+                        topPadding: 12
+                        bottomPadding: 12
+                        text: $tnmManager.clipboardContent
+                        font.family: "Alibaba PuHuiTi 3.0"
+                        font.pixelSize: 16
+                        color: "#D9000000"
+                        readOnly: true
+                        width: parent.width - 48
+                        wrapMode: TextArea.Wrap
+                        background: Rectangle {
+                            color: "#F5F5F5"
+                            radius: 12
                         }
                     }
-                }
-            }
-            
-            // 癌种选择界面
-            Rectangle {
-                width: parent.width - 48
-                height: cancerColumn.height + 32
-                visible: $tnmManager.showCancerSelection
-                color: "#ECF3FF"
-                radius: 8
-                
-                Column {
-                    id: cancerColumn
-                    anchors.centerIn: parent
-                    spacing: 12
-                    width: parent.width - 36
-                    
-                    // 癌种选择列表
-                    Repeater {
-                        model: $tnmManager.cancerTypes
-                        delegate: Rectangle {
-                            width: parent.width
-                            height: 40
-                            color: cancerMouseArea.containsMouse ? "#F5F5F5" : "#FFFFFF"
-                            radius: 8
-                            border.color: "#E0E0E0"
-                            border.width: 1
-                            Text {
-                                anchors.centerIn: parent
-                                font.family: "Alibaba PuHuiTi 3.0"
-                                font.pixelSize: 14
-                                color: "#D9000000"
-                                text: qsTr(modelData.name)
-                                anchors.verticalCenter: parent.verticalCenter
-                            }
-                            MouseArea {
-                                id: cancerMouseArea
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    $tnmManager.selectCancerType(modelData.name)
+
+                    // 标题栏
+                    Rectangle {
+                        height: 32
+                        width: parent.width
+                        color: "transparent"
+
+                        Image {
+                            id: cclsImage
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 32
+                            height: 32
+                            source: "qrc:/image/TNM.png"
+                        }
+
+                        Text {
+                            id: cclsInfo
+                            anchors.left: cclsImage.right
+                            anchors.leftMargin: 8
+                            font.family: "Alibaba PuHuiTi 3.0"
+                            font.weight: Font.Bold
+                            font.pixelSize: 16
+                            color: "#D9000000"
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: {
+                                if($tnmManager.isDetectingCancer){
+                                    return "肿瘤类型检测中" + getDots()
+                                }
+                                if($tnmManager.showCancerSelection){
+                                    return $tnmManager.cancerTypes.length !== 0 ? "请选择肿瘤类型：" : "未识别到肿瘤类型！"
+                                }
+                                if($tnmManager.isAnalyzing){
+                                    return "TNM分析中" + getDots()
+                                }
+                                if($tnmManager.isCompleted){
+                                    return "已完成TNM分析！"
+                                }else if(!$tnmManager.isCompleted && $tnmManager.inCompleteInfo){
+                                    return $tnmManager.inCompleteInfo
+                                }else{
+                                    return ""
                                 }
                             }
                         }
                     }
-                    
-                    // 跳过选择按钮
+
+                    // 癌种选择界面
                     Rectangle {
-                        width: parent.width
-                        height: 40
-                        color: skipMouseArea.containsMouse ? "#F5F5F5" : "#FFFFFF"
-                        radius: 8
-                        border.color: "#E0E0E0"
-                        border.width: 1
-                        
-                        Text {
-                            anchors.centerIn: parent
-                            font.family: "Alibaba PuHuiTi 3.0"
-                            font.pixelSize: 14
-                            color: "#D9000000"
-                            text: qsTr("跳过选择，默认使用肾肿瘤标准")
-                        }
-                        
-                        MouseArea {
-                            id: skipMouseArea
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                $tnmManager.skipCancerSelection()
-                            }
-                        }
-                    }
-                }
-            }
-            
-            Repeater {
-                model: $tnmManager.tipList.length
-                delegate: Rectangle {
-                    width:parent.width - 48
-                    height: 52 + 12 + 148
-                    visible:!$tnmManager.isAnalyzing && !$tnmManager.isCompleted && !$tnmManager.isDetectingCancer && !$tnmManager.showCancerSelection
-                    Rectangle{
+                        width: parent.width - 48
+                        height: cancerColumn.height + 32
+                        visible: $tnmManager.showCancerSelection
                         color: "#ECF3FF"
                         radius: 8
-                        width:parent.width
-                        height: 52
-                        Text{
-                            id: tipText
-                            elide: Text.ElideRight
-                            wrapMode: Text.NoWrap
-                            clip: true
+
+                        Column {
+                            id: cancerColumn
+                            anchors.centerIn: parent
+                            spacing: 12
                             width: parent.width - 36
-                            anchors.left: parent.left
-                            anchors.verticalCenter: parent.verticalCenter
-                            anchors.leftMargin: 18
-                            font.family: "Alibaba PuHuiTi 3.0"
-                            font.pixelSize: 16
-                            color: "#D9000000"
-                            text: $tnmManager.tipList[index]
-                            
-                            property bool isTextTruncated: tipText.contentWidth > tipText.width
-                            
-                            MouseArea {
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                
-                                ToolTip {
-                                    id: textToolTip
-                                    visible: parent.containsMouse && tipText.isTextTruncated
-                                    text: $tnmManager.tipList[index]
-                                    delay: 500  // 延迟500ms显示
-                                    timeout: 5000  // 5秒后自动隐藏
-                                    
-                                    background: Rectangle {
-                                        color: "#2D2D2D"
-                                        radius: 6
-                                        border.color: "#3A3A3A"
-                                        border.width: 1
-                                        
-                                        DropShadow {
-                                            anchors.fill: parent
-                                            radius: 8
-                                            samples: 16
-                                            color: "#40000000"
-                                            source: parent
-                                        }
-                                    }
-                                    
-                                    contentItem: Text {
-                                        text: textToolTip.text
+
+                            // 癌种选择列表
+                            Repeater {
+                                model: $tnmManager.cancerTypes
+                                delegate: Rectangle {
+                                    width: parent.width
+                                    height: 40
+                                    color: cancerMouseArea.containsMouse ? "#F5F5F5" : "#FFFFFF"
+                                    radius: 8
+                                    border.color: "#E0E0E0"
+                                    border.width: 1
+                                    Text {
+                                        anchors.centerIn: parent
                                         font.family: "Alibaba PuHuiTi 3.0"
                                         font.pixelSize: 14
-                                        color: "#FFFFFF"
-                                        wrapMode: Text.Wrap
-                                        maximumLineCount: 5
+                                        color: "#D9000000"
+                                        text: qsTr(modelData.name)
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+                                    MouseArea {
+                                        id: cancerMouseArea
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: {
+                                            $tnmManager.selectCancerType(modelData.name)
+                                        }
+                                    }
+                                }
+                            }
+
+                            // 跳过选择按钮
+                            Rectangle {
+                                width: parent.width
+                                height: 40
+                                color: skipMouseArea.containsMouse ? "#F5F5F5" : "#FFFFFF"
+                                radius: 8
+                                border.color: "#E0E0E0"
+                                border.width: 1
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    font.family: "Alibaba PuHuiTi 3.0"
+                                    font.pixelSize: 14
+                                    color: "#D9000000"
+                                    text: qsTr("跳过选择，默认使用肾肿瘤标准")
+                                }
+
+                                MouseArea {
+                                    id: skipMouseArea
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        $tnmManager.skipCancerSelection()
                                     }
                                 }
                             }
                         }
                     }
-                    MultiLineTextInput{
-                        width: parent.width
-                        height: 148
-                        y:64
-                        text: inputTexts[index] || ""
-                        
-                        Component.onCompleted: {
-                            // 初始化数组
-                            if (!inputTexts[index]) {
-                                var newTexts = inputTexts.slice()
-                                newTexts[index] = ""
-                                inputTexts = newTexts
+
+                    Repeater {
+                        model: $tnmManager.tipList.length
+                        delegate: Rectangle {
+                            width:parent.width - 48
+                            height: 52 + 12 + 148
+                            visible:!$tnmManager.isAnalyzing && !$tnmManager.isCompleted && !$tnmManager.isDetectingCancer && !$tnmManager.showCancerSelection
+                            Rectangle{
+                                color: "#ECF3FF"
+                                radius: 8
+                                width:parent.width
+                                height: 52
+                                Text{
+                                    id: tipText
+                                    elide: Text.ElideRight
+                                    wrapMode: Text.NoWrap
+                                    clip: true
+                                    width: parent.width - 36
+                                    anchors.left: parent.left
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    anchors.leftMargin: 18
+                                    font.family: "Alibaba PuHuiTi 3.0"
+                                    font.pixelSize: 16
+                                    color: "#D9000000"
+                                    text: $tnmManager.tipList[index]
+
+                                    property bool isTextTruncated: tipText.contentWidth > tipText.width
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+
+                                        ToolTip {
+                                            id: textToolTip
+                                            visible: parent.containsMouse && tipText.isTextTruncated
+                                            text: $tnmManager.tipList[index]
+                                            delay: 500  // 延迟500ms显示
+                                            timeout: 5000  // 5秒后自动隐藏
+
+                                            background: Rectangle {
+                                                color: "#2D2D2D"
+                                                radius: 6
+                                                border.color: "#3A3A3A"
+                                                border.width: 1
+
+                                                DropShadow {
+                                                    anchors.fill: parent
+                                                    radius: 8
+                                                    samples: 16
+                                                    color: "#40000000"
+                                                    source: parent
+                                                }
+                                            }
+
+                                            contentItem: Text {
+                                                text: textToolTip.text
+                                                font.family: "Alibaba PuHuiTi 3.0"
+                                                font.pixelSize: 14
+                                                color: "#FFFFFF"
+                                                wrapMode: Text.Wrap
+                                                maximumLineCount: 5
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            MultiLineTextInput{
+                                width: parent.width
+                                height: 148
+                                y:64
+                                text: inputTexts[index] || ""
+
+                                Component.onCompleted: {
+                                    // 初始化数组
+                                    if (!inputTexts[index]) {
+                                        var newTexts = inputTexts.slice()
+                                        newTexts[index] = ""
+                                        inputTexts = newTexts
+                                    }
+                                }
+
+                                onTextChanged: {
+                                    // 更新对应的数组项
+                                    var newTexts = inputTexts.slice()
+                                    newTexts[index] = text
+                                    inputTexts = newTexts
+                                }
                             }
                         }
-                        
-                        onTextChanged: {
-                            // 更新对应的数组项
-                            var newTexts = inputTexts.slice()
-                            newTexts[index] = text
-                            inputTexts = newTexts
+                    }
+                    Rectangle {
+                        width: parent.width - 48
+                        height: resultColumn.height
+                        visible:!$tnmManager.isAnalyzing && $tnmManager.isCompleted
+                        color: "#ECF3FF"
+                        radius: 8
+                        Column {
+                            id: resultColumn
+                            anchors.centerIn: parent
+                            spacing: 4
+                            width: parent.width
+                            leftPadding: 18
+                            rightPadding: 18
+                            topPadding: 14
+                            bottomPadding: 14
+                            // 综合评分
+                            Row {
+                                height: 24
+                                width: parent.width -36
+                                Text {
+                                    font.family: "Alibaba PuHuiTi 3.0"
+                                    font.weight: Font.Bold
+                                    font.pixelSize: 16
+                                    color: "#D9000000"
+                                    text: qsTr("TNM分期：")
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+
+                                Text {
+                                    font.family: "Alibaba PuHuiTi 3.0"
+                                    font.weight: Font.Bold
+                                    font.pixelSize: 16
+                                    color: "#D9000000"
+                                    text: $tnmManager.TNMConclusion
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+                            }
+
+                            Column {
+                                id: resultText
+                                width: parent.width -36
+                                Text {
+                                    id:stageText
+                                    font.family: "Alibaba PuHuiTi 3.0"
+                                    font.pixelSize: 16
+                                    color: "#A6000000"
+                                    text: qsTr("临床分期：") + $tnmManager.Stage
+                                }
+                                Text {
+                                    font.family: "Alibaba PuHuiTi 3.0"
+                                    font.weight: Font.Bold
+                                    font.pixelSize: 16
+                                    color: "#A6000000"
+                                    text: qsTr("T分期 （原发肿瘤）：")
+                                }
+                                Row{
+                                    height: label1.height
+                                    width: parent.width
+                                    Rectangle{
+                                        height: 24
+                                        width: 24
+                                        color: "transparent"
+                                        Text{
+                                            anchors.centerIn: parent
+                                            text:"●"
+                                            font.family: "Alibaba PuHuiTi 3.0"
+                                            font.pixelSize: 6
+                                            color: "#A6000000"
+                                        }
+                                    }
+                                    Text {
+                                        id:label1
+                                        font.family: "Alibaba PuHuiTi 3.0"
+                                        font.pixelSize: 16
+                                        color: "#A6000000"
+                                        width: parent.width - 24
+                                        wrapMode: Text.Wrap
+                                        text: $tnmManager.TConclusion
+                                    }
+                                }
+                                Text {
+                                    font.family: "Alibaba PuHuiTi 3.0"
+                                    font.weight: Font.Bold
+                                    font.pixelSize: 16
+                                    color: "#A6000000"
+                                    text: qsTr("N分期 （区域淋巴结）：")
+                                }
+                                Row{
+                                    height: label2.height
+                                    width: parent.width
+                                    Rectangle{
+                                        height: 24
+                                        width: 24
+                                        color: "transparent"
+                                        Text{
+                                            anchors.centerIn: parent
+                                            text:"●"
+                                            font.family: "Alibaba PuHuiTi 3.0"
+                                            font.pixelSize: 6
+                                            color: "#A6000000"
+                                        }
+                                    }
+                                    Text {
+                                        id:label2
+                                        font.family: "Alibaba PuHuiTi 3.0"
+                                        font.pixelSize: 16
+                                        color: "#A6000000"
+                                        width: parent.width - 24
+                                        wrapMode: Text.Wrap
+                                        text: $tnmManager.NConclusion
+                                    }
+                                }
+                                Text {
+                                    font.family: "Alibaba PuHuiTi 3.0"
+                                    font.weight: Font.Bold
+                                    font.pixelSize: 16
+                                    color: "#A6000000"
+                                    text: qsTr("M分期 （原发肿瘤）：")
+                                }
+                                Row{
+                                    height: label3.height
+                                    width: parent.width
+                                    Rectangle{
+                                        height: 24
+                                        width: 24
+                                        color: "transparent"
+                                        Text{
+                                            anchors.centerIn: parent
+                                            text:"●"
+                                            font.family: "Alibaba PuHuiTi 3.0"
+                                            font.pixelSize: 6
+                                            color: "#A6000000"
+                                        }
+                                    }
+                                    Text {
+                                        id:label3
+                                        font.family: "Alibaba PuHuiTi 3.0"
+                                        font.pixelSize: 16
+                                        color: "#A6000000"
+                                        width: parent.width - 24
+                                        wrapMode: Text.Wrap
+                                        text: $tnmManager.MConclusion
+                                    }
+                                }
+                            }
+                            Rectangle{
+                                height: 4
+                                width: parent.width -36
+                                color:"transparent"
+                            }
+                            Text{
+                                id: sourceText
+                                font.family: "Alibaba PuHuiTi 3.0"
+                                font.pixelSize: 12
+                                color: "#73000000"
+                                text: $tnmManager.sourceText
+                            }
                         }
+
                     }
                 }
-            }
-            Rectangle {
-                width: parent.width - 48
-                height: resultColumn.height
-                visible:!$tnmManager.isAnalyzing && $tnmManager.isCompleted
-                color: "#ECF3FF"
-                radius: 8
-                Column {
-                    id: resultColumn
-                    anchors.centerIn: parent
-                    spacing: 4
-                    width: parent.width
-                    leftPadding: 18
-                    rightPadding: 18
-                    topPadding: 14
-                    bottomPadding: 14
-                    // 综合评分
-                    Row {
-                        height: 24
-                        width: parent.width -36
-                        Text {
-                            font.family: "Alibaba PuHuiTi 3.0"
-                            font.weight: Font.Bold
-                            font.pixelSize: 16
-                            color: "#D9000000"
-                            text: qsTr("TNM分期：")
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-
-                        Text {
-                            font.family: "Alibaba PuHuiTi 3.0"
-                            font.weight: Font.Bold
-                            font.pixelSize: 16
-                            color: "#D9000000"
-                            text: $tnmManager.TNMConclusion
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-                    }
-
-                    Column {
-                        id: resultText
-                        width: parent.width -36
-                        Text {
-                            id:stageText
-                            font.family: "Alibaba PuHuiTi 3.0"
-                            font.pixelSize: 16
-                            color: "#A6000000"
-                            text: qsTr("临床分期：") + $tnmManager.Stage
-                        }
-                        Text {
-                            font.family: "Alibaba PuHuiTi 3.0"
-                            font.weight: Font.Bold
-                            font.pixelSize: 16
-                            color: "#A6000000"
-                            text: qsTr("T分期 （原发肿瘤）：")
-                        }
-                        Row{
-                            height: label1.height
-                            width: parent.width
-                            Rectangle{
-                                height: 24
-                                width: 24
-                                color: "transparent"
-                                Text{
-                                    anchors.centerIn: parent
-                                    text:"●"
-                                    font.family: "Alibaba PuHuiTi 3.0"
-                                    font.pixelSize: 6
-                                    color: "#A6000000"
-                                }
-                            }
-                            Text {
-                                id:label1
-                                font.family: "Alibaba PuHuiTi 3.0"
-                                font.pixelSize: 16
-                                color: "#A6000000"
-                                width: parent.width - 24
-                                wrapMode: Text.Wrap
-                                text: $tnmManager.TConclusion
-                            }
-                        }
-                        Text {
-                            font.family: "Alibaba PuHuiTi 3.0"
-                            font.weight: Font.Bold
-                            font.pixelSize: 16
-                            color: "#A6000000"
-                            text: qsTr("N分期 （区域淋巴结）：")
-                        }
-                        Row{
-                            height: label2.height
-                            width: parent.width
-                            Rectangle{
-                                height: 24
-                                width: 24
-                                color: "transparent"
-                                Text{
-                                    anchors.centerIn: parent
-                                    text:"●"
-                                    font.family: "Alibaba PuHuiTi 3.0"
-                                    font.pixelSize: 6
-                                    color: "#A6000000"
-                                }
-                            }
-                            Text {
-                                id:label2
-                                font.family: "Alibaba PuHuiTi 3.0"
-                                font.pixelSize: 16
-                                color: "#A6000000"
-                                width: parent.width - 24
-                                wrapMode: Text.Wrap
-                                text: $tnmManager.NConclusion
-                            }
-                        }
-                        Text {
-                            font.family: "Alibaba PuHuiTi 3.0"
-                            font.weight: Font.Bold
-                            font.pixelSize: 16
-                            color: "#A6000000"
-                            text: qsTr("M分期 （原发肿瘤）：")
-                        }
-                        Row{
-                            height: label3.height
-                            width: parent.width
-                            Rectangle{
-                                height: 24
-                                width: 24
-                                color: "transparent"
-                                Text{
-                                    anchors.centerIn: parent
-                                    text:"●"
-                                    font.family: "Alibaba PuHuiTi 3.0"
-                                    font.pixelSize: 6
-                                    color: "#A6000000"
-                                }
-                            }
-                            Text {
-                                id:label3
-                                font.family: "Alibaba PuHuiTi 3.0"
-                                font.pixelSize: 16
-                                color: "#A6000000"
-                                width: parent.width - 24
-                                wrapMode: Text.Wrap
-                                text: $tnmManager.MConclusion
-                            }
-                        }
-                    }
-                    Rectangle{
-                        height: 4
-                        width: parent.width -36
-                        color:"transparent"
-                    }
-                    Text{
-                        id: sourceText
-                        font.family: "Alibaba PuHuiTi 3.0"
-                        font.pixelSize: 12
-                        color: "#73000000"
-                        text: $tnmManager.sourceText
-                    }
-                }
-
             }
         }
-
         // 底部按钮栏
         Rectangle {
             height: 60
