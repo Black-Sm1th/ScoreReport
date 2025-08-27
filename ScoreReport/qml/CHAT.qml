@@ -210,12 +210,13 @@ Rectangle {
             height: 124
             color: "transparent"
             Rectangle {
+                id: inputRec
                 width: 496
                 height: 112
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.top: parent.top
                 radius: 16
-                color: closeArea.containsMouse ? "#FFF2F2" : "#ECF3FF"
+                color: "#ECF3FF"
                 border.color: "#E6EAF2"
                 border.width: 1
                 Rectangle{
@@ -255,7 +256,8 @@ Rectangle {
                             color: "transparent"
                         }
                         Image{
-                            source: parent.hovered ? "qrc:/image/closeRed.png" : "qrc:/image/closeGrey.png"
+                            id:closeImage
+                            source: "qrc:/image/closeGrey.png"
                             anchors.centerIn: parent
                         }
                         MouseArea{
@@ -266,6 +268,16 @@ Rectangle {
                             onClicked: {
                                 chatManager.endAnalysis()
                                 exitScore()
+                                inputRec.color = "#ECF3FF"
+                                closeImage.source = "qrc:/image/closeGrey.png"
+                            }
+                            onEntered: {
+                                inputRec.color = "#FFF2F2"
+                                closeImage.source = "qrc:/image/closeRed.png"
+                            }
+                            onExited: {
+                                inputRec.color = "#ECF3FF"
+                                closeImage.source = "qrc:/image/closeGrey.png"
                             }
                         }
                     }

@@ -1369,8 +1369,46 @@ ApplicationWindow {
                 anchors.fill: parent
                 Rectangle{
                     color: "transparent"
-                    height: 12
+                    height: 16
                     width: parent.width
+
+                    // 拖动提示横线
+                    Rectangle {
+                        width: 40
+                        height: 2
+                        anchors.centerIn: parent
+                        color: "#D0D0D0"
+                        radius: 1
+                    }
+
+                    // 添加拖动功能
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.SizeAllCursor
+
+                        property point lastMousePos
+
+                        onPressed: {
+                            lastMousePos = Qt.point(mouse.x, mouse.y)
+                        }
+
+                        onPositionChanged: {
+                            if (pressed) {
+                                var dx = mouse.x - lastMousePos.x
+                                var dy = mouse.y - lastMousePos.y
+
+                                var newX = chatWindow.x + dx
+                                var newY = chatWindow.y + dy
+
+                                // 限制窗口在屏幕范围内
+                                newX = Math.max(0, Math.min(newX, Screen.width - chatWindow.width))
+                                newY = Math.max(0, Math.min(newY, Screen.height - chatWindow.height))
+
+                                chatWindow.x = newX
+                                chatWindow.y = newY
+                            }
+                        }
+                    }
                 }
                 // 使用CHAT组件，指定使用独立的ChatManager
                 CHAT {
