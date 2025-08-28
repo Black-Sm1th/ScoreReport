@@ -64,7 +64,7 @@ void TNMManager::startAnalysis()
 
 void TNMManager::endAnalysis()
 {
-    if (!getisCompleted()) {
+    if (!getisCompleted() && !getisDetectingCancer() && !getshowCancerSelection()) {
         m_apiManager->deleteChatById(currentChatId);
     }
     resetAllParams();

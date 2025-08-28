@@ -301,6 +301,9 @@ private:
     
     /// @brief 跟踪流式聊天请求的chatId映射，用于在接收数据时识别会话
     QMap<QNetworkReply*, QString> m_streamChatIds;
+    
+    /// @brief 跟踪每个流式聊天请求的不完整SSE数据缓冲区
+    QMap<QNetworkReply*, QString> m_streamDataBuffers;
 
     // API地址常量
     const QString INTERNAL_BASE_URL = "http://192.168.1.2:9898/api";  ///< 内网API基础地址
