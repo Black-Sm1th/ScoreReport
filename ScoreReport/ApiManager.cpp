@@ -454,42 +454,46 @@ void ApiManager::onNetworkReply(QNetworkReply* reply)
         QByteArray responseData = reply->readAll();
         qDebug().noquote() << "[ApiManager] Response data:" << QString::fromLocal8Bit(responseData);
         
-        QJsonDocument doc = QJsonDocument::fromJson(responseData);
-        if (!doc.isObject()) {
-            qWarning() << "[ApiManager] Invalid JSON response";
-            emit networkError("Invalid server response");
+        // 对于流式聊天请求，特殊处理
+        if (requestType == "stream-chat") {
+            // 流式聊天完成，发送完成信号
+            QString chatId = m_streamChatIds.value(reply, "");
+            emit streamChatFinished(true, "聊天完成", chatId);
+            // 清理chatId映射
+            m_streamChatIds.remove(reply);
         } else {
-            QJsonObject responseObj = doc.object();
-            int code = responseObj.value("code").toInt();
-            QString message = responseObj.value("message").toString();
-            QJsonObject data = responseObj.value("data").toObject();
-            bool success = (code == 0);  // 服务器约定：code为0表示成功
- 
-            // 根据请求类型分发响应到对应的信号
-            if (requestType == "login") {
-                emit loginResponse(success, message, data);
-            } else if (requestType == "register") {
-                emit registerResponse(success, message, data);
-            } else if (requestType == "test-connection") {
-                emit connectionTestResult(success, message);
-            } else if (requestType == "tnm-ai-score") {
-                emit tnmAiQualityScoreResponse(success, message, data);
-            } else if (requestType == "renal-ai-score") {
-                emit renalAiQualityScoreResponse(success, message, data);
-            } else if (requestType == "delete-chat") {
-                emit deleteChatResponse(success, message, data);
-            } else if (requestType == "add-quality-record") {
-                emit addQualityRecordResponse(success, message, data);
-            } else if (requestType == "get-quality-list") {
-                emit getQualityListResponse(success, message, data);
-            } else if (requestType == "cancer-diagnose-type") {
-                emit cancerDiagnoseTypeResponse(success, message, data);
-            } else if (requestType == "stream-chat") {
-                // 流式聊天完成，发送完成信号
-                QString chatId = m_streamChatIds.value(reply, "");
-                emit streamChatFinished(success, message, chatId);
-                // 清理chatId映射
-                m_streamChatIds.remove(reply);
+            // 其他请求需要解析JSON响应
+            QJsonDocument doc = QJsonDocument::fromJson(responseData);
+            if (!doc.isObject()) {
+                qWarning() << "[ApiManager] Invalid JSON response";
+                emit networkError("Invalid server response");
+            } else {
+                QJsonObject responseObj = doc.object();
+                int code = responseObj.value("code").toInt();
+                QString message = responseObj.value("message").toString();
+                QJsonObject data = responseObj.value("data").toObject();
+                bool success = (code == 0);  // 服务器约定：code为0表示成功
+     
+                // 根据请求类型分发响应到对应的信号
+                if (requestType == "login") {
+                    emit loginResponse(success, message, data);
+                } else if (requestType == "register") {
+                    emit registerResponse(success, message, data);
+                } else if (requestType == "test-connection") {
+                    emit connectionTestResult(success, message);
+                } else if (requestType == "tnm-ai-score") {
+                    emit tnmAiQualityScoreResponse(success, message, data);
+                } else if (requestType == "renal-ai-score") {
+                    emit renalAiQualityScoreResponse(success, message, data);
+                } else if (requestType == "delete-chat") {
+                    emit deleteChatResponse(success, message, data);
+                } else if (requestType == "add-quality-record") {
+                    emit addQualityRecordResponse(success, message, data);
+                } else if (requestType == "get-quality-list") {
+                    emit getQualityListResponse(success, message, data);
+                } else if (requestType == "cancer-diagnose-type") {
+                    emit cancerDiagnoseTypeResponse(success, message, data);
+                }
             }
         }
     } else {

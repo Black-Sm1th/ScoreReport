@@ -1365,10 +1365,30 @@ ApplicationWindow {
         visible: false
         flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
         color: "transparent"
+        
+        // 记录窗口是否被用户拖拽过
+        property bool isDragged: false
+        property real centerY: Screen.height / 2  // 记录窗口中心Y坐标
+        
         // 窗口居中显示
         x: (Screen.width - width) / 2
-        y: (Screen.height - height) / 2
-
+        y: centerY - height / 2
+        
+        // 高度和y坐标同步动画
+        Behavior on height {
+            NumberAnimation {
+                id: heightchange
+                duration: 300
+                easing.type: Easing.OutCubic
+            }
+        }
+        
+        // 监听高度变化，实时调整y坐标保持中心点不变
+        // 移除y的Behavior，让y跟随高度变化同步更新
+        onHeightChanged: {
+            // 直接设置y坐标，不使用动画，这样y会跟随高度的动画进度同步变化
+            y = centerY - height / 2
+        }
         // 窗口阴影
         DropShadow {
             anchors.fill: chatWindowBackground
@@ -1429,6 +1449,10 @@ ApplicationWindow {
 
                                 chatWindow.x = newX
                                 chatWindow.y = newY
+                                
+                                // 标记为已拖拽，并更新中心Y坐标
+                                chatWindow.isDragged = true
+                                chatWindow.centerY = newY + chatWindow.height / 2
                             }
                         }
                     }

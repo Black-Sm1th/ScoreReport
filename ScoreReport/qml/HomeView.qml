@@ -48,72 +48,103 @@ Rectangle {
             width: parent.width
         }
 
-        // 评分方案网格
-        Grid {
-            id: kidney
+        // 带动画的内容容器
+        Rectangle {
+            id: contentContainer
             width: parent.width
-            columns: 3
-            columnSpacing: 12
-            rowSpacing: 12
-            visible: tabSwitcher.currentIndex === 1
-            anchors.horizontalCenter: parent.horizontalCenter
+            height: 240  // 固定高度以容纳两行卡片
+            color: "transparent"
+            clip: true
+            
+            // 滑动内容区域
+            Rectangle {
+                id: slidingContent
+                width: parent.width * 2  // 两个页面的宽度
+                height: parent.height
+                color: "transparent"
+                x: tabSwitcher.currentIndex === 0 ? 0 : -parent.width
+                
+                // 滑动动画
+                Behavior on x {
+                    NumberAnimation {
+                        duration: 300
+                        easing.type: Easing.OutCubic
+                    }
+                }
+                
+                // 通用页面 (index 0)
+                Grid {
+                    id: generalGrid
+                    width: contentContainer.width
+                    height: parent.height
+                    columns: 3
+                    columnSpacing: 12
+                    rowSpacing: 12
+                    anchors.left: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
+                    
+                    ScoreOptionCard {
+                        title: "TNM"
+                        backgroundColor: "#FFFAF8"
+                        iconUrl: "qrc:/image/TNM.png"
+                    }
+                    ScoreOptionCard {
+                        title: "CHAT"
+                        backgroundColor: "#F8FAFF"
+                        iconUrl: "qrc:/image/CHAT.png"
+                    }
+                }
+                
+                // 肾脏页面 (index 1)
+                Grid {
+                    id: kidneyGrid
+                    width: contentContainer.width
+                    height: parent.height
+                    columns: 3
+                    columnSpacing: 12
+                    rowSpacing: 12
+                    anchors.left: parent.left
+                    anchors.leftMargin: contentContainer.width + (width - (3 * ((width - 24) / 3) + 24)) / 2  // 第二页位置 + 居中对齐
+                    anchors.verticalCenter: parent.verticalCenter
 
-            // 第一行
-            ScoreOptionCard {
-                title: "RENAL"
-                backgroundColor: "#F8FAFF"
-                iconUrl: "qrc:/image/RENAL.png"
-            }
+                    // 第一行
+                    ScoreOptionCard {
+                        title: "RENAL"
+                        backgroundColor: "#F8FAFF"
+                        iconUrl: "qrc:/image/RENAL.png"
+                    }
 
-            ScoreOptionCard {
-                title: "CCLS"
-                backgroundColor: "#F7FCFB"
-                iconUrl: "qrc:/image/CCLS.png"
-            }
+                    ScoreOptionCard {
+                        title: "CCLS"
+                        backgroundColor: "#F7FCFB"
+                        iconUrl: "qrc:/image/CCLS.png"
+                    }
 
-            ScoreOptionCard {
-                title: "TNM"
-                backgroundColor: "#FFFAF8"
-                iconUrl: "qrc:/image/TNM.png"
-            }
+                    ScoreOptionCard {
+                        title: "TNM"
+                        backgroundColor: "#FFFAF8"
+                        iconUrl: "qrc:/image/TNM.png"
+                    }
 
-            // 第二行
-            ScoreOptionCard {
-                title: "UCLS MRS"
-                backgroundColor: "#FFFBF2"
-                iconUrl: "qrc:/image/UCLS-MRS.png"
-            }
+                    // 第二行
+                    ScoreOptionCard {
+                        title: "UCLS MRS"
+                        backgroundColor: "#FFFBF2"
+                        iconUrl: "qrc:/image/UCLS-MRS.png"
+                    }
 
-            ScoreOptionCard {
-                title: "UCLS CTS"
-                backgroundColor: "#F8F7FF"
-                iconUrl: "qrc:/image/UCLS-CTS.png"
-            }
+                    ScoreOptionCard {
+                        title: "UCLS CTS"
+                        backgroundColor: "#F8F7FF"
+                        iconUrl: "qrc:/image/UCLS-CTS.png"
+                    }
 
-            ScoreOptionCard {
-                title: "BIOSNAK"
-                backgroundColor: "#F8FAFF"
-                iconUrl: "qrc:/image/BIOSNAK.png"
-            }
-        }
-
-        Grid {
-            width: parent.width
-            height: kidney.height
-            columns: 3
-            columnSpacing: 12
-            rowSpacing: 12
-            visible: tabSwitcher.currentIndex === 0
-            anchors.horizontalCenter: parent.horizontalCenter
-            ScoreOptionCard {
-                title: "TNM"
-                backgroundColor: "#FFFAF8"
-                iconUrl: "qrc:/image/TNM.png"
-            }
-            ScoreOptionCard {
-                title: "CHAT"
-                backgroundColor: "#F8FAFF"
-                iconUrl: "qrc:/image/CHAT.png"
+                    ScoreOptionCard {
+                        title: "BIOSNAK"
+                        backgroundColor: "#F8FAFF"
+                        iconUrl: "qrc:/image/BIOSNAK.png"
+                    }
+                }
             }
         }
         // 分隔线

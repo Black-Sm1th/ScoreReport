@@ -375,7 +375,7 @@ Rectangle {
         messageInput.text = ""
 
         // 重置聊天管理器并添加欢迎消息
-        chatManager.resetWithWelcomeMessage(!specialPage)
+        chatManager.resetWithWelcomeMessage()
 
         // 滚动到顶部
         if (scrollView.contentItem) {
