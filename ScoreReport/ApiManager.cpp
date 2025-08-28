@@ -341,13 +341,25 @@ void ApiManager::onStreamDataReady()
     QString& buffer = m_streamDataBuffers[reply];
     buffer += newDataString;
     
-    // 处理SSE格式的数据，按双换行符分割完整的SSE事件
-    QStringList events = buffer.split("\n\n");
+    // 处理换行符：先将额外的换行符标记出来，然后按标准SSE格式分割
+    QString processedBuffer = buffer;
+    
+    // 将 \n\n\n\n 替换为 <<DOUBLE_NEWLINE>>\n\n (保留两个换行符)
+    processedBuffer.replace("\n\n\n\n", "<<DOUBLE_NEWLINE>>\n\n");
+    
+    // 将 \n\n\n 替换为 <<SINGLE_NEWLINE>>\n\n (保留一个换行符)  
+    processedBuffer.replace("\n\n\n", "<<SINGLE_NEWLINE>>\n\n");
+    
+    // 按标准SSE格式分割事件
+    QStringList events = processedBuffer.split("\n\n");
     
     // 保留最后一个可能不完整的事件在缓冲区中
-    if (!buffer.endsWith("\n\n")) {
+    if (!processedBuffer.endsWith("\n\n")) {
         // 最后一个事件可能不完整，保留在缓冲区中
         buffer = events.takeLast();
+        // 恢复原始的换行符标记到缓冲区
+        buffer.replace("<<DOUBLE_NEWLINE>>", "\n\n");
+        buffer.replace("<<SINGLE_NEWLINE>>", "\n");
     } else {
         // 如果以双换行符结尾，说明所有事件都是完整的
         buffer.clear();
@@ -372,6 +384,10 @@ void ApiManager::onStreamDataReady()
             else if (line.startsWith("data:")) {
                 // 从 "data:" 后面开始取所有内容，保留空格
                 content = line.mid(5);
+                
+                // 恢复额外的换行符
+                content.replace("<<DOUBLE_NEWLINE>>", "\n\n");
+                content.replace("<<SINGLE_NEWLINE>>", "\n");
             }
         }
         

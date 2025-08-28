@@ -138,7 +138,7 @@ void ChatManager::onStreamChatFinished(bool success, const QString& message, con
     if (chatId != m_currentChatId) {
         return;
     }
-    
+    qDebug() << "[ChatManager] Chat finished";
     // 重置状态
     setisSending(false);
     setisThinking(false);
