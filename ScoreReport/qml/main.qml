@@ -1,9 +1,9 @@
-import QtQuick 2.9
+import QtQuick 2.15
 import QtQuick.Window 2.2
 import QtQuick.Controls 2.2
 import QtQuick.Dialogs 1.2
 import QtGraphicalEffects 1.0
-import QtQuick 2.15
+
 import "./components"
 ApplicationWindow {
     id: mainWindow
@@ -49,7 +49,7 @@ ApplicationWindow {
         interval: 1000
         repeat: false
         onTriggered: {
-            scoreDialog.visible = false
+            scoreDialog.hideDialog()
         }
     }
     DropShadow {
@@ -188,6 +188,7 @@ ApplicationWindow {
         flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
         color: "transparent"
         property bool isEntered: false
+        property bool animating: false
         function resetAllValue(){
             if(contentRect.currentScore !== -1){
                 if(contentRect.currentScore == 0){
@@ -262,6 +263,87 @@ ApplicationWindow {
             }
         }
 
+        // —— 显示动画：从悬浮窗吐出效果 ——
+        ParallelAnimation {
+            id: showAnim
+            NumberAnimation {
+                target: contentRect
+                property: "scale"
+                from: 0.1
+                to: 1.0
+                duration: 400
+                easing.type: Easing.OutBack
+            }
+            NumberAnimation {
+                target: contentRect
+                property: "opacity"
+                from: 0.0
+                to: 1.0
+                duration: 300
+                easing.type: Easing.OutQuad
+            }
+            NumberAnimation {
+                id: showXAnim
+                target: scoreDialog
+                property: "x"
+                duration: 400
+                easing.type: Easing.OutBack
+            }
+            NumberAnimation {
+                id: showYAnim
+                target: scoreDialog
+                property: "y"
+                duration: 400
+                easing.type: Easing.OutBack
+            }
+            onFinished: {
+                // 动画完成后，恢复正常的跟随行为
+                scoreDialog.animating = false
+            }
+        }
+
+        // —— 隐藏动画：吸回悬浮窗效果 ——
+        ParallelAnimation {
+            id: hideAnim
+            NumberAnimation {
+                target: contentRect
+                property: "scale"
+                from: 1.0
+                to: 0.1
+                duration: 300
+                easing.type: Easing.InBack
+            }
+            NumberAnimation {
+                target: contentRect
+                property: "opacity"
+                from: 1.0
+                to: 0.0
+                duration: 200
+                easing.type: Easing.InQuad
+            }
+            NumberAnimation {
+                id: hideXAnim
+                target: scoreDialog
+                property: "x"
+                duration: 300
+                easing.type: Easing.InBack
+            }
+            NumberAnimation {
+                id: hideYAnim
+                target: scoreDialog
+                property: "y"
+                duration: 300
+                easing.type: Easing.InBack
+            }
+            onFinished: {
+                scoreDialog.visible = false
+                scoreDialog.animating = false
+                // 恢复正常缩放和透明度
+                contentRect.scale = 1.0
+                contentRect.opacity = 1.0
+            }
+        }
+
         // 计算悬浮窗的外接矩形
         function _floatingRect() {
             return Qt.rect(
@@ -275,6 +357,17 @@ ApplicationWindow {
         // 仅跟随悬浮窗移动（不改高度、不播放动画）
         function followFloatingInstantly() {
             if (!visible) return
+            
+            // 如果正在动画，停止动画并立即跟随（拖动时优先跟随）
+            if (animating) {
+                showAnim.stop()
+                hideAnim.stop()
+                animating = false
+                // 恢复正常状态
+                contentRect.scale = 1.0
+                contentRect.opacity = 1.0
+            }
+            
             var fr = _floatingRect()
             var newX = fr.x + fr.width - (width - 10)
             var newY = fr.y - height
@@ -286,9 +379,9 @@ ApplicationWindow {
             y = newY
         }
 
-        // 依据内容新高度，height 与 y 同步动画（“从下往上长高”）
+        // 依据内容新高度，height 与 y 同步动画（"从下往上长高"）
         function relayoutAndAnimate() {
-            if (!visible) return
+            if (!visible || animating) return  // 动画期间不执行
 
             var newHeight = contentRect.height + 20     // 你原来 Window 的边距留白
             var fr = _floatingRect()
@@ -308,12 +401,54 @@ ApplicationWindow {
                 growAnim.start()
         }
 
-        // —— 打开对话框：先瞬时放到正确位置（不动画），之后内容变化再动画 ——
+        // —— 打开对话框：带动画效果，从悬浮窗吐出 ——
         function showDialog() {
+            if (animating) return  // 防止动画期间重复调用
+            
+            animating = true
             visible = true
-            // 先把当前高度对齐一次，避免首次展示时拉伸动画
+            
+            // 计算悬浮窗中心位置作为动画起始点
+            var fr = _floatingRect()
+            var floatingCenterX = fr.x + fr.width / 2
+            var floatingCenterY = fr.y + fr.height / 2
+            
+            // 设置初始状态（在悬浮窗位置，小尺寸）
+            contentRect.scale = 0.1
+            contentRect.opacity = 0.0
+            x = floatingCenterX - width / 2
+            y = floatingCenterY - height / 2
             height = contentRect.height + 20
-            followFloatingInstantly()
+            
+            // 计算目标位置
+            var targetX = fr.x + fr.width - (width - 10)
+            var targetY = fr.y - height
+            
+            // 边界检查
+            targetX = Math.max(-width + 100, Math.min(targetX, Screen.width - 100))
+            targetY = Math.min(targetY, Screen.height - 50)
+            
+            // 设置动画目标并启动
+            showXAnim.to = targetX  // x动画
+            showYAnim.to = targetY  // y动画
+            showAnim.start()
+        }
+        
+        // —— 隐藏对话框：带动画效果，吸回悬浮窗 ——
+        function hideDialog() {
+            if (animating) return  // 防止动画期间重复调用
+            
+            animating = true
+            
+            // 计算悬浮窗中心位置作为动画终点
+            var fr = _floatingRect()
+            var floatingCenterX = fr.x + fr.width / 2
+            var floatingCenterY = fr.y + fr.height / 2
+            
+            // 设置动画目标并启动
+            hideXAnim.to = floatingCenterX - width / 2  // x动画
+            hideYAnim.to = floatingCenterY - height / 2  // y动画
+            hideAnim.start()
         }
 
         // === 连接：悬浮窗移动时“瞬时”跟随 ===
@@ -513,7 +648,7 @@ ApplicationWindow {
                                 if (contextMenu.visible) {
                                     contextMenu.hide()
                                 }
-                                scoreDialog.visible = false
+                                scoreDialog.hideDialog()
                             }
                         }
                     }
