@@ -176,12 +176,6 @@ ApplicationWindow {
                     chatWindow.show()
                 }
             }
-            onReleased: {
-                // 拖动结束后更新对话框位置
-                if (isDragging && scoreDialog.visible) {
-                    scoreDialog.updateDialogPosition()
-                }
-            }
         }
     }
 
@@ -189,7 +183,7 @@ ApplicationWindow {
     Window {
         id: scoreDialog
         width: contentRect.width + 20  // 增加宽度为阴影留出空间
-        height: contentRect.height + 20  // 增加高度为阴影留出空间
+        height: 20  // 增加高度为阴影留出空间
         visible: false
         flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
         color: "transparent"
@@ -228,21 +222,6 @@ ApplicationWindow {
             }
         }
 
-        // 监听悬浮窗位置变化，自动更新对话框位置
-        Connections {
-            target: mainWindow
-            function onXChanged() {
-                if (scoreDialog.visible) {
-                    scoreDialog.updateDialogPosition()
-                }
-            }
-            function onYChanged() {
-                if (scoreDialog.visible) {
-                    scoreDialog.updateDialogPosition()
-                }
-            }
-        }
-
         // 对话框消息组件
         MessageBox {
             id: dialogMessageBox
@@ -264,41 +243,92 @@ ApplicationWindow {
                 }
             }
         }
-        // 计算对话框位置的函数 - 始终显示在上方
-        function updateDialogPosition() {
-            // 如果窗口不可见，不需要更新位置
-            if (!scoreDialog.visible) {
-                return
+        // —— 动画：高度 + 位置 同步推进 ——
+        ParallelAnimation {
+            id: growAnim
+            NumberAnimation {
+                id: hAnim
+                target: scoreDialog
+                property: "height"
+                duration: 260
+                easing.type: Easing.OutCubic
             }
+            NumberAnimation {
+                id: yAnim
+                target: scoreDialog
+                property: "y"
+                duration: 260
+                easing.type: Easing.OutCubic
+            }
+        }
 
-            var floatingRect = Qt.rect(
+        // 计算悬浮窗的外接矩形
+        function _floatingRect() {
+            return Qt.rect(
                         mainWindow.x + (mainWindow.width - floatingWindow.width) / 2,
                         mainWindow.y + (mainWindow.height - floatingWindow.height) / 2,
                         floatingWindow.width,
                         floatingWindow.height
-                        )
+                    )
+        }
 
-            // 始终显示在悬浮窗上方，内容区域右侧对齐
-            var newX = floatingRect.x + floatingRect.width - (width - 10)
-            var newY = floatingRect.y - height  // 悬浮窗上方，间距10px
-            // 确保X坐标在合理范围内
+        // 仅跟随悬浮窗移动（不改高度、不播放动画）
+        function followFloatingInstantly() {
+            if (!visible) return
+            var fr = _floatingRect()
+            var newX = fr.x + fr.width - (width - 10)
+            var newY = fr.y - height
+
             newX = Math.max(-width + 100, Math.min(newX, Screen.width - 100))
-            // Y坐标允许出屏幕上方
             newY = Math.min(newY, Screen.height - 50)
 
             x = newX
             y = newY
         }
-        // 监听高度变化，当内容加载完成后更新位置
-        onHeightChanged: {
-            if (scoreDialog.visible && height > 0) {
-                Qt.callLater(scoreDialog.updateDialogPosition)
-            }
+
+        // 依据内容新高度，height 与 y 同步动画（“从下往上长高”）
+        function relayoutAndAnimate() {
+            if (!visible) return
+
+            var newHeight = contentRect.height + 20     // 你原来 Window 的边距留白
+            var fr = _floatingRect()
+            var newX = fr.x + fr.width - (width - 10)
+            var newY = fr.y - newHeight                 // 底边贴住悬浮窗上方
+
+            newX = Math.max(-width + 100, Math.min(newX, Screen.width - 100))
+            newY = Math.min(newY, Screen.height - 50)
+
+            // 停止旧动画，设置目标，一起开跑
+            growAnim.stop()
+            x = newX                 // x 直接到位，不需要动画
+            hAnim.to = newHeight
+            yAnim.to = newY
+            // 若目标与当前相同就不必启动动画
+            if (height !== newHeight || y !== newY)
+                growAnim.start()
         }
+
+        // —— 打开对话框：先瞬时放到正确位置（不动画），之后内容变化再动画 ——
         function showDialog() {
             visible = true
-            updateDialogPosition()
+            // 先把当前高度对齐一次，避免首次展示时拉伸动画
+            height = contentRect.height + 20
+            followFloatingInstantly()
         }
+
+        // === 连接：悬浮窗移动时“瞬时”跟随 ===
+        Connections {
+            target: mainWindow
+            function onXChanged() { scoreDialog.followFloatingInstantly() }
+            function onYChanged() { scoreDialog.followFloatingInstantly() }
+        }
+
+        // === 连接：内容高度发生变化时，触发“同步动画上长” ===
+        Connections {
+            target: contentRect
+            function onHeightChanged() { scoreDialog.relayoutAndAnimate() }
+        }
+
         Rectangle {
             id: contentRect
             width: 520
@@ -377,7 +407,7 @@ ApplicationWindow {
                                 }
 
                                 if (isDragging) {
-                                    // 拖动悬浮窗，对话框会通过updateDialogPosition自动跟随
+                                    // 拖动悬浮窗，对话框会通过自动跟随
                                     var newX = mainWindow.x + dx
                                     var newY = mainWindow.y + dy
 
@@ -388,13 +418,6 @@ ApplicationWindow {
                                     mainWindow.x = newX
                                     mainWindow.y = newY
                                 }
-                            }
-                        }
-
-                        onReleased: {
-                            // 拖动结束后更新对话框位置
-                            if (isDragging && scoreDialog.visible) {
-                                scoreDialog.updateDialogPosition()
                             }
                         }
                     }
