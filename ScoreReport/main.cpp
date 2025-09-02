@@ -25,6 +25,12 @@ int main(int argc, char *argv[])
 
     QGuiApplication app(argc, argv);
 
+    // 设置应用程序信息，解决FileDialog的QSettings错误
+    QCoreApplication::setOrganizationName("AETHERMIND");
+    QCoreApplication::setOrganizationDomain("aethermind.com");
+    QCoreApplication::setApplicationName("ScoreReport");
+    QCoreApplication::setApplicationVersion("0.7.0");
+
     QQmlApplicationEngine engine;
     // 使用单例模式获取实例
     auto* apiManager = GET_SINGLETON(ApiManager);

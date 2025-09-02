@@ -30,6 +30,15 @@ class ChatManager : public QObject
     /// @brief 最后一条用户消息
     QUICK_PROPERTY(QString, lastUserMessage)
 
+    /// @brief 上传的文件列表
+    QUICK_PROPERTY(QVariantList, files)
+
+    /// @brief 最大文件数量
+    QUICK_PROPERTY(int, maxFileCount)
+
+    /// @brief 最大文件大小（字节）
+    QUICK_PROPERTY(qint64, maxFileSize)
+
 public:
     explicit ChatManager(QObject* parent = nullptr);
 
@@ -51,7 +60,71 @@ public:
     Q_INVOKABLE void regenerateLastResponse();
 
     Q_INVOKABLE void copyToClipboard(const QString& content);
+    Q_INVOKABLE QString getClipboardText();
+    Q_INVOKABLE qint64 getFileSize(const QString& filePath);
     Q_INVOKABLE void endAnalysis();
+
+    /**
+     * @brief 添加文件到列表
+     * @param filePath 文件路径
+     * @return 是否添加成功
+     */
+    Q_INVOKABLE bool addFile(const QString& filePath);
+
+    
+    /**
+     * @brief 从列表中移除文件
+     * @param index 文件索引
+     * @return 是否移除成功
+     */
+    Q_INVOKABLE bool removeFile(int index);
+    
+    /**
+     * @brief 清空文件列表
+     */
+    Q_INVOKABLE void clearFiles();
+    
+    /**
+     * @brief 获取文件信息
+     * @param filePath 文件路径
+     * @return 文件信息对象
+     */
+    Q_INVOKABLE QVariantMap getFileInfo(const QString& filePath);
+    
+    /**
+     * @brief 验证文件格式是否支持
+     * @param filePath 文件路径
+     * @return 是否支持
+     */
+    Q_INVOKABLE bool isValidFileFormat(const QString& filePath);
+    
+    /**
+     * @brief 验证文件大小是否有效
+     * @param filePath 文件路径
+     * @return 是否有效
+     */
+    Q_INVOKABLE bool isFileSizeValid(const QString& filePath);
+    
+    /**
+     * @brief 格式化文件大小
+     * @param bytes 字节数
+     * @return 格式化后的字符串
+     */
+    Q_INVOKABLE QString formatFileSize(qint64 bytes);
+    
+    /**
+     * @brief 获取文件名（不含路径）
+     * @param filePath 文件路径
+     * @return 文件名
+     */
+    Q_INVOKABLE QString getFileName(const QString& filePath);
+    
+    /**
+     * @brief 批量添加文件
+     * @param filePaths 文件路径列表
+     * @return 成功添加的文件数量
+     */
+    Q_INVOKABLE int addFiles(const QStringList& filePaths);
 
 private slots:
     /**
@@ -68,6 +141,15 @@ private slots:
      * @param chatId 会话ID
      */
     void onStreamChatFinished(bool success, const QString& message, const QString& chatId);
+
+signals:
+    /**
+     * @brief 文件操作结果信号
+     * @param success 是否成功
+     * @param message 操作消息
+     * @param type 消息类型：success, warning, error, info
+     */
+    void fileOperationResult(const QString& message, const QString& type);
 
 private:
     /**
@@ -98,7 +180,18 @@ private:
      */
     void updateLastAiMessage(const QString& additionalText);
     
+    /**
+     * @brief 添加文件到列表（内部重载）
+     * @param filePath 文件路径
+     * @param showMessage 是否显示操作消息
+     * @return 是否添加成功
+     */
+    bool addFile(const QString& filePath, bool showMessage);
+
     /// @brief 当前正在接收的AI消息内容
     QString m_currentAiMessage;
+    
+    /// @brief 支持的文件格式列表
+    QStringList m_supportedFormats;
 };
 

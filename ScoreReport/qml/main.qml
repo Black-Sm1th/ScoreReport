@@ -185,7 +185,7 @@ ApplicationWindow {
         width: contentRect.width + 20  // 增加宽度为阴影留出空间
         height: 20  // 增加高度为阴影留出空间
         visible: false
-        flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
+        flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool
         color: "transparent"
         property bool isEntered: false
         property bool animating: false
@@ -1498,7 +1498,7 @@ ApplicationWindow {
         width: 520 + 20
         height: chatWindowContent.height + 20 + 12
         visible: false
-        flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
+        flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool
         color: "transparent"
         
         // 记录窗口是否被用户拖拽过
