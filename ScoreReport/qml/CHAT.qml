@@ -573,10 +573,18 @@ Rectangle {
         var clipboardText = chatManager.getClipboardText()
         
         if (clipboardText && clipboardText.length > 0) {
-            // 检查是否是文件路径
-            if (isFilePath(clipboardText)) {
-                // 尝试添加文件，如果是文件路径就不再粘贴为文本
-                chatManager.addFile(clipboardText)
+            // 解析可能的多个文件路径
+            var filePaths = parseFilePaths(clipboardText)
+            
+            if (filePaths.length > 0) {
+                // 有文件路径，处理文件添加
+                if (filePaths.length === 1) {
+                    // 单个文件直接添加，显示详细消息
+                    chatManager.addFile(filePaths[0])
+                } else {
+                    // 多个文件批量添加，显示汇总消息
+                    chatManager.addFiles(filePaths)
+                }
                 // 无论成功失败，都不粘贴为文本，错误信息已在C++中显示
             } else {
                 // 不是文件路径，作为普通文本粘贴
@@ -585,13 +593,61 @@ Rectangle {
         }
     }
     
+    // 解析剪贴板中的文件路径，支持多个文件
+    function parseFilePaths(text) {
+        var filePaths = []
+        
+        // 按行分割文本，处理可能的多行文件路径
+        var lines = text.split(/\r?\n/)
+        
+        for (var i = 0; i < lines.length; i++) {
+            var line = lines[i].trim()
+            if (line.length > 0 && isFilePath(line)) {
+                // 移除file://前缀
+                var cleanPath = line
+                if (cleanPath.startsWith("file:///")) {
+                    cleanPath = cleanPath.substring(8)
+                } else if (cleanPath.startsWith("file://")) {
+                    cleanPath = cleanPath.substring(7)
+                }
+                filePaths.push(cleanPath)
+            }
+        }
+        
+        // 如果没有找到按行分割的文件路径，检查整个文本是否是单个文件路径
+        if (filePaths.length === 0) {
+            var trimmedText = text.trim()
+            if (isFilePath(trimmedText)) {
+                // 移除file://前缀
+                var cleanPath = trimmedText
+                if (cleanPath.startsWith("file:///")) {
+                    cleanPath = cleanPath.substring(8)
+                } else if (cleanPath.startsWith("file://")) {
+                    cleanPath = cleanPath.substring(7)
+                }
+                filePaths.push(cleanPath)
+            }
+        }
+        
+        return filePaths
+    }
+    
     // 判断是否是文件路径（简单检查，详细验证在C++中进行）
     function isFilePath(text) {
         text = text.trim()
+        
+        // 移除file://前缀进行检查
+        var checkPath = text
+        if (checkPath.startsWith("file:///")) {
+            checkPath = checkPath.substring(8)
+        } else if (checkPath.startsWith("file://")) {
+            checkPath = checkPath.substring(7)
+        }
+        
         // 检查是否包含文件扩展名
-        var hasExtension = /\.\w+$/.test(text)
+        var hasExtension = /\.\w+$/.test(checkPath)
         // 检查是否是Windows或Linux路径格式
-        var isPath = /^[A-Za-z]:\\|^\/|^\.\/|^\.\.\//.test(text) || text.includes('\\') || text.includes('/')
+        var isPath = /^[A-Za-z]:\\|^\/|^\.\/|^\.\.\//.test(checkPath) || checkPath.includes('\\') || checkPath.includes('/')
         return hasExtension && isPath
     }
 
