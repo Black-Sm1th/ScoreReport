@@ -407,7 +407,7 @@ ApplicationWindow {
             
             animating = true
             visible = true
-            
+            contentRect.opacity = 0
             // 延迟一帧，确保内容组件完全加载和布局更新
             Qt.callLater(function() {
                 // 计算悬浮窗中心位置作为动画起始点
