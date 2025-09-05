@@ -139,7 +139,7 @@ Rectangle {
                         color: "transparent"
 
                         Image {
-                            id: cclsImage
+                            id: tnmImage
                             anchors.verticalCenter: parent.verticalCenter
                             width: 32
                             height: 32
@@ -147,8 +147,8 @@ Rectangle {
                         }
 
                         Text {
-                            id: cclsInfo
-                            anchors.left: cclsImage.right
+                            id: tnmInfo
+                            anchors.left: tnmImage.right
                             anchors.leftMargin: 8
                             font.family: "Alibaba PuHuiTi 3.0"
                             font.weight: Font.Bold
@@ -176,7 +176,7 @@ Rectangle {
                         }
                         Image {
                             id: infoImage
-                            anchors.left: cclsInfo.right
+                            anchors.left: tnmInfo.right
                             anchors.leftMargin: 8
                             anchors.verticalCenter: parent.verticalCenter
                             width: 16
@@ -342,7 +342,7 @@ Rectangle {
                                             text: $tnmManager.tipList[index]
                                             font.family: "Alibaba PuHuiTi 3.0"
                                             font.pixelSize: 14
-                                            delay: 100  // 延迟100ms显示
+                                            delay: 500  // 延迟500ms显示
                                             timeout: 3000  // 5秒后自动隐藏
 
                                             width: Math.min(480, implicitWidth)

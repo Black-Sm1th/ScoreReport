@@ -193,7 +193,7 @@ Rectangle {
                         color: "transparent"
 
                         Image {
-                            id: cclsImage
+                            id: reanlImage
                             anchors.verticalCenter: parent.verticalCenter
                             width: 32
                             height: 32
@@ -201,8 +201,8 @@ Rectangle {
                         }
 
                         Text {
-                            id: cclsInfo
-                            anchors.left: cclsImage.right
+                            id: reanlInfo
+                            anchors.left: reanlImage.right
                             anchors.leftMargin: 8
                             font.family: "Alibaba PuHuiTi 3.0"
                             font.weight: Font.Bold
