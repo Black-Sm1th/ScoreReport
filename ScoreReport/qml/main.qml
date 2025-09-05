@@ -408,30 +408,35 @@ ApplicationWindow {
             animating = true
             visible = true
             
-            // 计算悬浮窗中心位置作为动画起始点
-            var fr = _floatingRect()
-            var floatingCenterX = fr.x + fr.width / 2
-            var floatingCenterY = fr.y + fr.height / 2
-            
-            // 设置初始状态（在悬浮窗位置，小尺寸）
-            contentRect.scale = 0.1
-            contentRect.opacity = 0.0
-            x = floatingCenterX - width / 2
-            y = floatingCenterY - height / 2
-            height = contentRect.height + 20
-            
-            // 计算目标位置
-            var targetX = fr.x + fr.width - (width - 10)
-            var targetY = fr.y - height
-            
-            // 边界检查
-            targetX = Math.max(-width + 100, Math.min(targetX, Screen.width - 100))
-            targetY = Math.min(targetY, Screen.height - 50)
-            
-            // 设置动画目标并启动
-            showXAnim.to = targetX  // x动画
-            showYAnim.to = targetY  // y动画
-            showAnim.start()
+            // 延迟一帧，确保内容组件完全加载和布局更新
+            Qt.callLater(function() {
+                // 计算悬浮窗中心位置作为动画起始点
+                var fr = _floatingRect()
+                var floatingCenterX = fr.x + fr.width / 2
+                var floatingCenterY = fr.y + fr.height / 2
+                
+                // 设置正确的高度，现在内容组件应该已经更新了
+                height = contentRect.height + 20
+                
+                // 设置初始状态（在悬浮窗位置，小尺寸）
+                contentRect.scale = 0.1
+                contentRect.opacity = 0.0
+                x = floatingCenterX - width / 2
+                y = floatingCenterY - height / 2
+                
+                // 计算目标位置
+                var targetX = fr.x + fr.width - (width - 10)
+                var targetY = fr.y - height
+                
+                // 边界检查
+                targetX = Math.max(-width + 100, Math.min(targetX, Screen.width - 100))
+                targetY = Math.min(targetY, Screen.height - 50)
+                
+                // 设置动画目标并启动
+                showXAnim.to = targetX  // x动画
+                showYAnim.to = targetY  // y动画
+                showAnim.start()
+            })
         }
         
         // —— 隐藏对话框：带动画效果，吸回悬浮窗 ——
