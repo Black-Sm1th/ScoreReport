@@ -63,5 +63,6 @@
         <file>image/popup.png</file>
         <file>image/screenshoot.png</file>
         <file>image/upload.png</file>
+        <file>image/info.png</file>
     </qresource>
 </RCC>

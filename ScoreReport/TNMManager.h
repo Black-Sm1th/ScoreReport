@@ -18,6 +18,7 @@ class TNMManager : public QObject
         QUICK_PROPERTY(QString, inCompleteInfo)
         QUICK_PROPERTY(QVariantList, tipList)
         QUICK_PROPERTY(QString, TNMConclusion)
+        QUICK_PROPERTY(QString, inCompleteInfoDetail)
         QUICK_PROPERTY(QString, Stage)
         QUICK_PROPERTY(QString, TConclusion)
         QUICK_PROPERTY(QString, NConclusion)

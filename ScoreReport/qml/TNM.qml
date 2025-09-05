@@ -1,6 +1,6 @@
-import QtQuick 2.9
+import QtQuick 2.15
 import QtQuick.Window 2.2
-import QtQuick.Controls 2.2
+import QtQuick.Controls 2.15
 import QtQuick.Dialogs 1.2
 import QtGraphicalEffects 1.0
 import "./components"
@@ -174,6 +174,61 @@ Rectangle {
                                 }
                             }
                         }
+                        Image {
+                            id: infoImage
+                            anchors.left: cclsInfo.right
+                            anchors.leftMargin: 8
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 16
+                            height: 16
+                            visible:!$tnmManager.isAnalyzing && !$tnmManager.isCompleted && !$tnmManager.isDetectingCancer && !$tnmManager.showCancerSelection
+                            source: "qrc:/image/info.png"
+                            MouseArea {
+                                id: hoverArea
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onEntered: toolTip.visible = true
+                                onExited: toolTip.visible = false
+                            }
+                        }
+                        // 提示信息
+                        ToolTip {
+                            id: toolTip
+                            text: $tnmManager.inCompleteInfoDetail
+                            visible: false
+                            delay: 100
+                            timeout: 0 // 不自动消失
+                            font.family: "Alibaba PuHuiTi 3.0"
+                            font.pixelSize: 14
+                            x: 5
+                            y: 25
+                            width: Math.min(480, implicitWidth)
+                            // 修改提示框内容
+                            contentItem: Text {
+                                text: toolTip.text
+                                font: toolTip.font
+                                color: "#ffffff"
+                                wrapMode: Text.WordWrap
+                                padding: 6
+                            }
+                            enter: Transition {
+                                NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 200; easing.type: Easing.OutCubic }
+                                NumberAnimation { property: "scale"; from: 0.9; to: 1.0; duration: 200; easing.type: Easing.OutCubic }
+                            }
+
+                            exit: Transition {
+                                NumberAnimation { property: "opacity"; from: 1; to: 0; duration: 200; easing.type: Easing.InCubic }
+                                NumberAnimation { property: "scale"; from: 1.0; to: 0.9; duration: 200; easing.type: Easing.InCubic }
+                            }
+                            // 修改背景样式
+                            background: Rectangle {
+                                color: "#A6000000"
+                                radius: 8
+                            }
+
+                        }
+
                     }
 
                     // 癌种选择界面
@@ -283,33 +338,35 @@ Rectangle {
 
                                         ToolTip {
                                             id: textToolTip
-                                            visible: parent.containsMouse && tipText.isTextTruncated
+                                            visible: parent.containsMouse
                                             text: $tnmManager.tipList[index]
-                                            delay: 500  // 延迟500ms显示
-                                            timeout: 5000  // 5秒后自动隐藏
+                                            font.family: "Alibaba PuHuiTi 3.0"
+                                            font.pixelSize: 14
+                                            delay: 100  // 延迟100ms显示
+                                            timeout: 3000  // 5秒后自动隐藏
 
-                                            background: Rectangle {
-                                                color: "#2D2D2D"
-                                                radius: 6
-                                                border.color: "#3A3A3A"
-                                                border.width: 1
-
-                                                DropShadow {
-                                                    anchors.fill: parent
-                                                    radius: 8
-                                                    samples: 16
-                                                    color: "#40000000"
-                                                    source: parent
-                                                }
-                                            }
-
+                                            width: Math.min(480, implicitWidth)
+                                            // 修改提示框内容
                                             contentItem: Text {
                                                 text: textToolTip.text
-                                                font.family: "Alibaba PuHuiTi 3.0"
-                                                font.pixelSize: 14
-                                                color: "#FFFFFF"
-                                                wrapMode: Text.Wrap
-                                                maximumLineCount: 5
+                                                font: textToolTip.font
+                                                color: "#ffffff"
+                                                wrapMode: Text.WordWrap
+                                                padding: 6
+                                            }
+                                            enter: Transition {
+                                                NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 200; easing.type: Easing.OutCubic }
+                                                NumberAnimation { property: "scale"; from: 0.9; to: 1.0; duration: 200; easing.type: Easing.OutCubic }
+                                            }
+
+                                            exit: Transition {
+                                                NumberAnimation { property: "opacity"; from: 1; to: 0; duration: 200; easing.type: Easing.InCubic }
+                                                NumberAnimation { property: "scale"; from: 1.0; to: 0.9; duration: 200; easing.type: Easing.InCubic }
+                                            }
+                                            // 修改背景样式
+                                            background: Rectangle {
+                                                color: "#A6000000"
+                                                radius: 8
                                             }
                                         }
                                     }

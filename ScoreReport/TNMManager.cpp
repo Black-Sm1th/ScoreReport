@@ -17,6 +17,7 @@ TNMManager::TNMManager(QObject *parent)
     setclipboardContent("");
     setinCompleteInfo("");
     settipList(QVariantList());
+    setinCompleteInfoDetail("");
     setTNMConclusion("");
     setStage("");
     setTConclusion("");
@@ -120,6 +121,7 @@ void TNMManager::resetAllParams()
     setisAnalyzing(false);
     setclipboardContent("");
     setinCompleteInfo("");
+    setinCompleteInfoDetail("");
     settipList(QVariantList());
     setTNMConclusion("");
     setStage("");
@@ -184,6 +186,7 @@ void TNMManager::onTnmAiQualityScoreResponse(bool success, const QString& messag
         if (status == "success") {
             setisCompleted(true);
             setinCompleteInfo("");
+            setinCompleteInfoDetail("");
             QString T = detailData.value("conclusion").toObject().value("T").toString();
             QString N = detailData.value("conclusion").toObject().value("N").toString();
             QString M = detailData.value("conclusion").toObject().value("M").toString();
@@ -210,12 +213,17 @@ void TNMManager::onTnmAiQualityScoreResponse(bool success, const QString& messag
         else{
             QString info = detailData.value("message").toString();
             QJsonArray tips = detailData.value("tips").toArray();
+            QString T = detailData.value("basis").toObject().value("T").toString();
+            QString N = detailData.value("basis").toObject().value("N").toString();
+            QString M = detailData.value("basis").toObject().value("M").toString();
+            QString infoDetail = QString::fromUtf8("T：") + T + QString::fromUtf8("\n\nN：") + N + QString::fromUtf8("\n\nM：") + M;
             QVariantList list;
 
             for (const QJsonValue& value : tips) {
                 list.append(value.toString());  // 转成 QVariantMap
             }
             settipList(list);
+            setinCompleteInfoDetail(infoDetail);
             setinCompleteInfo(info);
             setisCompleted(false);
         }
