@@ -148,6 +148,7 @@
     <QtMoc Include="ApiManager.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Version.h" />
     <QtMoc Include="GlobalMouseListener.h" />
     <QtMoc Include="LanguageManager.h" />
     <QtMoc Include="UCLSCTSScorer.h" />
@@ -162,6 +163,9 @@
   <ItemGroup>
     <QtTranslation Include="translations\ScoreReport_en.ts" />
     <QtTranslation Include="translations\ScoreReport_zh.ts" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="ScoreReport.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

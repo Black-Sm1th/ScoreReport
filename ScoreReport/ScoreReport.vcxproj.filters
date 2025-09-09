@@ -88,9 +88,18 @@
     <QtMoc Include="UCLSCTSScorer.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="GlobalMouseListener.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="OCRHelper.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CommonFunc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Version.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -107,6 +116,12 @@
     <ClCompile Include="UCLSCTSScorer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="GlobalMouseListener.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="OCRHelper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtTranslation Include="translations\ScoreReport_en.ts">
@@ -119,5 +134,10 @@
   <ItemGroup>
     <None Include="translations\ScoreReport_en.qm" />
     <None Include="translations\ScoreReport_zh.qm" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="ScoreReport.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>
