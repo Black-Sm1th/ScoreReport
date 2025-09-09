@@ -224,10 +224,10 @@ QString CCLSScorer::getDetailedDiagnosis(int t2Signal, int enhancement, int micr
             }
         }
         else if (enhancement == Moderate) { // 中度强化
-            if (microFat == Yes) {
+            if (microFat == Yes || (microFat == No && segmentalReversal == No)) {
                 return QString::fromUtf8("嫌色细胞癌");
             }
-            else if (microFat == No && segmentalReversal == No) {
+            else if (microFat == No && segmentalReversal == Yes) {
                 return QString::fromUtf8("嗜酸细胞瘤");
             }
         }
