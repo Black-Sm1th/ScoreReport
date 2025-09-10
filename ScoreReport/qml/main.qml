@@ -189,6 +189,7 @@ ApplicationWindow {
         color: "transparent"
         property bool isEntered: false
         property bool animating: false
+        property bool isFirst: true
         function resetAllValue(){
             if(contentRect.currentScore !== -1){
                 if(contentRect.currentScore == 0){
@@ -404,12 +405,18 @@ ApplicationWindow {
         // —— 打开对话框：带动画效果，从悬浮窗吐出 ——
         function showDialog() {
             if (animating) return  // 防止动画期间重复调用
-            
-            animating = true
-            visible = true
-            contentRect.opacity = 0
+            if(!scoreDialog.isFirst){
+                animating = true
+                visible = true
+                contentRect.opacity = 0
+            }
             // 延迟一帧，确保内容组件完全加载和布局更新
             Qt.callLater(function() {
+                if(scoreDialog.isFirst){
+                    animating = true
+                    visible = true
+                    scoreDialog.isFirst = false
+                }
                 // 计算悬浮窗中心位置作为动画起始点
                 var fr = _floatingRect()
                 var floatingCenterX = fr.x + fr.width / 2
