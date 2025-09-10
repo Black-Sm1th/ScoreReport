@@ -748,6 +748,14 @@ ApplicationWindow {
                         contentRect.currentScore = -1
                     }
                 }
+                REPORT{
+                    id:reportView
+                    visible: contentRect.currentIndex === 0 && contentRect.currentScore === 7
+                    messageManager: dialogMessageBox
+                    onExitScore: {
+                        contentRect.currentScore = -1
+                    }
+                }
             }
         }
     }

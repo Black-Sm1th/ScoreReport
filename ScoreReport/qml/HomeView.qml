@@ -93,6 +93,11 @@ Rectangle {
                         backgroundColor: "#F8FAFF"
                         iconUrl: "qrc:/image/CHAT.png"
                     }
+                    ScoreOptionCard {
+                        title: "Report"
+                        backgroundColor: "#F8FAFF"
+                        iconUrl: "qrc:/image/BIOSNAK.png"
+                    }
                 }
                 
                 // 肾脏页面 (index 1)
@@ -218,6 +223,9 @@ Rectangle {
                 else if(title === "UCLS CTS"){
                     currentPageChanged(4)
                 }
+                // else if(title === "Report"){
+                //     currentPageChanged(7)
+                // }
                 else{
                     messageManager.warning(qsTr("该功能暂未开放"))
                 }
