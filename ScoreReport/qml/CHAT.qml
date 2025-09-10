@@ -7,7 +7,7 @@ import "./components"
 
 Rectangle {
     id: chatView
-    height: messagesArea.visible ? 754 : (chatManager.files.length > 0 ? 236 : 124)  // 630 + 124 + 可选文件列表100
+    height: messagesArea.visible ? 754 : (chatManager.files.length > 0 ? 248 : 124)  // 630 + 124 + 可选文件列表112
     width: parent.width
     color: "transparent"
     property var messageManager: null
@@ -20,8 +20,7 @@ Rectangle {
         id: fileDialog
         selectMultiple: true
         title: qsTr("选择文件")
-        nameFilters: ["支持的文件格式 (*.pdf *.txt *.doc *.docx *.jpg *.jpeg *.png *.bmp *.gif)",
-                     "PDF文件 (*.pdf)",
+        nameFilters: ["支持的文件格式 (*.txt *.doc *.docx *.jpg *.jpeg *.png *.bmp *.gif)",
                      "文本文件 (*.txt)",
                      "Word文档 (*.doc *.docx)",
                      "图片文件 (*.jpg *.jpeg *.png *.bmp *.gif)"]
@@ -61,7 +60,7 @@ Rectangle {
         Rectangle {
             id: messagesArea
             width: parent.width
-            height: chatManager.files.length > 0 ? 530 - 24 : 630 - 12
+            height: chatManager.files.length > 0 ? 518 - 24 : 630 - 12  // 调整以适应新的文件列表高度
             color: "transparent"
             visible: !specialPage || chatManager.messages.length > 0
             ScrollView {
@@ -244,7 +243,7 @@ Rectangle {
         Rectangle {
             id: fileListArea
             width: parent.width
-            height: chatManager.files.length > 0 ? 100 : 0
+            height: chatManager.files.length > 0 ? 112 : 0  // 增加高度以适应新的文件项高度
             color: "transparent"
             visible: chatManager.files.length > 0
             
@@ -266,7 +265,7 @@ Rectangle {
                         model: chatManager.files
                         delegate: Rectangle {
                             width: (parent.width - 16) / 3 // 最多3列
-                            height: 76
+                            height: 88  // 增加高度以适应进度条
                             color: "#FFFFFF"
                             radius: 8
                             border.color: "#E6EAF2"
@@ -278,26 +277,85 @@ Rectangle {
                                 anchors.verticalCenter: parent.verticalCenter
                                 anchors.right: closeBtn.left
                                 anchors.rightMargin: 8
-                                spacing: 16
+                                spacing: 8
                                 
                                 Text {
                                     id: fileName
                                     width: parent.width
                                     text: modelData.name || ""
                                     font.family: "Alibaba PuHuiTi 3.0"
-                                    font.pixelSize: 16
+                                    font.pixelSize: 14
                                     font.weight: Font.Bold
                                     color: "#D9000000"
                                     elide: Text.ElideMiddle
                                 }
                                 
                                 Text {
+                                    property var progressInfo: chatManager.fileReadProgress[modelData.path] || {}
+                                    property bool isReading: progressInfo.isReading || false
+                                    property bool success: progressInfo.success !== undefined ? progressInfo.success : true
                                     id: fileInfo
-                                    width: parent.width
                                     text: (modelData.extension || "") + "   " + (modelData.formattedSize || "")
                                     font.family: "Alibaba PuHuiTi 3.0"
                                     font.pixelSize: 12
                                     color: "#73000000"
+                                    visible: !isReading && success
+                                }
+
+                                // 读取状态指示器
+                                Text {
+                                    id: readStatus
+                                    property var progressInfo: chatManager.fileReadProgress[modelData.path] || {}
+                                    property bool isReading: progressInfo.isReading || false
+                                    property int percentage: progressInfo.percentage || 0
+                                    property bool success: progressInfo.success !== undefined ? progressInfo.success : true
+
+                                    text: {
+                                        if (isReading) {
+                                            return "读取中 " + percentage + "%"
+                                        } else if (!success) {
+                                            return "读取失败"
+                                        } else {
+                                            return "已读取"
+                                        }
+                                    }
+                                    font.family: "Alibaba PuHuiTi 3.0"
+                                    font.pixelSize: 12
+                                    color: {
+                                        if (isReading) return "#006BFF"
+                                        else if (!success) return "#FF4444"
+                                        else return "#00AA44"
+                                    }
+                                    visible: isReading || !success
+                                }
+                                
+                                // 进度条
+                                Rectangle {
+                                    id: progressBar
+                                    width: parent.width
+                                    height: 3
+                                    color: "#E6EAF2"
+                                    radius: 1.5
+                                    
+                                    property var progressInfo: chatManager.fileReadProgress[modelData.path] || {}
+                                    property bool isReading: progressInfo.isReading || false
+                                    property int percentage: progressInfo.percentage || 0
+                                    
+                                    visible: isReading
+                                    
+                                    Rectangle {
+                                        width: parent.width * (parent.percentage / 100.0)
+                                        height: parent.height
+                                        color: "#006BFF"
+                                        radius: parent.radius
+                                        
+                                        Behavior on width {
+                                            NumberAnimation {
+                                                duration: 200
+                                                easing.type: Easing.OutQuad
+                                            }
+                                        }
+                                    }
                                 }
                             }
                             
@@ -349,7 +407,7 @@ Rectangle {
                 DropArea {
                     id: dropArea
                     anchors.fill: parent
-                    enabled: !chatManager.isSending && $loginManager.isLoggedIn
+                    enabled: !chatManager.isSending && !chatManager.isUploading && $loginManager.isLoggedIn
                     onDropped: {
                         if (drop.hasUrls) {
                             var filePaths = []
@@ -426,7 +484,7 @@ Rectangle {
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
-                                chatManager.endAnalysis()
+                                chatManager.endAnalysis(!specialPage)
                                 exitScore()
                                 inputRec.color = "#ECF3FF"
                                 closeImage.source = "qrc:/image/closeGrey.png"
@@ -474,7 +532,7 @@ Rectangle {
                                     color: "#D9000000"
                                     wrapMode: TextArea.Wrap
                                     selectByMouse: true
-                                    enabled: !chatManager.isSending && $loginManager.isLoggedIn
+                                    enabled: !chatManager.isSending && !chatManager.isUploading && $loginManager.isLoggedIn
                                     padding: 0
                                     Keys.onPressed: {
                                         if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter)) {
@@ -483,7 +541,7 @@ Rectangle {
                                                 return
                                             } else if (event.modifiers === Qt.NoModifier) {
                                                 // 单独回车：发送消息
-                                                sendMessage()
+                                                if (!chatManager.isUploading) sendMessage()
                                                 event.accepted = true
                                             }
                                         } else if (event.key === Qt.Key_V && (event.modifiers & Qt.ControlModifier)) {
@@ -504,7 +562,7 @@ Rectangle {
                             height: 32
                             source: "qrc:/image/upload.png"
                             opacity: !enabled ? 0.2 : (uploadButtonArea.containsMouse ? 0.8 : 0.6)
-                            enabled: !chatManager.isSending && $loginManager.isLoggedIn
+                            enabled: !chatManager.isSending && !chatManager.isUploading && $loginManager.isLoggedIn
                             MouseArea {
                                 enabled: parent.enabled
                                 id: uploadButtonArea
@@ -521,8 +579,8 @@ Rectangle {
                             id: sendButton
                             anchors.bottom: parent.bottom
                             anchors.bottomMargin: 12
-                            source: chatManager.isSending || messageInput.text.trim().length === 0 ? "qrc:/image/sendDisable.png" : "qrc:/image/send.png"
-                            enabled: !chatManager.isSending && messageInput.text.trim().length > 0 && $loginManager.isLoggedIn
+                            source: !enabled ? "qrc:/image/sendDisable.png" : "qrc:/image/send.png"
+                            enabled: !chatManager.isSending && !chatManager.isUploading && messageInput.text.trim().length > 0 && $loginManager.isLoggedIn
                             opacity: enabled && clickArea.containsMouse ? 0.8 : 1
                             MouseArea {
                                 id: clickArea

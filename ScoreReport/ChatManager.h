@@ -4,7 +4,37 @@
 #include <QString>
 #include <QVariantList>
 #include <QJsonObject>
+#include <QThread>
+#include <QMutex>
 #include "CommonFunc.h"
+
+/**
+ * @brief 文件读取线程类 - 在后台线程中读取文件内容
+ */
+class FileReaderThread : public QThread
+{
+    Q_OBJECT
+
+public:
+    explicit FileReaderThread(const QString& filePath, const QString& fileName, QObject* parent = nullptr);
+
+protected:
+    void run() override;
+
+signals:
+    void progressChanged(int percentage);
+    void readCompleted(const QString& filePath, const QString& content, bool success, const QString& errorMessage);
+
+private:
+    QString m_filePath;
+    QString m_fileName;
+    
+    QString readTextFile(const QString& filePath);
+    QString readDocxFile(const QString& filePath);
+    QString readDocFile(const QString& filePath);
+    QString readImageFile(const QString& filePath);
+    void emitProgress(int percentage);
+};
 
 /**
  * @brief 聊天管理器类 - 负责处理聊天功能
@@ -24,6 +54,9 @@ class ChatManager : public QObject
     /// @brief 是否显示思考中状态
     QUICK_PROPERTY(bool, isThinking)
 
+    /// @brief 是否有文件正在上传（读取中）
+    QUICK_PROPERTY(bool, isUploading)
+
     /// @brief 当前聊天ID
     QUICK_PROPERTY(QString, currentChatId)
 
@@ -38,6 +71,9 @@ class ChatManager : public QObject
 
     /// @brief 最大文件大小（字节）
     QUICK_PROPERTY(qint64, maxFileSize)
+    
+    /// @brief 文件读取进度信息
+    QUICK_PROPERTY(QVariantMap, fileReadProgress)
 
 public:
     explicit ChatManager(QObject* parent = nullptr);
@@ -62,7 +98,7 @@ public:
     Q_INVOKABLE void copyToClipboard(const QString& content);
     Q_INVOKABLE QString getClipboardText();
     Q_INVOKABLE qint64 getFileSize(const QString& filePath);
-    Q_INVOKABLE void endAnalysis();
+    Q_INVOKABLE void endAnalysis(bool clearfile);
 
     /**
      * @brief 添加文件到列表
@@ -126,6 +162,13 @@ public:
      */
     Q_INVOKABLE int addFiles(const QStringList& filePaths);
 
+    /**
+     * @brief 读取文件内容
+     * @param filePath 文件路径
+     * @return 文件文本内容，如果读取失败返回空字符串
+     */
+    Q_INVOKABLE QString readFileContent(const QString& filePath);
+
 private slots:
     /**
      * @brief 处理流式聊天响应
@@ -141,6 +184,21 @@ private slots:
      * @param chatId 会话ID
      */
     void onStreamChatFinished(bool success, const QString& message, const QString& chatId);
+    
+    /**
+     * @brief 处理文件读取进度变化
+     * @param percentage 进度百分比
+     */
+    void onFileReadProgress(int percentage);
+    
+    /**
+     * @brief 处理文件读取完成
+     * @param filePath 文件路径
+     * @param content 文件内容
+     * @param success 是否成功
+     * @param errorMessage 错误信息
+     */
+    void onFileReadCompleted(const QString& filePath, const QString& content, bool success, const QString& errorMessage);
 
 signals:
     /**
@@ -150,6 +208,20 @@ signals:
      * @param type 消息类型：success, warning, error, info
      */
     void fileOperationResult(const QString& message, const QString& type);
+    
+    /**
+     * @brief 文件读取进度变化信号
+     * @param filePath 文件路径
+     * @param percentage 进度百分比
+     */
+    void fileReadProgressChanged(const QString& filePath, int percentage);
+    
+    /**
+     * @brief 文件读取完成信号
+     * @param filePath 文件路径
+     * @param success 是否成功
+     */
+    void fileReadCompleted(const QString& filePath, bool success);
 
 private:
     /**
@@ -193,5 +265,60 @@ private:
     
     /// @brief 支持的文件格式列表
     QStringList m_supportedFormats;
+    
+    /// @brief 文件内容存储映射 (文件路径 -> 文件内容)
+    QMap<QString, QString> m_fileContents;
+    
+    /// @brief 当前正在进行的文件读取线程映射 (文件路径 -> 线程指针)
+    QMap<QString, FileReaderThread*> m_activeReadTasks;
+    
+    /// @brief 线程安全互斥锁
+    QMutex m_mutex;
+    
+    /**
+     * @brief 读取DOCX文件内容
+     * @param filePath 文件路径
+     * @return 文档文本内容
+     */
+    QString readDocxContent(QString filePath);
+    
+    /**
+     * @brief 读取DOC文件内容
+     * @param filePath 文件路径
+     * @return 文档文本内容
+     */
+    QString readDocContent(QString filePath);
+    
+    /**
+     * @brief 从XML中提取文本内容
+     * @param xmlContent XML内容
+     * @return 提取的文本
+     */
+    QString extractTextFromXml(const QString& xmlContent);
+    
+    /**
+     * @brief 启动文件读取任务
+     * @param filePath 文件路径
+     * @param fileName 文件名
+     */
+    void startFileReadTask(const QString& filePath, const QString& fileName);
+    
+    /**
+     * @brief 清理文件读取任务
+     * @param filePath 文件路径
+     */
+    void cleanupFileReadTask(const QString& filePath);
+    
+    /**
+     * @brief 清理所有文件读取任务
+     */
+    void cleanupAllFileReadTasks();
+    
+    /**
+     * @brief 获取文件已读取的内容
+     * @param filePath 文件路径
+     * @return 文件内容，如果未读取则返回空字符串
+     */
+    QString getFileContent(const QString& filePath);
 };
 

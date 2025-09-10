@@ -42,7 +42,7 @@ TRANSLATIONS += translations/ScoreReport_zh_CN.ts \
     translations/ScoreReport_en.ts
 
 # 配置Qt版本和模块
-QT += quick qml widgets
+QT += quick qml widgets xml concurrent
 
 # 语言文件编译和资源打包
 qtPrepareTool(LRELEASE, lrelease)
