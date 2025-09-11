@@ -61,7 +61,7 @@ ApplicationWindow {
     // 帮助提示定时器 - 每30秒弹出一次
     Timer {
         id: helpBubbleTimer
-        interval: 8000  // 30秒
+        interval: 30000  // 30秒
         repeat: true
         running: true  // 初始不运行
         onTriggered: {
