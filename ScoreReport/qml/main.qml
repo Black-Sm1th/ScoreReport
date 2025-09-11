@@ -203,7 +203,7 @@ ApplicationWindow {
                 }else if(contentRect.currentScore == 4){
                     uclsctsView.resetValues()
                 }else if(contentRect.currentScore == 6){
-                    $chatManager.endAnalysis()
+                    $chatManager.endAnalysis(true)
                 }
                 contentRect.currentScore = -1
             }

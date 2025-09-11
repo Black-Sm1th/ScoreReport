@@ -17,14 +17,21 @@
 #include <QXmlStreamReader>
 #include <QClipboard>
 #include <QGuiApplication>
+#include <QtConcurrent/QtConcurrent>
+#include <QTimer>
+#include <QRegularExpression>
 
 namespace {
-    const int DEFAULT_MAX_FILE_COUNT = 3;                    ///< 默认最大文件数量
-    const qint64 DEFAULT_MAX_FILE_SIZE = 10 * 1024 * 1024;   ///< 默认最大文件大小 (10MB)
-    const int THREAD_WAIT_TIMEOUT = 3000;                    ///< 线程等待超时时间 (毫秒)
-    const int THREAD_TERMINATE_TIMEOUT = 1000;               ///< 线程强制终止超时时间 (毫秒)
-    const int POWERSHELL_TIMEOUT = 30000;                    ///< PowerShell执行超时时间 (毫秒)
-    const int PROGRESS_ANIMATION_DELAY = 50;                 ///< 进度动画延迟 (毫秒)
+    // 配置常量
+    constexpr int DEFAULT_MAX_FILE_COUNT = 3;                    ///< 默认最大文件数量
+    constexpr qint64 DEFAULT_MAX_FILE_SIZE = 10 * 1024 * 1024;   ///< 默认最大文件大小 (10MB)
+    constexpr int THREAD_WAIT_TIMEOUT = 3000;                    ///< 线程等待超时时间 (毫秒)
+    constexpr int POWERSHELL_TIMEOUT = 30000;                    ///< PowerShell执行超时时间 (毫秒)
+    constexpr int PROGRESS_ANIMATION_DELAY = 50;                 ///< 进度动画延迟 (毫秒)
+    
+    // 文件读取相关常量
+    const QStringList SUPPORTED_TEXT_FORMATS = {"txt", "doc", "docx"};
+    const QStringList SUPPORTED_IMAGE_FORMATS = {"jpg", "jpeg", "png", "bmp", "gif"};
 }
 
 ChatManager::ChatManager(QObject* parent)
@@ -47,8 +54,7 @@ ChatManager::ChatManager(QObject* parent)
     m_currentChatId = CommonFunc::generateNumericUUID();
     
     // 初始化支持的文件格式
-    m_supportedFormats << "txt" << "doc" << "docx" 
-                       << "jpg" << "jpeg" << "png" << "bmp" << "gif";
+    m_supportedFormats = SUPPORTED_TEXT_FORMATS + SUPPORTED_IMAGE_FORMATS;
     
     // 初始化属性
     setfiles(QVariantList());
@@ -67,36 +73,8 @@ void ChatManager::sendMessage(const QString& message)
     // 处理文件附件
     QVariantList currentFiles = getfiles();
     if (!currentFiles.isEmpty()) {
-        QStringList fileContents;
-        
-        for (const auto& file : currentFiles) {
-            QVariantMap fileMap = file.toMap();
-            QString filePath = fileMap["path"].toString();
-            QString fileName = fileMap["name"].toString();
-            
-            // 优先使用已缓存的文件内容
-            QString content = getFileContent(filePath);
-            if (content.isEmpty()) {
-                // 备用：同步读取
-                content = readFileContent(filePath);
-            }
-            
-            if (!content.isEmpty()) {
-                QString extension = QFileInfo(filePath).suffix().toLower();
-                if (extension == "txt" || extension == "doc" || extension == "docx") {
-                    fileContents << QString("【文件：%1】\n%2").arg(fileName, content);
-                } else {
-                    fileContents << content;
-                }
-            }
-        }
-        
-        if (!fileContents.isEmpty()) {
-            fullMessage = fileContents.join("\n\n") + "\n\n【用户问题】\n" + trimmedMessage;
-        }
-        
-        // 发送后清空文件列表
-        clearFiles();
+        fullMessage = buildMessageWithFiles(trimmedMessage, currentFiles);
+        clearFiles(); // 发送后清空文件列表
     }
     
     // 保存消息用于重新生成
@@ -278,6 +256,65 @@ void ChatManager::updateLastAiMessage(const QString& additionalText)
     }
 }
 
+QString ChatManager::buildMessageWithFiles(const QString& userMessage, const QVariantList& files)
+{
+    QStringList fileContents;
+    
+    for (const auto& file : files) {
+        QVariantMap fileMap = file.toMap();
+        QString filePath = fileMap["path"].toString();
+        QString fileName = fileMap["name"].toString();
+        
+        // 优先使用已缓存的文件内容
+        QString content = getFileContent(filePath);
+        if (content.isEmpty()) {
+            // 备用：同步读取
+            content = readFileContent(filePath);
+        }
+        
+        if (!content.isEmpty()) {
+            QString extension = QFileInfo(filePath).suffix().toLower();
+            if (SUPPORTED_TEXT_FORMATS.contains(extension)) {
+                fileContents << QString("【文件：%1】\n%2").arg(fileName, content);
+            } else {
+                fileContents << content;
+            }
+        }
+    }
+    
+    return fileContents.isEmpty() ? userMessage : 
+           fileContents.join("\n\n") + "\n\n【用户问题】\n" + userMessage;
+}
+
+QString ChatManager::validateFileForAdding(const QString& filePath, const QString& fileName)
+{
+    // 验证文件数量限制
+    if (getfiles().size() >= getmaxFileCount()) {
+        return QString("无法添加 %1：最多只能上传%2个文件").arg(fileName).arg(getmaxFileCount());
+    }
+    
+    // 验证文件格式
+    if (!isValidFileFormat(filePath)) {
+        return QString("无法添加 %1：不支持的文件格式").arg(fileName);
+    }
+    
+    // 验证文件大小
+    if (!isFileSizeValid(filePath)) {
+        return QString("无法添加 %1：文件大小超过%2限制").arg(fileName).arg(formatFileSize(getmaxFileSize()));
+    }
+    
+    // 检查文件是否已存在
+    QVariantList currentFiles = getfiles();
+    for (const auto& file : currentFiles) {
+        QVariantMap fileMap = file.toMap();
+        if (fileMap["path"].toString() == filePath) {
+            return QString("无法添加 %1：文件已存在").arg(fileName);
+        }
+    }
+    
+    return QString(); // 验证通过，返回空字符串
+}
+
 void ChatManager::onStreamChatResponse(const QString& data, const QString& chatId)
 {
     // 验证是否为当前会话
@@ -335,55 +372,17 @@ bool ChatManager::addFile(const QString& filePath, bool showMessage)
 {
     QString fileName = getFileName(filePath);
     
-    // 验证文件数量限制
-    if (getfiles().size() >= getmaxFileCount()) {
+    // 验证文件是否可以添加
+    QString errorMessage = validateFileForAdding(filePath, fileName);
+    if (!errorMessage.isEmpty()) {
         if (showMessage) {
-            emit fileOperationResult(
-                QString("无法添加 %1：最多只能上传%2个文件").arg(fileName).arg(getmaxFileCount()), 
-                "error"
-            );
+            emit fileOperationResult(errorMessage, "error");
         }
         return false;
-    }
-    
-    // 验证文件格式
-    if (!isValidFileFormat(filePath)) {
-        if (showMessage) {
-            emit fileOperationResult(
-                QString("无法添加 %1：不支持的文件格式").arg(fileName), 
-                "error"
-            );
-        }
-        return false;
-    }
-    
-    // 验证文件大小
-    if (!isFileSizeValid(filePath)) {
-        if (showMessage) {
-            emit fileOperationResult(
-                QString("无法添加 %1：文件大小超过%2限制").arg(fileName).arg(formatFileSize(getmaxFileSize())), 
-                "error"
-            );
-        }
-        return false;
-    }
-    
-    // 检查文件是否已存在
-    QVariantList currentFiles = getfiles();
-    for (const auto& file : currentFiles) {
-        QVariantMap fileMap = file.toMap();
-        if (fileMap["path"].toString() == filePath) {
-            if (showMessage) {
-                emit fileOperationResult(
-                    QString("无法添加 %1：文件已存在").arg(fileName), 
-                    "error"
-                );
-            }
-            return false;
-        }
     }
     
     // 添加文件到列表
+    QVariantList currentFiles = getfiles();
     QVariantMap fileInfo = getFileInfo(filePath);
     currentFiles.append(fileInfo);
     setfiles(currentFiles);
@@ -541,7 +540,7 @@ QString ChatManager::formatFileSize(qint64 bytes)
     
     if (i == 0) {
         return QString("%1%2").arg(static_cast<int>(size)).arg(sizes[i]);
-    } else { 
+    } else {
         return QString("%1%2").arg(size, 0, 'f', 1).arg(sizes[i]);
     }
 }
@@ -593,44 +592,20 @@ QString ChatManager::readFileContent(const QString& filePath)
 }
 
 
-QString ChatManager::readDocxContent(QString filePath)
+QString ChatManager::readDocxContent(const QString& filePath)
 {
-    QFileInfo fileInfo(filePath);
-    
-    // 使用PowerShell + Word COM对象读取DOCX
-    QProcess process;
-    QString temp = filePath;
-        QString psScript = QString(
-            "$word = New-Object -ComObject Word.Application; "
-            "$word.Visible = $false; "
-            "$doc = $word.Documents.Open(\"%1\"); "
-            "$text = $doc.Content.Text; "
-            "$doc.Close(); "
-            "$word.Quit(); "
-            "$text"
-    ).arg(temp.replace("/", "\\"));
-    
-    process.start("powershell", QStringList() << "-Command" << psScript);
-    process.waitForFinished(POWERSHELL_TIMEOUT);
-    
-    if (process.exitCode() == 0) {
-        QString content = QString::fromLocal8Bit(process.readAllStandardOutput()).trimmed();
-        if (!content.isEmpty()) {
-            return content;
-        }
-    }
-    
-    qDebug() << "[ChatManager] PowerShell method failed for DOCX";
-    return QString("[DOCX文档: %1 - 内容读取需要Microsoft Word]").arg(fileInfo.fileName());
+    return readWordDocumentWithPowerShell(filePath, "DOCX文档: %1 - 内容读取需要Microsoft Word");
 }
 
-QString ChatManager::readDocContent(QString filePath)
+QString ChatManager::readDocContent(const QString& filePath)
+{
+    return readWordDocumentWithPowerShell(filePath, "DOC文档: %1 - 内容读取需要Microsoft Word，建议转换为DOCX格式");
+}
+
+QString ChatManager::readWordDocumentWithPowerShell(const QString& filePath, const QString& fallbackMessage)
 {
     QFileInfo fileInfo(filePath);
     
-    // 使用PowerShell + Word COM对象读取DOC
-    QProcess process;
-    QString temp = filePath;
     QString psScript = QString(
         "$word = New-Object -ComObject Word.Application; "
         "$word.Visible = $false; "
@@ -639,8 +614,9 @@ QString ChatManager::readDocContent(QString filePath)
         "$doc.Close(); "
         "$word.Quit(); "
         "$text"
-    ).arg(temp.replace("/", "\\"));
+    ).arg(QString(filePath).replace("/", "\\"));
     
+    QProcess process;
     process.start("powershell", QStringList() << "-Command" << psScript);
     process.waitForFinished(POWERSHELL_TIMEOUT);
     
@@ -651,7 +627,8 @@ QString ChatManager::readDocContent(QString filePath)
         }
     }
     
-    return QString("[DOC文档: %1 - 内容读取需要Microsoft Word，建议转换为DOCX格式]").arg(fileInfo.fileName());
+    qDebug() << "[ChatManager] PowerShell method failed for" << fileInfo.suffix();
+    return QString("[%1]").arg(fallbackMessage.arg(fileInfo.fileName()));
 }
 
 QString ChatManager::extractTextFromXml(const QString& xmlContent)
@@ -764,59 +741,20 @@ QString FileReaderThread::readTextFile(const QString& filePath)
 
 QString FileReaderThread::readDocxFile(const QString& filePath)
 {
-    emitProgress(30);
-    if (isInterruptionRequested()) return QString();
-    
-    QFileInfo fileInfo(filePath);
-    QProcess process;
-    QString temp = filePath;
-    QString psScript = QString(
-        "$word = New-Object -ComObject Word.Application; "
-        "$word.Visible = $false; "
-        "$doc = $word.Documents.Open(\"%1\"); "
-        "$text = $doc.Content.Text; "
-        "$doc.Close(); "
-        "$word.Quit(); "
-        "$text"
-    ).arg(temp.replace("/", "\\"));
-    
-    emitProgress(60);
-    
-    process.start("powershell", QStringList() << "-Command" << psScript);
-    int waited = 0;
-    const int step = 100;
-    while (!process.waitForFinished(step)) {
-        waited += step;
-        if (isInterruptionRequested()) {
-            process.kill();
-            process.waitForFinished(3000);
-            return QString();
-        }
-        if (waited >= POWERSHELL_TIMEOUT) {
-            break;
-        }
-    }
-    
-    emitProgress(90);
-    
-    if (process.exitCode() == 0) {
-        QString content = QString::fromLocal8Bit(process.readAllStandardOutput()).trimmed();
-        if (!content.isEmpty()) {
-            return content;
-        }
-    }
-    
-    return QString("[DOCX文档: %1 - 内容读取需要Microsoft Word]").arg(fileInfo.fileName());
+    return readWordFileWithProgress(filePath, "DOCX文档: %1 - 内容读取需要Microsoft Word");
 }
 
 QString FileReaderThread::readDocFile(const QString& filePath)
+{
+    return readWordFileWithProgress(filePath, "DOC文档: %1 - 内容读取需要Microsoft Word，建议转换为DOCX格式");
+}
+
+QString FileReaderThread::readWordFileWithProgress(const QString& filePath, const QString& fallbackMessage)
 {
     emitProgress(30);
     if (isInterruptionRequested()) return QString();
     
     QFileInfo fileInfo(filePath);
-    QProcess process;
-    QString temp = filePath;
     QString psScript = QString(
         "$word = New-Object -ComObject Word.Application; "
         "$word.Visible = $false; "
@@ -825,11 +763,13 @@ QString FileReaderThread::readDocFile(const QString& filePath)
         "$doc.Close(); "
         "$word.Quit(); "
         "$text"
-    ).arg(temp.replace("/", "\\"));
+    ).arg(QString(filePath).replace("/", "\\"));
     
     emitProgress(60);
     
+    QProcess process;
     process.start("powershell", QStringList() << "-Command" << psScript);
+    
     int waited = 0;
     const int step = 100;
     while (!process.waitForFinished(step)) {
@@ -853,7 +793,7 @@ QString FileReaderThread::readDocFile(const QString& filePath)
         }
     }
     
-    return QString("[DOC文档: %1 - 内容读取需要Microsoft Word，建议转换为DOCX格式]").arg(fileInfo.fileName());
+    return QString("[%1]").arg(fallbackMessage.arg(fileInfo.fileName()));
 }
 
 QString FileReaderThread::readImageFile(const QString& filePath)
@@ -961,9 +901,20 @@ void ChatManager::cleanupAllFileReadTasks()
 {
     // 先复制任务列表，避免在持锁状态下递归锁
     QStringList filePaths;
+    bool hasWordDocs = false;
     {
         QMutexLocker locker(&m_mutex);
         filePaths = m_activeReadTasks.keys();
+        
+        // 检查是否有Word文档在读取中
+    for (const QString& filePath : filePaths) {
+            QFileInfo fileInfo(filePath);
+            QString extension = fileInfo.suffix().toLower();
+            if (extension == "doc" || extension == "docx") {
+                hasWordDocs = true;
+                break;
+            }
+        }
     }
 
     for (const QString& fp : filePaths) {
@@ -972,6 +923,12 @@ void ChatManager::cleanupAllFileReadTasks()
 
     setfileReadProgress(QVariantMap());
     setisUploading(false);
+    
+    // 如果有Word文档任务被清理，启动延迟Word进程清理
+    if (hasWordDocs) {
+        qDebug() << "[ChatManager] Word document tasks were cleaned up, starting delayed Word process cleanup";
+        startDelayedWordProcessCleanup();
+    }
 }
 
 QString ChatManager::getFileContent(const QString& filePath)
@@ -992,7 +949,7 @@ void ChatManager::onFileReadProgress(int percentage)
         for (auto it = m_activeReadTasks.begin(); it != m_activeReadTasks.end(); ++it) {
             if (it.value() == senderThread) {
                 filePath = it.key();
-                break;
+            break;
             }
         }
     }
@@ -1063,4 +1020,99 @@ void ChatManager::onFileReadCompleted(const QString& filePath, const QString& co
     if (noTasksRemaining) {
         setisUploading(false);
     }
+}
+
+void ChatManager::startDelayedWordProcessCleanup()
+{
+    // 在后台线程中执行延迟清理
+    QtConcurrent::run([this]() {
+        // 延迟2秒后开始清理
+        QThread::msleep(2000);
+        
+        // 执行多次清理确保所有进程都被清除
+        for (int attempt = 1; attempt <= 3; ++attempt) {
+            qDebug() << "[ChatManager] Word cleanup attempt" << attempt << "of 3";
+            
+            int processCount = cleanupHangingWordProcesses();
+            
+            if (processCount == 0) {
+                qDebug() << "[ChatManager] No more Word processes to clean, stopping";
+                break;
+            }
+            
+            // 如果还有进程，等待1秒后再次尝试
+            if (attempt < 3) {
+                QThread::msleep(1000);
+            }
+        }
+        
+        qDebug() << "[ChatManager] Delayed Word process cleanup completed";
+    });
+}
+
+int ChatManager::cleanupHangingWordProcesses()
+{ 
+    // 使用PowerShell查找并终止没有可见窗口的Word进程
+    // 这些通常是COM自动化进程，不会影响用户正在使用的Word实例
+    QProcess process;
+    
+    QString psScript = 
+        "try { "
+            "$processCount = 0; "
+            // 查找没有主窗口标题的Word进程（COM自动化进程）
+            "Get-Process -Name WINWORD -ErrorAction SilentlyContinue | "
+            "Where-Object { "
+                "($_.MainWindowTitle -eq '' -or $_.MainWindowTitle -eq $null) -and "
+                "$_.ProcessName -eq 'WINWORD' "
+            "} | "
+            "ForEach-Object { "
+                "try { "
+                    "Write-Output \"Found hanging Word process: PID $($_.Id)\"; "
+                    "Stop-Process -Id $_.Id -Force; "
+                    "Write-Output \"Successfully terminated Word process: PID $($_.Id)\"; "
+                    "$processCount++; "
+                "} catch { "
+                    "Write-Output \"Failed to terminate Word process: PID $($_.Id) - $($_.Exception.Message)\"; "
+                "} "
+            "}; "
+            "Write-Output \"PROCESS_COUNT:$processCount\"; "
+        "} catch { "
+            "Write-Output \"Error during Word process cleanup: $($_.Exception.Message)\"; "
+        "}";
+    
+    process.start("powershell", QStringList() << "-Command" << psScript);
+    
+    int cleanedProcessCount = 0;
+    
+    // 等待最多10秒完成清理
+    if (process.waitForFinished(10000)) {
+        QString output = QString::fromLocal8Bit(process.readAllStandardOutput());
+        QString errorOutput = QString::fromLocal8Bit(process.readAllStandardError());
+        
+        if (!output.trimmed().isEmpty()) {
+            qDebug() << "[ChatManager] Word cleanup output:" << output;
+            
+            // 提取清理的进程数量
+            QRegularExpression re("PROCESS_COUNT:(\\d+)");
+            QRegularExpressionMatch match = re.match(output);
+            if (match.hasMatch()) {
+                cleanedProcessCount = match.captured(1).toInt();
+            }
+        }
+        
+        if (!errorOutput.trimmed().isEmpty()) {
+            qDebug() << "[ChatManager] Word cleanup errors:" << errorOutput;
+        }
+        
+        if (process.exitCode() == 0) {
+            qDebug() << "[ChatManager] Word process cleanup completed successfully, cleaned" << cleanedProcessCount << "processes";
+        } else {
+            qDebug() << "[ChatManager] Word process cleanup completed with exit code:" << process.exitCode();
+        }
+    } else {
+        qDebug() << "[ChatManager] Word process cleanup timed out";
+        process.kill(); // 强制终止PowerShell进程
+    }
+    
+    return cleanedProcessCount;
 }

@@ -7,13 +7,25 @@ import "./components"
 
 Rectangle {
     id: chatView
-    height: messagesArea.visible ? 754 : (chatManager.files.length > 0 ? 248 : 124)  // 630 + 124 + 可选文件列表112
     width: parent.width
+    height: calculateHeight()
     color: "transparent"
+    
+    // 属性
     property var messageManager: null
     property bool specialPage: false
     property var chatManager: $chatManager  // 默认使用全局的ChatManager，可以被覆盖
+    
+    // 信号
     signal exitScore()
+    
+    // 高度计算函数
+    function calculateHeight() {
+        if (messagesArea.visible) {
+            return 754
+        }
+        return chatManager.files.length > 0 ? 248 : 124
+    }
 
     // 文件选择对话框
     FileDialog {
@@ -25,29 +37,8 @@ Rectangle {
                      "Word文档 (*.doc *.docx)",
                      "图片文件 (*.jpg *.jpeg *.png *.bmp *.gif)"]
         onAccepted: {
-            var filePaths = []
-            var urls = fileDialog.fileUrls  // 使用 fileUrls 获取多个文件
-            
-            // 处理所有选中的文件
-            for (var i = 0; i < urls.length; i++) {
-                var filePath = urls[i].toString()
-                // 移除file://前缀
-                if (filePath.startsWith("file:///")) {
-                    filePath = filePath.substring(8)
-                } else if (filePath.startsWith("file://")) {
-                    filePath = filePath.substring(7)
-                }
-                filePaths.push(filePath)
-            }
-            
-            // 使用批量添加方法
-            if (filePaths.length === 1) {
-                // 单个文件直接添加，显示详细消息
-                chatManager.addFile(filePaths[0])
-            } else if (filePaths.length > 1) {
-                // 多个文件批量添加，显示汇总消息
-                chatManager.addFiles(filePaths)
-            }
+            var filePaths = extractFilePathsFromUrls(fileDialog.fileUrls)
+            handleFileAddition(filePaths)
         }
     }
 
@@ -369,7 +360,9 @@ Rectangle {
                                 anchors.topMargin: 8
                                 source: "qrc:/image/close.png"
                                 opacity: closeBtnArea.containsMouse ? 0.8 : 0.6
-                                
+                                property var progressInfo: chatManager.fileReadProgress[modelData.path] || {}
+                                property bool isReading: progressInfo.isReading || false
+                                visible: !isReading
                                 MouseArea {
                                     id: closeBtnArea
                                     anchors.fill: parent
@@ -410,29 +403,8 @@ Rectangle {
                     enabled: !chatManager.isSending && !chatManager.isUploading && $loginManager.isLoggedIn
                     onDropped: {
                         if (drop.hasUrls) {
-                            var filePaths = []
-                            var urls = drop.urls
-                            
-                            // 处理所有文件路径
-                            for (var i = 0; i < urls.length; i++) {
-                                var filePath = urls[i].toString()
-                                // 移除file://前缀
-                                if (filePath.startsWith("file:///")) {
-                                    filePath = filePath.substring(8)
-                                } else if (filePath.startsWith("file://")) {
-                                    filePath = filePath.substring(7)
-                                }
-                                filePaths.push(filePath)
-                            }
-                            
-                            // 使用C++的批量添加方法
-                            if (filePaths.length === 1) {
-                                // 单个文件直接添加，显示详细消息
-                                chatManager.addFile(filePaths[0])
-                            } else {
-                                // 多个文件批量添加，显示汇总消息
-                                chatManager.addFiles(filePaths)
-                            }
+                            var filePaths = extractFilePathsFromUrls(drop.urls)
+                            handleFileAddition(filePaths)
                         }
                         drop.accept()
                     }
@@ -636,18 +608,41 @@ Rectangle {
             
             if (filePaths.length > 0) {
                 // 有文件路径，处理文件添加
-                if (filePaths.length === 1) {
-                    // 单个文件直接添加，显示详细消息
-                    chatManager.addFile(filePaths[0])
-                } else {
-                    // 多个文件批量添加，显示汇总消息
-                    chatManager.addFiles(filePaths)
-                }
+                handleFileAddition(filePaths)
                 // 无论成功失败，都不粘贴为文本，错误信息已在C++中显示
             } else {
                 // 不是文件路径，作为普通文本粘贴
                 messageInput.paste()
             }
+        }
+    }
+    
+    // 提取文件路径的通用函数
+    function extractFilePathsFromUrls(urls) {
+        var filePaths = []
+        
+        for (var i = 0; i < urls.length; i++) {
+            var filePath = urls[i].toString()
+            // 移除file://前缀
+            if (filePath.startsWith("file:///")) {
+                filePath = filePath.substring(8)
+            } else if (filePath.startsWith("file://")) {
+                filePath = filePath.substring(7)
+            }
+            filePaths.push(filePath)
+        }
+        
+        return filePaths
+    }
+    
+    // 处理文件添加的通用函数
+    function handleFileAddition(filePaths) {
+        if (filePaths.length === 1) {
+            // 单个文件直接添加，显示详细消息
+            chatManager.addFile(filePaths[0])
+        } else if (filePaths.length > 1) {
+            // 多个文件批量添加，显示汇总消息
+            chatManager.addFiles(filePaths)
         }
     }
     
