@@ -1,6 +1,5 @@
 <RCC>
     <qresource prefix="/">
-        <file>image/floatIcon.png</file>
         <file>image/titleIcon.png</file>
         <file>image/titleName.png</file>
         <file>image/history.png</file>
@@ -65,5 +64,15 @@
         <file>image/upload.png</file>
         <file>image/info.png</file>
         <file>qml/REPORT.qml</file>
+        <file>image/floatIcon/icon1.png</file>
+        <file>image/floatIcon/icon2.png</file>
+        <file>image/floatIcon/icon3.png</file>
+        <file>image/floatIcon/icon4.png</file>
+        <file>image/floatIcon/icon5.png</file>
+        <file>image/floatIcon/icon6.png</file>
+        <file>image/floatIcon/icon7.png</file>
+        <file>image/floatIcon/icon8.png</file>
+        <file>image/floatIcon/icon9.png</file>
+        <file>image/floatIcon/icon10.png</file>
     </qresource>
 </RCC>

@@ -8,6 +8,11 @@ import "./components"
 ApplicationWindow {
     id: mainWindow
     visible: true
+
+    // 应用启动完成后启动帮助定时器
+    Component.onCompleted: {
+        helpBubbleTimer.start()
+    }
     // 全局快捷键：Ctrl+F12 打开截图功能
     Shortcut {
         sequence: "Ctrl+F12"
@@ -35,8 +40,8 @@ ApplicationWindow {
     color: "transparent"
 
     // 窗口大小只包含悬浮窗本身
-    width: 76
-    height: 76
+    width: 90
+    height: 90
 
     // 初始位置设置在屏幕右下角
     x: Screen.width - width - 50
@@ -52,6 +57,20 @@ ApplicationWindow {
             scoreDialog.hideDialog()
         }
     }
+
+    // 帮助提示定时器 - 每30秒弹出一次
+    Timer {
+        id: helpBubbleTimer
+        interval: 8000  // 30秒
+        repeat: true
+        running: true  // 初始不运行
+        onTriggered: {
+            // 只有在没有其他对话框显示时才显示帮助气泡
+            if (!scoreDialog.visible && !scoringMethodDialog.visible && !contextMenu.visible && !chatWindow.visible) {
+                helpBubble.showBubble()
+            }
+        }
+    }
     DropShadow {
         id:floatingShaow
         anchors.fill: floatingWindow
@@ -61,23 +80,35 @@ ApplicationWindow {
         radius: 16
         color: "#1F1A1A1A"
         samples: 32
+        scale: 1.1
     }
 
     // 悬浮窗
     Rectangle {
         id: floatingWindow
-        width: 56
-        height: 56
-        color: "#FFFFFF"
+        width: 65
+        height: 65
+        color: "transparent"
+        scale: 1.1
         anchors.centerIn: parent
-        radius: 12
+        property int currentIndex: 0
+        property var images: ["qrc:/image/floatIcon/icon1.png", "qrc:/image/floatIcon/icon2.png", "qrc:/image/floatIcon/icon3.png", "qrc:/image/floatIcon/icon4.png", "qrc:/image/floatIcon/icon5.png", "qrc:/image/floatIcon/icon6.png", "qrc:/image/floatIcon/icon7.png", "qrc:/image/floatIcon/icon8.png", "qrc:/image/floatIcon/icon9.png", "qrc:/image/floatIcon/icon10.png"]
         // 悬浮窗图标/图片
         Image {
             id: floatingImage
+            anchors.fill: parent
             anchors.centerIn: parent
-            source: "qrc:/image/floatIcon.png"
+            fillMode: Image.PreserveAspectFit
+            source: floatingWindow.images[floatingWindow.currentIndex]
+            scale: 1.1
         }
-
+        Timer {
+            interval: 250; running: true; repeat: true
+            onTriggered: {
+                floatingWindow.currentIndex = (floatingWindow.currentIndex + 1) % floatingWindow.images.length
+                floatingImage.source = floatingWindow.images[floatingWindow.currentIndex]
+            }
+        }
         // 鼠标悬停效果
         states: [
             State {
@@ -85,15 +116,15 @@ ApplicationWindow {
                 when: mouseArea.containsMouse
                 PropertyChanges {
                     target: floatingWindow
-                    scale: 1.1
+                    scale: 1.2
                 }
                 PropertyChanges {
                     target: floatingShaow
-                    scale: 1.1
+                    scale: 1.2
                 }
                 PropertyChanges {
                     target: floatingImage
-                    scale: 1.01
+                    scale: 1.2
                 }
             }
         ]
@@ -101,7 +132,7 @@ ApplicationWindow {
         transitions: Transition {
             NumberAnimation {
                 property: "scale"
-                duration: 200
+                duration: 300
                 easing.type: Easing.OutBack
             }
         }
@@ -136,6 +167,12 @@ ApplicationWindow {
             }
             onEntered: {
                 disabledTimer.stop()
+                // 鼠标悬停时暂停帮助定时器
+                helpBubbleTimer.stop()
+                // 隐藏帮助气泡
+                if (helpBubble.visible) {
+                    helpBubble.hideBubble()
+                }
                 if(!scoreDialog.visible){
                     scoreDialog.showDialog()
                 }
@@ -143,6 +180,8 @@ ApplicationWindow {
             onExited: {
                 if(scoreDialog.isEntered == false){
                     disabledTimer.start()
+                    // 鼠标离开时重启帮助定时器
+                    helpBubbleTimer.restart()
                 }
             }
             onPositionChanged: {
@@ -342,6 +381,10 @@ ApplicationWindow {
                 // 恢复正常缩放和透明度
                 contentRect.scale = 1.0
                 contentRect.opacity = 1.0
+                // 对话框隐藏后重启帮助定时器
+                if (!mouseArea.containsMouse) {
+                    helpBubbleTimer.restart()
+                }
             }
         }
 
@@ -358,7 +401,7 @@ ApplicationWindow {
         // 仅跟随悬浮窗移动（不改高度、不播放动画）
         function followFloatingInstantly() {
             if (!visible) return
-            
+
             // 如果正在动画，停止动画并立即跟随（拖动时优先跟随）
             if (animating) {
                 showAnim.stop()
@@ -368,7 +411,7 @@ ApplicationWindow {
                 contentRect.scale = 1.0
                 contentRect.opacity = 1.0
             }
-            
+
             var fr = _floatingRect()
             var newX = fr.x + fr.width - (width - 10)
             var newY = fr.y - height
@@ -405,6 +448,11 @@ ApplicationWindow {
         // —— 打开对话框：带动画效果，从悬浮窗吐出 ——
         function showDialog() {
             if (animating) return  // 防止动画期间重复调用
+            // 显示对话框时暂停帮助定时器并隐藏气泡
+            helpBubbleTimer.stop()
+            if (helpBubble.visible) {
+                helpBubble.hideBubble()
+            }
             if(!scoreDialog.isFirst){
                 animating = true
                 visible = true
@@ -421,42 +469,42 @@ ApplicationWindow {
                 var fr = _floatingRect()
                 var floatingCenterX = fr.x + fr.width / 2
                 var floatingCenterY = fr.y + fr.height / 2
-                
+
                 // 设置正确的高度，现在内容组件应该已经更新了
                 height = contentRect.height + 20
-                
+
                 // 设置初始状态（在悬浮窗位置，小尺寸）
                 contentRect.scale = 0.1
                 contentRect.opacity = 0.0
                 x = floatingCenterX - width / 2
                 y = floatingCenterY - height / 2
-                
+
                 // 计算目标位置
                 var targetX = fr.x + fr.width - (width - 10)
                 var targetY = fr.y - height
-                
+
                 // 边界检查
                 targetX = Math.max(-width + 100, Math.min(targetX, Screen.width - 100))
                 targetY = Math.min(targetY, Screen.height - 50)
-                
+
                 // 设置动画目标并启动
                 showXAnim.to = targetX  // x动画
                 showYAnim.to = targetY  // y动画
                 showAnim.start()
             })
         }
-        
+
         // —— 隐藏对话框：带动画效果，吸回悬浮窗 ——
         function hideDialog() {
             if (animating) return  // 防止动画期间重复调用
-            
+
             animating = true
-            
+
             // 计算悬浮窗中心位置作为动画终点
             var fr = _floatingRect()
             var floatingCenterX = fr.x + fr.width / 2
             var floatingCenterY = fr.y + fr.height / 2
-            
+
             // 设置动画目标并启动
             hideXAnim.to = floatingCenterX - width / 2  // x动画
             hideYAnim.to = floatingCenterY - height / 2  // y动画
@@ -826,6 +874,11 @@ ApplicationWindow {
             // 计算弹窗位置
             $loginManager.changeMouseStatus(true)
             updateDialogPosition()
+            // 暂停帮助定时器
+            helpBubbleTimer.stop()
+            if (helpBubble.visible) {
+                helpBubble.hideBubble()
+            }
             visible = true
             opacity = 1
             autoHideTimer.restart()
@@ -869,6 +922,10 @@ ApplicationWindow {
             visible = false
             // 清理上次处理的文本记录，允许相同文本再次触发
             lastProcessedText = ""
+            // 重启帮助定时器
+            if (!scoreDialog.visible && !contextMenu.visible && !chatWindow.visible) {
+                helpBubbleTimer.restart()
+            }
         }
 
         Rectangle {
@@ -1019,6 +1076,12 @@ ApplicationWindow {
             menuY = Math.max(0, menuY)
             menuX = Math.max(0, menuX)
 
+            // 暂停帮助定时器
+            helpBubbleTimer.stop()
+            if (helpBubble.visible) {
+                helpBubble.hideBubble()
+            }
+
             x = menuX
             y = menuY
             visible = true
@@ -1028,6 +1091,10 @@ ApplicationWindow {
         // 隐藏菜单
         function hide() {
             visible = false
+            // 重启帮助定时器
+            if (!scoreDialog.visible && !scoringMethodDialog.visible && !chatWindow.visible) {
+                helpBubbleTimer.restart()
+            }
         }
 
         Rectangle {
@@ -1520,15 +1587,31 @@ ApplicationWindow {
         visible: false
         flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool
         color: "transparent"
-        
+
+        // 监听窗口显示状态变化
+        onVisibleChanged: {
+            if (visible) {
+                // 窗口显示时暂停帮助定时器
+                helpBubbleTimer.stop()
+                if (helpBubble.visible) {
+                    helpBubble.hideBubble()
+                }
+            } else {
+                // 窗口隐藏时重启帮助定时器
+                if (!scoreDialog.visible && !scoringMethodDialog.visible && !contextMenu.visible) {
+                    helpBubbleTimer.restart()
+                }
+            }
+        }
+
         // 记录窗口是否被用户拖拽过
         property bool isDragged: false
         property real centerY: Screen.height / 2  // 记录窗口中心Y坐标
-        
+
         // 窗口居中显示
         x: (Screen.width - width) / 2
         y: centerY - height / 2
-        
+
         // 高度和y坐标同步动画
         Behavior on height {
             NumberAnimation {
@@ -1537,7 +1620,7 @@ ApplicationWindow {
                 easing.type: Easing.OutCubic
             }
         }
-        
+
         // 监听高度变化，实时调整y坐标保持中心点不变
         // 移除y的Behavior，让y跟随高度变化同步更新
         onHeightChanged: {
@@ -1604,7 +1687,7 @@ ApplicationWindow {
 
                                 chatWindow.x = newX
                                 chatWindow.y = newY
-                                
+
                                 // 标记为已拖拽，并更新中心Y坐标
                                 chatWindow.isDragged = true
                                 chatWindow.centerY = newY + chatWindow.height / 2
@@ -1628,6 +1711,158 @@ ApplicationWindow {
             MessageBox {
                 id: chatWindowMessageBox
                 anchors.fill: parent
+            }
+        }
+    }
+
+    // 帮助气泡提示窗口
+    Window {
+        id: helpBubble
+        width: helpBubbleContent.width + 20
+        height: helpBubbleContent.height + 20
+        visible: false
+        flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool
+        color: "transparent"
+        opacity: 0
+
+        // 透明度动画
+        Behavior on opacity {
+            NumberAnimation {
+                duration: 300
+                easing.type: Easing.OutQuad
+            }
+        }
+
+        // 缩放动画
+        property real bubbleScale: 0.8
+        Behavior on bubbleScale {
+            NumberAnimation {
+                duration: 300
+                easing.type: Easing.OutBack
+            }
+        }
+
+        // 自动隐藏定时器 - 5秒后隐藏
+        Timer {
+            id: autoHideBubbleTimer
+            interval: 5000
+            repeat: false
+            onTriggered: {
+                helpBubble.hideBubble()
+            }
+        }
+
+        function showBubble() {
+            // 计算气泡位置 - 显示在悬浮窗上方
+            var floatingRect = Qt.rect(
+                mainWindow.x + (mainWindow.width - floatingWindow.width) / 2,
+                mainWindow.y + (mainWindow.height - floatingWindow.height) / 2,
+                floatingWindow.width,
+                floatingWindow.height
+            )
+
+            var bubbleX = floatingRect.x + floatingRect.width / 2 - width / 2
+            var bubbleY = floatingRect.y - height
+
+            // 边界检查
+            bubbleX = Math.max(10, Math.min(bubbleX, Screen.width - width - 10))
+            bubbleY = Math.max(10, bubbleY)
+
+            x = bubbleX
+            y = bubbleY
+
+            visible = true
+            opacity = 1
+            bubbleScale = 1.0
+            autoHideBubbleTimer.restart()
+        }
+
+        function hideBubble() {
+            autoHideBubbleTimer.stop()
+            opacity = 0
+            bubbleScale = 0.8
+            // 延迟隐藏窗口
+            Qt.callLater(function() {
+                visible = false
+            })
+        }
+
+        // 气泡内容背景
+        Rectangle {
+            id: helpBubbleContent
+            width: 180
+            height: 60
+            color: "#FFFFFF"
+            radius: 20
+            scale: helpBubble.bubbleScale
+            anchors.centerIn: parent
+
+            layer.enabled: true
+            layer.effect: DropShadow {
+                horizontalOffset: 0
+                verticalOffset: 0
+                radius: 16
+                color: "#40000000"
+                samples: 32
+                transparentBorder: true
+            }
+
+            // 气泡尖角
+            Canvas {
+                id: bubbleTriangle
+                width: 20
+                height: 10
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.top: parent.bottom
+                anchors.topMargin: -1
+
+                onPaint: {
+                    var ctx = getContext("2d")
+                    ctx.reset()
+                    ctx.fillStyle = "#FFFFFF"
+                    ctx.beginPath()
+                    ctx.moveTo(0, 0)
+                    ctx.lineTo(width / 2, height)
+                    ctx.lineTo(width, 0)
+                    ctx.closePath()
+                    ctx.fill()
+                }
+            }
+
+            // 气泡文字内容
+            Column {
+                anchors.centerIn: parent
+                spacing: 4
+
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    font.family: "Alibaba PuHuiTi 3.0"
+                    font.pixelSize: 14
+                    font.weight: Font.BOLD
+                    color: "#D9000000"
+                    text: qsTr("请问需要什么帮助嘛？")
+                }
+
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    font.family: "Alibaba PuHuiTi 3.0"
+                    font.pixelSize: 12
+                    color: "#73000000"
+                    text: qsTr("点击或触碰悬浮窗开始使用")
+                }
+            }
+
+            // 点击气泡关闭
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: {
+                    helpBubble.hideBubble()
+                    // 点击气泡后打开主对话框
+                    if (!scoreDialog.visible) {
+                        scoreDialog.showDialog()
+                    }
+                }
             }
         }
     }
