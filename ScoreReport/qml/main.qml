@@ -1724,7 +1724,7 @@ ApplicationWindow {
         flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool
         color: "transparent"
         opacity: 0
-
+        property bool isLeft: false
         // 透明度动画
         Behavior on opacity {
             NumberAnimation {
@@ -1742,6 +1742,24 @@ ApplicationWindow {
             }
         }
 
+        // 横幅拉出动画 - X方向
+        NumberAnimation {
+            id: slideAnimation
+            target: helpBubble
+            property: "x"
+            duration: 400
+            easing.type: Easing.OutBack
+        }
+
+        // 横幅拉出动画 - Y方向
+        NumberAnimation {
+            id: slideYAnimation
+            target: helpBubble
+            property: "y"
+            duration: 400
+            easing.type: Easing.OutBack
+        }
+
         // 自动隐藏定时器 - 5秒后隐藏
         Timer {
             id: autoHideBubbleTimer
@@ -1753,7 +1771,7 @@ ApplicationWindow {
         }
 
         function showBubble() {
-            // 计算气泡位置 - 显示在悬浮窗上方
+            // 计算悬浮窗位置
             var floatingRect = Qt.rect(
                 mainWindow.x + (mainWindow.width - floatingWindow.width) / 2,
                 mainWindow.y + (mainWindow.height - floatingWindow.height) / 2,
@@ -1761,19 +1779,64 @@ ApplicationWindow {
                 floatingWindow.height
             )
 
-            var bubbleX = floatingRect.x + floatingRect.width / 2 - width / 2
-            var bubbleY = floatingRect.y - height
+            var bubbleX, bubbleY
+            var spacing = 0  // 与悬浮窗的间距
 
-            // 边界检查
+            // 优先显示在左侧
+            var leftX = floatingRect.x - width - spacing
+            if (leftX >= 10) {
+                // 左侧有足够空间
+                bubbleX = leftX
+                bubbleY = floatingRect.y + (floatingRect.height - height) / 2
+            } else {
+                // 左侧空间不够，显示在右侧
+                bubbleX = floatingRect.x + floatingRect.width + spacing
+                bubbleY = floatingRect.y + (floatingRect.height - height) / 2
+                
+                // 如果右侧也放不下，回退到上方
+                if (bubbleX + width > Screen.width - 10) {
+                    bubbleX = floatingRect.x + floatingRect.width / 2 - width / 2
+                    bubbleY = floatingRect.y - height - spacing
+                }
+            }
+
+            // 最终边界检查
             bubbleX = Math.max(10, Math.min(bubbleX, Screen.width - width - 10))
-            bubbleY = Math.max(10, bubbleY)
+            bubbleY = Math.max(10, Math.min(bubbleY, Screen.height - height - 10))
+
+            // 设置初始位置（横幅拉出效果的起始位置）
+            var targetX = bubbleX
+            var targetY = bubbleY
+            var isHorizontal = false
+            
+            // 根据最终位置确定拉出方向和尖角方向
+            if (bubbleX < floatingRect.x) {
+                // 在左侧，从右向左拉出
+                bubbleX = floatingRect.x
+                isHorizontal = true
+                helpBubble.isLeft = false  // 尖角指向右侧（悬浮窗）
+            } else if (bubbleX > floatingRect.x + floatingRect.width) {
+                // 在右侧，从左向右拉出
+                bubbleX = floatingRect.x + floatingRect.width - width
+                isHorizontal = true
+                helpBubble.isLeft = true   // 尖角指向左侧（悬浮窗）
+            } else {
+                // 在上方，从下向上拉出
+                bubbleY = floatingRect.y
+                isHorizontal = false
+                helpBubble.isLeft = false  // 垂直尖角向下
+            }
 
             x = bubbleX
             y = bubbleY
-
             visible = true
             opacity = 1
             bubbleScale = 1.0
+
+            // 启动拉出动画
+            slideAnimation.to = targetX
+            slideYAnimation.to = targetY
+            slideAnimation.start()
             autoHideBubbleTimer.restart()
         }
 
@@ -1790,10 +1853,10 @@ ApplicationWindow {
         // 气泡内容背景
         Rectangle {
             id: helpBubbleContent
-            width: 180
+            width: 460
             height: 60
             color: "#FFFFFF"
-            radius: 20
+            radius: 61
             scale: helpBubble.bubbleScale
             anchors.centerIn: parent
 
@@ -1807,48 +1870,25 @@ ApplicationWindow {
                 transparentBorder: true
             }
 
-            // 气泡尖角
-            Canvas {
-                id: bubbleTriangle
-                width: 20
-                height: 10
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.top: parent.bottom
-                anchors.topMargin: -1
-
-                onPaint: {
-                    var ctx = getContext("2d")
-                    ctx.reset()
-                    ctx.fillStyle = "#FFFFFF"
-                    ctx.beginPath()
-                    ctx.moveTo(0, 0)
-                    ctx.lineTo(width / 2, height)
-                    ctx.lineTo(width, 0)
-                    ctx.closePath()
-                    ctx.fill()
-                }
-            }
-
             // 气泡文字内容
-            Column {
+            Row {
                 anchors.centerIn: parent
                 spacing: 4
-
-                Text {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    font.family: "Alibaba PuHuiTi 3.0"
-                    font.pixelSize: 14
-                    font.weight: Font.BOLD
-                    color: "#D9000000"
-                    text: qsTr("请问需要什么帮助嘛？")
+                Image{
+                    visible: helpBubble.isLeft
+                    source: "qrc:/image/finger.png"
+                    rotation: 180
                 }
-
                 Text {
-                    anchors.horizontalCenter: parent.horizontalCenter
                     font.family: "Alibaba PuHuiTi 3.0"
-                    font.pixelSize: 12
-                    color: "#73000000"
-                    text: qsTr("点击或触碰悬浮窗开始使用")
+                    font.pixelSize: 16
+                    font.weight: Font.Normal
+                    color: "#D9000000"
+                    text: qsTr("我是汇小曦，您的评分小助理~点击我开始帮您评分吧！")
+                }
+                Image{
+                    visible: !helpBubble.isLeft
+                    source: "qrc:/image/finger.png"
                 }
             }
 
