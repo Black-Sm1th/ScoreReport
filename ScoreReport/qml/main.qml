@@ -9,10 +9,6 @@ ApplicationWindow {
     id: mainWindow
     visible: true
 
-    // 应用启动完成后启动帮助定时器
-    Component.onCompleted: {
-        helpBubbleTimer.start()
-    }
     // 全局快捷键：Ctrl+F12 打开截图功能
     Shortcut {
         sequence: "Ctrl+F12"
@@ -61,7 +57,7 @@ ApplicationWindow {
     // 帮助提示定时器 - 每30秒弹出一次
     Timer {
         id: helpBubbleTimer
-        interval: 30000  // 30秒
+        interval: 120000  // 2分钟
         repeat: true
         running: true  // 初始不运行
         onTriggered: {
@@ -1725,6 +1721,10 @@ ApplicationWindow {
         color: "transparent"
         opacity: 0
         property bool isLeft: false
+        // 应用启动完成后启动帮助定时器
+        Component.onCompleted: {
+            helpBubble.showBubble()
+        }
         // 透明度动画
         Behavior on opacity {
             NumberAnimation {
@@ -1771,6 +1771,17 @@ ApplicationWindow {
         }
 
         function showBubble() {
+            // 选择要显示的消息
+            if (helpBubbleContent.isFirstShow) {
+                // 第一次显示，使用默认消息
+                helpBubbleContent.currentMessage = "我是汇小曦，您的报告小助理~看看能帮您干些啥？"
+                helpBubbleContent.isFirstShow = false
+            } else {
+                // 非第一次显示，从helpContent中随机选择
+                var randomIndex = Math.floor(Math.random() * helpBubbleContent.helpContent.length)
+                helpBubbleContent.currentMessage = helpBubbleContent.helpContent[randomIndex]
+            }
+
             // 计算悬浮窗位置
             var floatingRect = Qt.rect(
                 mainWindow.x + (mainWindow.width - floatingWindow.width) / 2,
@@ -1792,7 +1803,7 @@ ApplicationWindow {
                 // 左侧空间不够，显示在右侧
                 bubbleX = floatingRect.x + floatingRect.width + spacing
                 bubbleY = floatingRect.y + (floatingRect.height - height) / 2
-                
+
                 // 如果右侧也放不下，回退到上方
                 if (bubbleX + width > Screen.width - 10) {
                     bubbleX = floatingRect.x + floatingRect.width / 2 - width / 2
@@ -1808,7 +1819,7 @@ ApplicationWindow {
             var targetX = bubbleX
             var targetY = bubbleY
             var isHorizontal = false
-            
+
             // 根据最终位置确定拉出方向和尖角方向
             if (bubbleX < floatingRect.x) {
                 // 在左侧，从右向左拉出
@@ -1853,13 +1864,15 @@ ApplicationWindow {
         // 气泡内容背景
         Rectangle {
             id: helpBubbleContent
-            width: 460
+            width: contentRow.width + 40
             height: 60
             color: "#FFFFFF"
             radius: 61
             scale: helpBubble.bubbleScale
             anchors.centerIn: parent
-
+            property bool isFirstShow: true
+            property string currentMessage: "我是汇小曦，您的报告小助理~看看能帮您干些啥？"
+            property var helpContent: ["听说您今天给躁动患儿做CT？建议直接申报『三维立体版捉迷藏大赛』冠军🏆", "伪影就是影像里的“鬼影”，有时候是病，有时候只是你打了个滚（动得太厉害）。——汇小曦，自认为的影像艺术家", "CT剂量报告里的'低于致癌阈值'，翻译：相当于连吃20年烧烤但只嘬了签子味儿"]
             layer.enabled: true
             layer.effect: DropShadow {
                 horizontalOffset: 0
@@ -1872,6 +1885,7 @@ ApplicationWindow {
 
             // 气泡文字内容
             Row {
+                id: contentRow
                 anchors.centerIn: parent
                 spacing: 4
                 Image{
@@ -1884,7 +1898,7 @@ ApplicationWindow {
                     font.pixelSize: 16
                     font.weight: Font.Normal
                     color: "#D9000000"
-                    text: qsTr("我是汇小曦，您的评分小助理~点击我开始帮您评分吧！")
+                    text: helpBubbleContent.currentMessage
                 }
                 Image{
                     visible: !helpBubble.isLeft
