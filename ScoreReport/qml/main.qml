@@ -1780,7 +1780,7 @@ ApplicationWindow {
             )
 
             var bubbleX, bubbleY
-            var spacing = 0  // 与悬浮窗的间距
+            var spacing = 1  // 与悬浮窗的间距
 
             // 优先显示在左侧
             var leftX = floatingRect.x - width - spacing
