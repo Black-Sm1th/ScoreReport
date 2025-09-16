@@ -54,19 +54,6 @@ ApplicationWindow {
         }
     }
 
-    // 帮助提示定时器 - 每30秒弹出一次
-    Timer {
-        id: helpBubbleTimer
-        interval: 120000  // 2分钟
-        repeat: true
-        running: true  // 初始不运行
-        onTriggered: {
-            // 只有在没有其他对话框显示时才显示帮助气泡
-            if (!scoreDialog.visible && !scoringMethodDialog.visible && !contextMenu.visible && !chatWindow.visible) {
-                helpBubble.showBubble()
-            }
-        }
-    }
     DropShadow {
         id:floatingShaow
         anchors.fill: floatingWindow
@@ -1770,6 +1757,19 @@ ApplicationWindow {
             }
         }
 
+        // 帮助提示定时器 - 每30秒弹出一次
+        Timer {
+            id: helpBubbleTimer
+            interval: 120000  // 2分钟
+            repeat: false
+            onTriggered: {
+                // 只有在没有其他对话框显示时才显示帮助气泡
+                if (!scoreDialog.visible && !scoringMethodDialog.visible && !contextMenu.visible && !chatWindow.visible) {
+                    helpBubble.showBubble()
+                }
+            }
+        }
+
         function showBubble() {
             // 选择要显示的消息
             if (helpBubbleContent.isFirstShow) {
@@ -1781,7 +1781,7 @@ ApplicationWindow {
                 var randomIndex = Math.floor(Math.random() * helpBubbleContent.helpContent.length)
                 helpBubbleContent.currentMessage = helpBubbleContent.helpContent[randomIndex]
             }
-
+            contentRow.forceLayout()
             // 计算悬浮窗位置
             var floatingRect = Qt.rect(
                 mainWindow.x + (mainWindow.width - floatingWindow.width) / 2,
@@ -1858,6 +1858,7 @@ ApplicationWindow {
             // 延迟隐藏窗口
             Qt.callLater(function() {
                 visible = false
+                helpBubbleTimer.restart()
             })
         }
 
@@ -1872,7 +1873,23 @@ ApplicationWindow {
             anchors.centerIn: parent
             property bool isFirstShow: true
             property string currentMessage: "我是汇小曦，您的报告小助理~看看能帮您干些啥？"
-            property var helpContent: ["听说您今天给躁动患儿做CT？建议直接申报『三维立体版捉迷藏大赛』冠军🏆", "伪影就是影像里的“鬼影”，有时候是病，有时候只是你打了个滚（动得太厉害）。——汇小曦，自认为的影像艺术家", "CT剂量报告里的'低于致癌阈值'，翻译：相当于连吃20年烧烤但只嘬了签子味儿"]
+            property var helpContent: [
+                "听说您今天给躁动患儿做CT？建议直接申报『三维立体版捉迷藏大赛』冠军🏆",
+                "伪影就是影像里的“鬼影”，有时候是病，有时候只是你打了个滚（动得太厉害）。——汇小曦，自认为的影像艺术家",
+                "CT剂量报告里的“低于致癌阈值”，翻译：相当于连吃20年烧烤但只嘬了签子味儿",
+                "MRI的磁场能让轮椅变身炮弹——所以我们的候诊区其实隐藏着漫威拍摄基地",
+                "PACS系统崩溃时，全科眼神交流达成共识：现在改用脑内云盘读片",
+                "放射科医生写“请结合临床”不是推脱，是诚实——更多临床信息能让我给出更有价值的建议",
+                "超声探头压得用力不是报复社会，是物理定律在说：『脂肪不压扁，回声不上天』",
+                "辐射剂量：一次胸部CT≈自然本底辐射活8个月，但您加班时长已突破安全值⚠",
+                "对比剂过敏反应分三级：Ⅰ级痒，Ⅱ级喘，Ⅲ级…快喊主任！",
+                "送您放射科祖传祝福：愿您视野清晰无伪影，诊断准确无漏诊！",
+                "窗位/窗宽就像给片子换滤镜，调得对能看到不同“风景”",
+                "ALARA 原则是放射学的节俭哲学：辐射要尽量低，但必须够看清问题",
+                "有些“异常”看着吓人，但统计学会安慰人——我会告诉你它的概率有多高",
+                "MRI喜欢显微镜式的细节，CT擅长看整体结构，我会根据需要给出最合适的解释",
+                "我会尽量客观，但我也懂一点黑色幽默：最怕报告写得像小说，读者却当真",
+                "我不会替代医生，但能把影像的“话”先说出来，节省大家的猜谜时间"]
             layer.enabled: true
             layer.effect: DropShadow {
                 horizontalOffset: 0
