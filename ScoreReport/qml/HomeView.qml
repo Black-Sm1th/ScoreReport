@@ -223,9 +223,9 @@ Rectangle {
                 else if(title === "UCLS CTS"){
                     currentPageChanged(4)
                 }
-                // else if(title === "Report"){
-                //     currentPageChanged(7)
-                // }
+                else if(title === "Report"){
+                    currentPageChanged(7)
+                }
                 else{
                     messageManager.warning(qsTr("该功能暂未开放"))
                 }

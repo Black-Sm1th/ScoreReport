@@ -226,6 +226,8 @@ ApplicationWindow {
                     uclsctsView.resetValues()
                 }else if(contentRect.currentScore == 6){
                     $chatManager.endAnalysis(true)
+                }else if(contentRect.currentScore == 7){
+                    reportView.resetValues()
                 }
                 contentRect.currentScore = -1
             }
