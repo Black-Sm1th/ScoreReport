@@ -21,7 +21,7 @@ Rectangle {
     property color hoverColor: "#F8FAFF"
     property color selectedColor: "#F0F7FF"
     property int currentIndex: 0
-    property string currentText: scoreTypes[currentIndex].text
+    property string currentText: scoreTypes.length > 0 ? scoreTypes[currentIndex].text : ""
     
     // 选择改变信号
     signal selectionChanged(int index, string text, string value)
@@ -59,8 +59,8 @@ Rectangle {
         Image {
             id: selectedIcon
             anchors.verticalCenter: parent.verticalCenter
-            source: scoreTypes[currentIndex].iconUrl
-            visible: scoreTypes[currentIndex].iconUrl !== "" // 只有选中具体类型时才显示图标，全部类型不显示
+            source: scoreTypes.length > 0 ? scoreTypes[currentIndex].iconUrl : ""
+            visible: scoreTypes.length > 0 && scoreTypes[currentIndex].iconUrl !== "" // 只有选中具体类型时才显示图标，全部类型不显示
             width: 14
             height: 14
         }
