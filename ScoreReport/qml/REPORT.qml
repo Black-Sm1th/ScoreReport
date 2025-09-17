@@ -8,11 +8,41 @@ Rectangle {
     width: parent.width
     color: "transparent"
     property var messageManager: null
+    property bool isEdit: false
+    property var originalTemplateData: []
+    property var editableTemplateData: []
     signal exitScore()
     function resetValues(){
         tabswitcher.currentIndex = 0
         chooseTemplate.currentIndex = 0
         chooseTemplateDetail.currentIndex = 0
+        originalTemplateData = []
+        editableTemplateData = []
+        isEdit = false
+    }
+    
+    function updateEditableData() {
+        var items = []
+        if ($reportManager.templateList.length > 0 && chooseTemplateDetail.currentIndex < $reportManager.templateList.length) {
+            var selectedTemplate = $reportManager.templateList[chooseTemplateDetail.currentIndex]
+            if (selectedTemplate && selectedTemplate.template) {
+                var templateData = selectedTemplate.template
+                for (var key in templateData) {
+                    items.push({
+                        key: key,
+                        value: templateData[key] || ""
+                    })
+                }
+            }
+        }
+        editableTemplateData = []  // 先清空以触发绑定更新
+        editableTemplateData = items
+        originalTemplateData = JSON.parse(JSON.stringify(items)) // 深拷贝
+    }
+    
+    function restoreOriginalData() {
+        editableTemplateData = []  // 先清空以触发绑定更新
+        editableTemplateData = JSON.parse(JSON.stringify(originalTemplateData)) // 深拷贝恢复
     }
     Connections{
         target: $reportManager
@@ -28,6 +58,7 @@ Rectangle {
             }
             chooseTemplate.scoreTypes = templateLists
             chooseTemplateDetail.scoreTypes = templateLists
+            updateEditableData()
         }
     }
     Column{
@@ -100,7 +131,13 @@ Rectangle {
                     id:chooseTemplateDetail
                     anchors.left: chooseTemplateText.right
                     anchors.verticalCenter: parent.verticalCenter
+                    enabled: !isEdit
                     scoreTypes: []
+                    onCurrentIndexChanged: {
+                        if (!isEdit) {
+                            updateEditableData()
+                        }
+                    }
                 }
                 CustomButton{
                     id: deleteBtn
@@ -111,6 +148,7 @@ Rectangle {
                     fontSize: 14
                     backgroundColor: "#FF5132"
                     textColor: "#ffffff"
+                    visible: !isEdit
                     anchors.right: parent.right
                     anchors.rightMargin: 16
                     anchors.verticalCenter: parent.verticalCenter
@@ -123,6 +161,7 @@ Rectangle {
                     fontSize: 14
                     width: 80
                     height: 29
+                    visible: !isEdit
                     borderWidth: 0
                     backgroundColor: "#006BFF"
                     textColor: "#ffffff"
@@ -155,22 +194,8 @@ Rectangle {
                         leftPadding: 16
                         rightPadding: 16
                         Repeater{
-                            model: {
-                                var items = []
-                                if ($reportManager.templateList.length > 0 && chooseTemplateDetail.currentIndex < $reportManager.templateList.length) {
-                                    var selectedTemplate = $reportManager.templateList[chooseTemplateDetail.currentIndex]
-                                    if (selectedTemplate && selectedTemplate.template) {
-                                        var templateData = selectedTemplate.template
-                                        for (var key in templateData) {
-                                            items.push({
-                                                key: key,
-                                                value: templateData[key] || ""
-                                            })
-                                        }
-                                    }
-                                }
-                                return items
-                            }
+                            id: detailRepeater
+                            model: editableTemplateData
                             // 消息气泡
                             delegate: Row {
                                 spacing: 8
@@ -186,16 +211,22 @@ Rectangle {
                                         color: "#D9000000"
                                         text: "词条名："
                                     }
-                                    TextField {
-                                        height: 37
-                                        width: parent.width
-                                        font.family: "Alibaba PuHuiTi 3.0"
-                                        font.pixelSize: 16
-                                        color: "#D9000000"
-                                        selectByMouse: true
+                                    SingleLineTextInput {
+                                        inputHeight: 37
+                                        inputWidth: parent.width
+                                        fontSize: 16
+                                        readOnly: !isEdit
+                                        backgroundColor: "#ffffff"
+                                        borderColor: "#E6EAF2"
+                                        textColor: "#D9000000"
                                         placeholderText: qsTr("请输入")
-                                        placeholderTextColor: "#40000000"
+                                        placeholderColor: "#40000000"
                                         text: modelData.key
+                                        onEditingFinished: {
+                                            if (isEdit && text !== modelData.key) {
+                                                editableTemplateData[index].key = text
+                                            }
+                                        }
                                     }
                                 }
                                 Column{
@@ -208,16 +239,22 @@ Rectangle {
                                         color: "#D9000000"
                                         text: "词条描述："
                                     }
-                                    TextField {
-                                        height: 37
-                                        width: parent.width
-                                        font.family: "Alibaba PuHuiTi 3.0"
-                                        font.pixelSize: 16
-                                        color: "#D9000000"
-                                        selectByMouse: true
+                                    SingleLineTextInput {
+                                        inputHeight: 37
+                                        inputWidth: parent.width
+                                        fontSize: 16
+                                        readOnly: !isEdit
+                                        borderColor: "#E6EAF2"
+                                        backgroundColor: "#ffffff"
+                                        textColor: "#D9000000"
                                         placeholderText: qsTr("请输入")
-                                        placeholderTextColor: "#40000000"
+                                        placeholderColor: "#40000000"
                                         text: modelData.value
+                                        onEditingFinished: {
+                                            if (isEdit && text !== modelData.value) {
+                                                editableTemplateData[index].value = text
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -241,8 +278,8 @@ Rectangle {
             CustomButton {
                 id:stopBtn
                 anchors.verticalCenter: parent.verticalCenter
-                anchors.right: parent.right
-                anchors.rightMargin: 24
+                anchors.left: parent.left
+                anchors.leftMargin: 24
                 text: qsTr("退出")
                 width: 88
                 height: 36
@@ -253,7 +290,110 @@ Rectangle {
                 backgroundColor: "#1A006BFF"
                 textColor: "#006BFF"
                 onClicked: {
+                    resetValues()
                     exitScore()
+                }
+            }
+            CustomButton {
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.right: parent.right
+                anchors.rightMargin: 24
+                text: qsTr("发送")
+                width: 88
+                visible: tabswitcher.currentIndex === 0
+                height: 36
+                radius: 4
+                fontSize: 14
+                borderWidth: 0
+                backgroundColor: "#006BFF"
+                onClicked: {
+
+                }
+            }
+            CustomButton {
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.right: parent.right
+                anchors.rightMargin: 24
+                text: qsTr("编辑")
+                width: 88
+                visible: tabswitcher.currentIndex === 1 && !isEdit
+                height: 36
+                radius: 4
+                fontSize: 14
+                borderWidth: 0
+                backgroundColor: "#006BFF"
+                onClicked: {
+                    updateEditableData()  // 重新加载当前数据作为编辑的起点
+                    isEdit = true
+                }
+            }
+
+            CustomButton {
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.right: saveBtn.left
+                anchors.rightMargin: 12
+                text: qsTr("取消")
+                width: 88
+                visible: tabswitcher.currentIndex === 1 && isEdit
+                height: 36
+                radius: 4
+                fontSize: 14
+                borderWidth: 0
+                backgroundColor: "#006BFF"
+                onClicked: {
+                    restoreOriginalData()  // 恢复到编辑前的数据
+                    isEdit = false
+                }
+            }
+            CustomButton {
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.right: addBtn.left
+                anchors.rightMargin: 12
+                text: qsTr("取消")
+                width: 88
+                visible: tabswitcher.currentIndex === 1 && isEdit
+                height: 36
+                radius: 4
+                fontSize: 14
+                borderWidth: 0
+                backgroundColor: "#006BFF"
+                onClicked: {
+                    restoreOriginalData()  // 恢复到编辑前的数据
+                    isEdit = false
+                }
+            }
+            CustomButton {
+                id: addBtn
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.right: saveBtn.left
+                anchors.rightMargin: 12
+                text: qsTr("添加词条")
+                width: 88
+                visible: tabswitcher.currentIndex === 1 && isEdit
+                height: 36
+                radius: 4
+                fontSize: 14
+                borderWidth: 0
+                backgroundColor: "#006BFF"
+                onClicked: {
+
+                }
+            }
+            CustomButton {
+                id: saveBtn
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.right: parent.right
+                anchors.rightMargin: 24
+                text: qsTr("保存")
+                width: 88
+                visible: tabswitcher.currentIndex === 1 && isEdit
+                height: 36
+                radius: 4
+                fontSize: 14
+                borderWidth: 0
+                backgroundColor: "#006BFF"
+                onClicked: {
+
                 }
             }
         }

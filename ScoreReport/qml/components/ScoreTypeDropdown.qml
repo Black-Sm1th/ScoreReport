@@ -21,7 +21,7 @@ Rectangle {
     property color hoverColor: "#F8FAFF"
     property color selectedColor: "#F0F7FF"
     property int currentIndex: 0
-    property string currentText: scoreTypes.length > 0 ? scoreTypes[currentIndex].text : ""
+    property bool enabled: true
     
     // 选择改变信号
     signal selectionChanged(int index, string text, string value)
@@ -39,10 +39,11 @@ Rectangle {
     
     width: dropdownWidth
     height: dropdownHeight
-    color: mainMouseArea.containsMouse ? hoverColor : backgroundColor
-    border.color: dropdownOpen ? "#33006BFF" : "#0F000000"
+    color: enabled ? (mainMouseArea.containsMouse ? hoverColor : backgroundColor) : "#F5F5F5"
+    border.color: enabled ? (dropdownOpen ? "#33006BFF" : "#0F000000") : "#E0E0E0"
     border.width: 1
     radius: 8
+    opacity: enabled ? 1.0 : 0.6
     
     property bool dropdownOpen: false
     
@@ -63,15 +64,16 @@ Rectangle {
             visible: scoreTypes.length > 0 && scoreTypes[currentIndex].iconUrl !== "" // 只有选中具体类型时才显示图标，全部类型不显示
             width: 14
             height: 14
+            opacity: enabled ? 1.0 : 0.6
         }
         
         // 选中的文本
         Text {
             id: selectedText
-            text: currentText
+            text: scoreTypes.length > 0 ? scoreTypes[currentIndex].text : ""
             font.family: "Alibaba PuHuiTi 3.0"
             font.pixelSize: 14
-            color: "#D9000000"
+            color: enabled ? "#D9000000" : "#BFBFBF"
             anchors.verticalCenter: parent.verticalCenter
             elide: Text.ElideRight
             width: Math.max(0, parent.width - (selectedIcon.visible ? selectedIcon.width + parent.spacing : 0))
@@ -90,7 +92,11 @@ Rectangle {
         onPaint: {
             var ctx = getContext("2d")
             ctx.clearRect(0, 0, width, height)
-            ctx.fillStyle = dropdownOpen ? "#006BFF" : "#73000000"
+            if (enabled) {
+                ctx.fillStyle = dropdownOpen ? "#006BFF" : "#73000000"
+            } else {
+                ctx.fillStyle = "#BFBFBF"
+            }
             ctx.beginPath()
             if (dropdownOpen) {
                 // 向上箭头
@@ -112,18 +118,21 @@ Rectangle {
     MouseArea {
         id: mainMouseArea
         anchors.fill: parent
-        hoverEnabled: true
-        cursorShape: Qt.PointingHandCursor
+        enabled: dropdownContainer.enabled
+        hoverEnabled: enabled
+        cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
         
         onClicked: {
-            dropdownContainer.forceActiveFocus()
-            if (dropdownOpen) {
-                dropdownPopup.close()
-            } else {
-                dropdownOpen = true
-                dropdownPopup.open()
+            if (enabled) {
+                dropdownContainer.forceActiveFocus()
+                if (dropdownOpen) {
+                    dropdownPopup.close()
+                } else {
+                    dropdownOpen = true
+                    dropdownPopup.open()
+                }
+                arrowIcon.requestPaint()
             }
-            arrowIcon.requestPaint()
         }
     }
     
@@ -196,7 +205,6 @@ Rectangle {
                     
                     onClicked: {
                         currentIndex = index
-                        currentText = modelData.text
                         dropdownPopup.close()
                         selectionChanged(index, modelData.text, modelData.value)
                     }
@@ -234,9 +242,17 @@ Rectangle {
     
     // 确保状态同步
     onDropdownOpenChanged: {
-        if (dropdownOpen && !dropdownPopup.visible) {
+        if (dropdownOpen && !dropdownPopup.visible && enabled) {
             dropdownPopup.open()
         } else if (!dropdownOpen && dropdownPopup.visible) {
+            dropdownPopup.close()
+        }
+    }
+    
+    // 当 enabled 状态改变时重新绘制箭头
+    onEnabledChanged: {
+        arrowIcon.requestPaint()
+        if (!enabled && dropdownOpen) {
             dropdownPopup.close()
         }
     }
@@ -254,7 +270,6 @@ Rectangle {
         for (var i = 0; i < scoreTypes.length; i++) {
             if (scoreTypes[i].value === value) {
                 currentIndex = i
-                currentText = scoreTypes[i].text
                 break
             }
         }
@@ -263,7 +278,6 @@ Rectangle {
     function selectByIndex(index) {
         if (index >= 0 && index < scoreTypes.length) {
             currentIndex = index
-            currentText = scoreTypes[index].text
         }
     }
     

@@ -78,4 +78,5 @@ void ReportManager::onGetReportTemplateListResponse(bool success, const QString&
     
     // 更新属性
     settemplateList(newTemplateList);
+    emit templateListChanged();
 }
