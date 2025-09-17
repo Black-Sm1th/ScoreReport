@@ -14,6 +14,7 @@
 #include "UCLSCTSScorer.h"
 #include "ChatManager.h"
 #include "LanguageManager.h"
+#include "ReportManager.h"
 int main(int argc, char *argv[])
 {
 #if defined(Q_OS_WIN)
@@ -29,7 +30,7 @@ int main(int argc, char *argv[])
     QCoreApplication::setOrganizationName("AETHERMIND");
     QCoreApplication::setOrganizationDomain("aethermind.com");
     QCoreApplication::setApplicationName("ScoreReport");
-    QCoreApplication::setApplicationVersion("0.7.0");
+    QCoreApplication::setApplicationVersion("0.8.1");
 
     QQmlApplicationEngine engine;
     // 使用单例模式获取实例
@@ -64,6 +65,9 @@ int main(int argc, char *argv[])
     // 为独立chat窗口创建单独的ChatManager实例
     auto* independentChatManager = new ChatManager();
     engine.rootContext()->setContextProperty("$independentChatManager", independentChatManager);
+
+    auto* reportManager = GET_SINGLETON(ReportManager);
+    engine.rootContext()->setContextProperty("$reportManager", reportManager);
 
     // 初始化语言管理器
     auto* languageManager = GET_SINGLETON(LanguageManager);

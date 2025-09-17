@@ -8,9 +8,16 @@ Rectangle {
     width: parent.width
     color: "transparent"
     property var messageManager: null
+    property var templateLists: []
     signal exitScore()
     function resetValues(){
         tabswitcher.currentIndex = 0
+    }
+    Connections{
+        target: $reportManager
+        function onTemplateListChanged(){
+            templateLists.clear()
+        }
     }
     Column{
         id: reportColumn
@@ -21,10 +28,49 @@ Rectangle {
         TabSwitcher{
             id: tabswitcher
             tabTitles: ["报告", "设置模板"]
+            currentIndex: 0
         }
-        MultiLineTextInput{
+        Column {
             width: parent.width - reportColumn.leftPadding - reportColumn.rightPadding
-            height: 100
+            visible: tabswitcher.currentIndex === 0
+            spacing: 8
+            Text {
+                font.family: "Alibaba PuHuiTi 3.0"
+                font.weight: Font.Normal
+                font.pixelSize: 16
+                color: "#D9000000"
+                text: "输入报告"
+            }
+            MultiLineTextInput{
+                width: parent.width
+                height: 300
+            }
+            Row{
+                height: 29
+                Text {
+                    font.family: "Alibaba PuHuiTi 3.0"
+                    font.weight: Font.Normal
+                    font.pixelSize: 16
+                    color: "#D9000000"
+                    text: "选择模板："
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+                ScoreTypeDropdown{
+                    anchors.verticalCenter: parent.verticalCenter
+                    scoreTypes: templateLists
+                }
+            }
+        }
+        Rectangle{
+            width: parent.width
+            height: 630
+            anchors.horizontalCenter: parent.horizontalCenter
+            visible: tabswitcher.currentIndex === 1
+            ScrollView {
+                id: scrollView
+                anchors.fill: parent
+                clip: true
+            }
         }
         // 底部按钮栏
         Rectangle {
@@ -38,26 +84,6 @@ Rectangle {
                 width: parent.width
                 color: "#0F000000"
             }
-
-            // 重置按钮 - 在有缺失项时显示
-            CustomButton {
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.right: stopBtn.left
-                anchors.rightMargin: 12
-                text: qsTr("重置")
-                width: 88
-                height: 36
-                radius: 4
-                fontSize: 14
-                borderWidth: 1
-                borderColor: "#33006BFF"
-                backgroundColor: "#1A006BFF"
-                textColor: "#006BFF"
-                onClicked: {
-
-                }
-            }
-
             CustomButton {
                 id:stopBtn
                 anchors.verticalCenter: parent.verticalCenter

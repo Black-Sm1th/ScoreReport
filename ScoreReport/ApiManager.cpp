@@ -311,6 +311,72 @@ void ApiManager::getCancerDiagnoseType(const QString& content, const QString& la
 }
 
 /**
+ * @brief 保存报告模板接口实现
+ * @param templateContent 模板内容（JSON字符串）
+ * @param templateId 模板ID（可选，用于更新现有模板）
+ * 
+ * 发送保存模板请求到服务器的 /report/template/save 端点。
+ * 请求类型标记为 "save-report-template"，结果会通过 saveReportTemplateResponse 信号返回。
+ */
+void ApiManager::saveReportTemplate(const QString& templateContent, const QString& templateId)
+{
+    QJsonObject requestData;
+    requestData["template"] = templateContent;  // template字段作为JSON字符串
+    
+    // 如果提供了模板ID，则添加到请求中（用于更新现有模板）
+    if (!templateId.isEmpty()) {
+        requestData["id"] = templateId;
+    }
+    
+    makePostRequest("/report/template/save", requestData, "save-report-template");
+}
+
+/**
+ * @brief 删除报告模板接口实现
+ * @param templateId 要删除的模板ID
+ * 
+ * 发送删除模板请求到服务器的 /report/template/delete 端点。
+ * 请求类型标记为 "delete-report-template"，结果会通过 deleteReportTemplateResponse 信号返回。
+ */
+void ApiManager::deleteReportTemplate(const QString& templateId)
+{
+    QJsonObject requestData;
+    requestData["id"] = templateId;
+    
+    makePostRequest("/report/template/delete", requestData, "delete-report-template");
+}
+
+/**
+ * @brief 生成质控报告接口实现
+ * @param query 查询文本
+ * @param templateId 模板ID
+ * @param language 语言设置（zh或en）
+ * 
+ * 发送生成质控报告请求到服务器的 /report/template/generateReport 端点。
+ * 请求类型标记为 "generate-quality-report"，结果会通过 generateQualityReportResponse 信号返回。
+ */
+void ApiManager::generateQualityReport(const QString& query, const QString& templateId, const QString& language)
+{
+    QJsonObject requestData;
+    requestData["query"] = query;
+    requestData["template"] = templateId;
+    requestData["language"] = language;
+    
+    makePostRequest("/report/template/generateReport", requestData, "generate-quality-report");
+}
+
+/**
+ * @brief 获取用户创建的模板列表接口实现
+ * 
+ * 发送获取模板列表请求到服务器的 /report/template/list 端点。
+ * 请求类型标记为 "get-report-template-list"，结果会通过 getReportTemplateListResponse 信号返回。
+ */
+void ApiManager::getReportTemplateList()
+{
+    makeGetRequest("/report/template/list", "get-report-template-list");
+}
+
+/**
  * @brief 流式数据就绪槽函数实现
  * 
  * 当流式聊天接口有新数据可读时调用此函数。
@@ -498,6 +564,17 @@ void ApiManager::onNetworkReply(QNetworkReply* reply)
                     emit getQualityListResponse(success, message, data);
                 } else if (requestType == "cancer-diagnose-type") {
                     emit cancerDiagnoseTypeResponse(success, message, data);
+                } else if (requestType == "save-report-template") {
+                    emit saveReportTemplateResponse(success, message, data);
+                } else if (requestType == "delete-report-template") {
+                    emit deleteReportTemplateResponse(success, message, data);
+                } else if (requestType == "generate-quality-report") {
+                    emit generateQualityReportResponse(success, message, data);
+                } else if (requestType == "get-report-template-list") {
+                    // 模板列表接口的data字段是数组，需要特殊处理
+                    QJsonObject specialData;
+                    specialData["data"] = responseObj.value("data").toArray();
+                    emit getReportTemplateListResponse(success, message, specialData);
                 }
             }
         }
@@ -530,6 +607,14 @@ void ApiManager::onNetworkReply(QNetworkReply* reply)
                 emit getQualityListResponse(false, errorString, QJsonObject());
             } else if (requestType == "cancer-diagnose-type") {
                 emit cancerDiagnoseTypeResponse(false, errorString, QJsonObject());
+            } else if (requestType == "save-report-template") {
+                emit saveReportTemplateResponse(false, errorString, QJsonObject());
+            } else if (requestType == "delete-report-template") {
+                emit deleteReportTemplateResponse(false, errorString, QJsonObject());
+            } else if (requestType == "generate-quality-report") {
+                emit generateQualityReportResponse(false, errorString, QJsonObject());
+            } else if (requestType == "get-report-template-list") {
+                emit getReportTemplateListResponse(false, errorString, QJsonObject());
             } else if (requestType == "stream-chat") {
                 // 流式聊天错误，发送错误完成信号
                 QString chatId = m_streamChatIds.value(reply, "");

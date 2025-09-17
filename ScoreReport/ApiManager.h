@@ -8,6 +8,7 @@
 #include <QNetworkReply>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QJsonArray>
 #include <QDebug>
 #include <QSet>
 #include "CommonFunc.h"
@@ -128,6 +129,40 @@ public:
     void getCancerDiagnoseType(const QString& content, const QString& language);
     
     /**
+     * @brief 保存报告模板
+     * @param templateContent 模板内容（JSON字符串）
+     * @param templateId 模板ID（可选，用于更新现有模板）
+     * 
+     * 发送保存模板请求到服务器，结果通过 saveReportTemplateResponse 信号返回
+     */
+    void saveReportTemplate(const QString& templateContent, const QString& templateId = "");
+    
+    /**
+     * @brief 删除报告模板
+     * @param templateId 要删除的模板ID
+     * 
+     * 发送删除模板请求到服务器，结果通过 deleteReportTemplateResponse 信号返回
+     */
+    void deleteReportTemplate(const QString& templateId);
+    
+    /**
+     * @brief 生成质控报告
+     * @param query 查询文本
+     * @param templateId 模板ID
+     * @param language 语言设置（zh或en）
+     * 
+     * 发送生成质控报告请求到服务器，结果通过 generateQualityReportResponse 信号返回
+     */
+    void generateQualityReport(const QString& query, const QString& templateId, const QString& language);
+    
+    /**
+     * @brief 获取用户创建的模板列表
+     * 
+     * 发送获取模板列表请求到服务器，结果通过 getReportTemplateListResponse 信号返回
+     */
+    void getReportTemplateList();
+    
+    /**
      * @brief 终止所有正在进行的网络请求
      * 
      * 立即终止所有活跃的POST/GET请求，已发送的请求会被中断。
@@ -234,6 +269,38 @@ signals:
      * @param data 分类数据
      */
     void cancerDiagnoseTypeResponse(bool success, const QString& message, const QJsonObject& data);
+    
+    /**
+     * @brief 保存报告模板响应信号
+     * @param success 是否保存成功
+     * @param message 服务器返回的消息
+     * @param data 响应数据
+     */
+    void saveReportTemplateResponse(bool success, const QString& message, const QJsonObject& data);
+    
+    /**
+     * @brief 删除报告模板响应信号
+     * @param success 是否删除成功
+     * @param message 服务器返回的消息
+     * @param data 响应数据
+     */
+    void deleteReportTemplateResponse(bool success, const QString& message, const QJsonObject& data);
+    
+    /**
+     * @brief 生成质控报告响应信号
+     * @param success 是否生成成功
+     * @param message 服务器返回的消息
+     * @param data 报告数据
+     */
+    void generateQualityReportResponse(bool success, const QString& message, const QJsonObject& data);
+    
+    /**
+     * @brief 获取报告模板列表响应信号
+     * @param success 是否请求成功
+     * @param message 服务器返回的消息
+     * @param data 模板列表数据
+     */
+    void getReportTemplateListResponse(bool success, const QString& message, const QJsonObject& data);
     
     /**
      * @brief 网络错误信号

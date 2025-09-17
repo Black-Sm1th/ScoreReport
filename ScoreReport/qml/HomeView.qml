@@ -224,6 +224,7 @@ Rectangle {
                     currentPageChanged(4)
                 }
                 else if(title === "Report"){
+                    $reportManager.refreshTemplate()
                     currentPageChanged(7)
                 }
                 else{

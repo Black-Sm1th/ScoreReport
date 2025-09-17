@@ -20,7 +20,6 @@ Rectangle {
     property color borderColor: "#E6EAF2"
     property color hoverColor: "#F8FAFF"
     property color selectedColor: "#F0F7FF"
-    property string placeholderText: qsTr("全部类型")
     property int currentIndex: 0
     property string currentText: scoreTypes[currentIndex].text
     
@@ -60,8 +59,8 @@ Rectangle {
         Image {
             id: selectedIcon
             anchors.verticalCenter: parent.verticalCenter
-            source: currentIndex >= 0 && currentIndex < scoreTypes.length ? scoreTypes[currentIndex].iconUrl : ""
-            visible: source !== "" && currentIndex > 0  // 只有选中具体类型时才显示图标，全部类型不显示
+            source: scoreTypes[currentIndex].iconUrl
+            visible: scoreTypes[currentIndex].iconUrl !== "" // 只有选中具体类型时才显示图标，全部类型不显示
             width: 14
             height: 14
         }
@@ -132,7 +131,7 @@ Rectangle {
     Popup {
         id: dropdownPopup
         width: dropdownContainer.width
-        height: Math.min(listView.contentHeight + 12, maxDropdownHeight)
+        height: Math.min(listView.contentHeight + 24, maxDropdownHeight)
         x: 0
         y: dropdownContainer.height + 2
         visible: dropdownOpen
@@ -173,7 +172,7 @@ Rectangle {
                     Image {
                         anchors.verticalCenter: parent.verticalCenter
                         source: modelData.iconUrl
-                        visible: source !== "" && index > 0  // 只有具体类型才显示图标
+                        visible: modelData.iconUrl !== "" // 只有具体类型才显示图标
                         width: 14
                         height: 14
                     }
