@@ -7,10 +7,12 @@ Rectangle {
     height: reportColumn.height
     width: parent.width
     color: "transparent"
+    focus: true
     property var messageManager: null
     property bool isEdit: false
     property var originalTemplateData: []
     property var editableTemplateData: []
+    property int pendingRemoveIndex: -1
     signal exitScore()
     function resetValues(){
         tabswitcher.currentIndex = 0
@@ -41,8 +43,100 @@ Rectangle {
     }
     
     function restoreOriginalData() {
+        // 取消时直接恢复到原始数据，不需要处理当前输入（我们要丢弃这些修改）
         editableTemplateData = []  // 先清空以触发绑定更新
         editableTemplateData = JSON.parse(JSON.stringify(originalTemplateData)) // 深拷贝恢复
+    }
+    
+    function addNewEntry() {
+        // 先让页面失去焦点，确保当前输入被保存
+        reportView.forceActiveFocus()
+        
+        // 使用Timer延迟执行添加，确保onEditingFinished有时间触发
+        addTimer.start()
+    }
+    
+    function doActualAdd() {
+        var newEntry = {
+            key: "",
+            value: ""
+        }
+        var newData = JSON.parse(JSON.stringify(editableTemplateData)) // 深拷贝当前数据
+        newData.push(newEntry)
+        editableTemplateData = []  // 先清空以触发绑定更新
+        editableTemplateData = newData
+    }
+    
+    function saveTemplateData() {
+        // 先让页面失去焦点，这样会触发所有输入框的onEditingFinished事件
+        reportView.forceActiveFocus()
+        
+        // 使用Timer延迟执行保存，确保onEditingFinished有时间触发
+        saveTimer.start()
+    }
+    
+    function doActualSave() {
+        // 获取当前选中模板的ID
+        var templateId = ""
+        if ($reportManager.templateList.length > 0 && chooseTemplateDetail.currentIndex < $reportManager.templateList.length) {
+            var selectedTemplate = $reportManager.templateList[chooseTemplateDetail.currentIndex]
+            if (selectedTemplate && selectedTemplate.id) {
+                templateId = selectedTemplate.id
+            }
+        }
+        
+        // 调用C++的保存方法
+        $reportManager.saveTemplate(templateId, editableTemplateData)
+        
+        // 更新原始数据为当前编辑的数据
+        originalTemplateData = JSON.parse(JSON.stringify(editableTemplateData))
+        
+        // 退出编辑模式
+        isEdit = false
+        
+        console.log("正在保存模板数据，ID:", templateId)
+    }
+    
+    Timer {
+        id: saveTimer
+        interval: 50  // 50ms延迟，足够让onEditingFinished触发
+        repeat: false
+        onTriggered: doActualSave()
+    }
+    
+    Timer {
+        id: addTimer
+        interval: 50  // 50ms延迟，足够让onEditingFinished触发
+        repeat: false
+        onTriggered: doActualAdd()
+    }
+    
+    Timer {
+        id: removeTimer
+        interval: 50  // 50ms延迟，足够让onEditingFinished触发
+        repeat: false
+        onTriggered: doActualRemove()
+    }
+    
+    function removeEntry(entryIndex) {
+        // 先让页面失去焦点，确保当前输入被保存
+        reportView.forceActiveFocus()
+        
+        // 保存要删除的索引
+        pendingRemoveIndex = entryIndex
+        
+        // 使用Timer延迟执行删除，确保onEditingFinished有时间触发
+        removeTimer.start()
+    }
+    
+    function doActualRemove() {
+        if (pendingRemoveIndex >= 0) {
+            var newData = JSON.parse(JSON.stringify(editableTemplateData)) // 深拷贝当前数据
+            newData.splice(pendingRemoveIndex, 1) // 删除指定索引的项
+            editableTemplateData = []  // 先清空以触发绑定更新
+            editableTemplateData = newData
+            pendingRemoveIndex = -1  // 重置索引
+        }
     }
     Connections{
         target: $reportManager
@@ -59,6 +153,14 @@ Rectangle {
             chooseTemplate.scoreTypes = templateLists
             chooseTemplateDetail.scoreTypes = templateLists
             updateEditableData()
+        }
+        
+        function onTemplateSaveResult(success, message){
+            if (success) {
+                messageManager.success("保存成功！")
+            } else {
+                messageManager.error("保存失败:" + message)
+            }
         }
     }
     Column{
@@ -202,7 +304,7 @@ Rectangle {
                                 height: detailCol.height
                                 Column{
                                     id: detailCol
-                                    width: (scrollView.width - 40) / 2
+                                    width: isEdit ? (scrollView.width - 100) / 2 : (scrollView.width - 40) / 2
                                     spacing: 8
                                     Text {
                                         font.family: "Alibaba PuHuiTi 3.0"
@@ -230,7 +332,7 @@ Rectangle {
                                     }
                                 }
                                 Column{
-                                    width: (scrollView.width - 40) / 2
+                                    width: isEdit ? (scrollView.width - 100) / 2 : (scrollView.width - 40) / 2
                                     spacing: 8
                                     Text {
                                         font.family: "Alibaba PuHuiTi 3.0"
@@ -255,6 +357,22 @@ Rectangle {
                                                 editableTemplateData[index].value = text
                                             }
                                         }
+                                    }
+                                }
+                                
+                                // 删除按钮
+                                CustomButton {
+                                    anchors.bottom: parent.bottom
+                                    text: qsTr("删除")
+                                    width: 56
+                                    height: 37
+                                    fontSize: 14
+                                    borderWidth: 0
+                                    backgroundColor: "#FF5132"
+                                    textColor: "#ffffff"
+                                    visible: isEdit
+                                    onClicked: {
+                                        removeEntry(index)
                                     }
                                 }
                             }
@@ -376,7 +494,7 @@ Rectangle {
                 borderWidth: 0
                 backgroundColor: "#006BFF"
                 onClicked: {
-
+                    addNewEntry()
                 }
             }
             CustomButton {
@@ -393,7 +511,7 @@ Rectangle {
                 borderWidth: 0
                 backgroundColor: "#006BFF"
                 onClicked: {
-
+                    saveTemplateData()
                 }
             }
         }

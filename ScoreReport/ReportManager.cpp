@@ -10,6 +10,7 @@ ReportManager::ReportManager(QObject *parent)
     settemplateList(QVariantList());
     m_apiManager = GET_SINGLETON(ApiManager);
     QObject::connect(m_apiManager, &ApiManager::getReportTemplateListResponse, this, &ReportManager::onGetReportTemplateListResponse);
+    QObject::connect(m_apiManager, &ApiManager::saveReportTemplateResponse, this, &ReportManager::onSaveReportTemplateResponse);
 }
 
 void ReportManager::refreshTemplate()
@@ -79,4 +80,42 @@ void ReportManager::onGetReportTemplateListResponse(bool success, const QString&
     // 更新属性
     settemplateList(newTemplateList);
     emit templateListChanged();
+}
+
+void ReportManager::saveTemplate(const QString& templateId, const QVariantList& templateData)
+{
+    // 将QVariantList转换为JSON对象
+    QJsonObject templateObject;
+    
+    for (const QVariant& item : templateData) {
+        QVariantMap itemMap = item.toMap();
+        QString key = itemMap.value("key").toString();
+        QString value = itemMap.value("value").toString();
+        
+        if (!key.isEmpty()) {
+            templateObject[key] = value;
+        }
+    }
+    
+    // 将JSON对象转换为字符串
+    QJsonDocument templateDoc(templateObject);
+    QString templateContent = templateDoc.toJson(QJsonDocument::Compact);
+    
+    qDebug() << "[ReportManager] 保存模板 ID:" << templateId << "内容:" << templateContent;
+    
+    // 调用ApiManager的保存方法
+    m_apiManager->saveReportTemplate(templateContent, templateId);
+}
+
+void ReportManager::onSaveReportTemplateResponse(bool success, const QString& message, const QJsonObject& data)
+{
+    if (success) {
+        qDebug() << "[ReportManager] 模板保存成功:" << message;
+        // 保存成功后刷新模板列表
+        refreshTemplate();
+        emit templateSaveResult(true, "模板保存成功");
+    } else {
+        qWarning() << "[ReportManager] 模板保存失败:" << message;
+        emit templateSaveResult(false, message.isEmpty() ? "模板保存失败" : message);
+    }
 }

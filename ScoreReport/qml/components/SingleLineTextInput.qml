@@ -48,7 +48,7 @@ Rectangle {
         color: textColor
         selectByMouse: !readOnly
         
-        placeholderText: singleLineTextInput.placeholderText
+        placeholderText: !readOnly ? singleLineTextInput.placeholderText : ""
         placeholderTextColor: placeholderColor
         
         background: Rectangle {
