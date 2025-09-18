@@ -13,6 +13,8 @@ Rectangle {
     property var originalTemplateData: []
     property var editableTemplateData: []
     property int pendingRemoveIndex: -1
+    property bool isNewTemplate: false
+    property int newTemplateIndex: -1
     signal exitScore()
     function resetValues(){
         tabswitcher.currentIndex = 0
@@ -21,6 +23,8 @@ Rectangle {
         originalTemplateData = []
         editableTemplateData = []
         isEdit = false
+        isNewTemplate = false
+        newTemplateIndex = -1
     }
     
     function updateEditableData() {
@@ -43,9 +47,48 @@ Rectangle {
     }
     
     function restoreOriginalData() {
-        // 取消时直接恢复到原始数据，不需要处理当前输入（我们要丢弃这些修改）
-        editableTemplateData = []  // 先清空以触发绑定更新
-        editableTemplateData = JSON.parse(JSON.stringify(originalTemplateData)) // 深拷贝恢复
+        if (isNewTemplate) {
+            // 如果是新模板，从前端删除它
+            removeNewTemplateFromFrontend()
+        } else {
+            // 取消时直接恢复到原始数据，不需要处理当前输入（我们要丢弃这些修改）
+            editableTemplateData = []  // 先清空以触发绑定更新
+            editableTemplateData = JSON.parse(JSON.stringify(originalTemplateData)) // 深拷贝恢复
+        }
+    }
+    
+    function removeNewTemplateFromFrontend() {
+        // 重新构建模板列表（排除新模板）
+        var templateLists = []
+        for (var i = 0; i < $reportManager.templateList.length; i++) {
+            var template = $reportManager.templateList[i]
+            templateLists.push({
+                value: template.id,
+                text: "模板" + (i + 1),
+                iconUrl: ""
+            })
+        }
+        
+        // 两个下拉框都恢复到原始模板列表
+        chooseTemplate.scoreTypes = templateLists
+        chooseTemplateDetail.scoreTypes = templateLists
+        
+        // 切换到第一个模板（如果有的话）
+        if (templateLists.length > 0) {
+            chooseTemplate.currentIndex = 0
+            chooseTemplateDetail.currentIndex = 0
+            updateEditableData()
+        } else {
+            chooseTemplate.currentIndex = -1
+            chooseTemplateDetail.currentIndex = -1
+            editableTemplateData = []
+        }
+        
+        // 重置新模板状态
+        isNewTemplate = false
+        newTemplateIndex = -1
+        
+        console.log("已删除新模板，切换到索引:", chooseTemplateDetail.currentIndex)
     }
     
     function addNewEntry() {
@@ -78,10 +121,17 @@ Rectangle {
     function doActualSave() {
         // 获取当前选中模板的ID
         var templateId = ""
-        if ($reportManager.templateList.length > 0 && chooseTemplateDetail.currentIndex < $reportManager.templateList.length) {
-            var selectedTemplate = $reportManager.templateList[chooseTemplateDetail.currentIndex]
-            if (selectedTemplate && selectedTemplate.id) {
-                templateId = selectedTemplate.id
+        
+        if (isNewTemplate) {
+            // 新模板不传ID，让后端生成新ID
+            templateId = ""
+        } else {
+            // 现有模板使用原有ID
+            if ($reportManager.templateList.length > 0 && chooseTemplateDetail.currentIndex < $reportManager.templateList.length) {
+                var selectedTemplate = $reportManager.templateList[chooseTemplateDetail.currentIndex]
+                if (selectedTemplate && selectedTemplate.id) {
+                    templateId = selectedTemplate.id
+                }
             }
         }
         
@@ -94,9 +144,15 @@ Rectangle {
         // 退出编辑模式
         isEdit = false
         
-        console.log("正在保存模板数据，ID:", templateId)
+        // 重置新模板状态（保存成功后会在onTemplateSaveResult中处理）
+        console.log("正在保存模板数据，ID:", templateId, "是否新模板:", isNewTemplate)
     }
-    
+    ConfirmDialog {
+        id: confirmDialog
+        onConfirmed: {
+            executeDeleteTemplate()
+        }
+    }
     Timer {
         id: saveTimer
         interval: 50  // 50ms延迟，足够让onEditingFinished触发
@@ -138,6 +194,129 @@ Rectangle {
             pendingRemoveIndex = -1  // 重置索引
         }
     }
+    
+    function createNewTemplate() {
+        // 创建一个新的模板对象
+        var newTemplate = {
+            id: "new_template_" + Date.now(), // 临时ID
+            template: {
+                "词条名1": "词条描述1"  // 默认添加一个词条
+            }
+        }
+        
+        // 将新模板添加到现有模板列表
+        var currentTemplateList = JSON.parse(JSON.stringify($reportManager.templateList))
+        currentTemplateList.push(newTemplate)
+        
+        // 更新下拉框选项
+        var templateLists = []
+        for (var i = 0; i < currentTemplateList.length; i++) {
+            var template = currentTemplateList[i]
+            templateLists.push({
+                value: template.id,
+                text: "模板" + (i + 1),
+                iconUrl: ""
+            })
+        }
+        
+        // 报告页面的下拉框不包含新模板（未保存的模板不应该在报告页面显示）
+        var reportTemplateList = []
+        for (var j = 0; j < $reportManager.templateList.length; j++) {
+            var reportTemplate = $reportManager.templateList[j]
+            reportTemplateList.push({
+                value: reportTemplate.id,
+                text: "模板" + (j + 1),
+                iconUrl: ""
+            })
+        }
+        chooseTemplate.scoreTypes = reportTemplateList
+        
+        // 设置页面的下拉框包含新模板
+        chooseTemplateDetail.scoreTypes = templateLists
+        
+        // 设置新模板状态
+        isNewTemplate = true
+        newTemplateIndex = currentTemplateList.length - 1
+        
+        // 切换到新模板
+        chooseTemplateDetail.currentIndex = newTemplateIndex
+        
+        // 设置编辑模式
+        isEdit = true
+        
+        // 初始化编辑数据（一个默认词条）
+        editableTemplateData = [
+            {
+                key: "词条名1",
+                value: "词条描述1"
+            }
+        ]
+        originalTemplateData = JSON.parse(JSON.stringify(editableTemplateData))
+        
+        console.log("创建新模板，索引:", newTemplateIndex)
+    }
+    
+    function confirmDeleteTemplate() {
+        // 检查是否有选中的模板
+        if ($reportManager.templateList.length === 0 || chooseTemplateDetail.currentIndex < 0) {
+            messageManager.warning("没有可删除的模板")
+            return
+        }
+        
+        var selectedTemplate = $reportManager.templateList[chooseTemplateDetail.currentIndex]
+        if (!selectedTemplate || !selectedTemplate.id) {
+            messageManager.warning("模板信息无效")
+            return
+        }
+        
+        // 配置确认对话框
+        confirmDialog.title = "删除模板"
+        confirmDialog.message = "确定要删除模板" + (chooseTemplateDetail.currentIndex + 1) + "吗？"
+        
+        // 显示确认对话框
+        confirmDialog.show()
+    }
+    
+    function executeDeleteTemplate() {
+        var selectedTemplate = $reportManager.templateList[chooseTemplateDetail.currentIndex]
+        if (selectedTemplate && selectedTemplate.id) {
+            console.log("删除模板，ID:", selectedTemplate.id)
+            $reportManager.deleteTemplate(selectedTemplate.id)
+        }
+    }
+    
+    function handleTemplateIndexAfterDelete() {
+        // 获取删除后的模板列表长度
+        var templateCount = $reportManager.templateList.length
+        
+        if (templateCount === 0) {
+            // 没有模板了
+            chooseTemplate.currentIndex = -1
+            chooseTemplateDetail.currentIndex = -1
+            editableTemplateData = []
+            originalTemplateData = []
+        } else {
+            // 还有模板，智能选择索引
+            var newIndex = 0
+            
+            // 如果当前索引超出范围，选择最后一个
+            if (chooseTemplateDetail.currentIndex >= templateCount) {
+                newIndex = templateCount - 1
+            } else {
+                // 否则保持当前索引（删除后会自动调整到合适位置）
+                newIndex = Math.max(0, Math.min(chooseTemplateDetail.currentIndex, templateCount - 1))
+            }
+            
+            // 同步更新两个下拉框的索引
+            chooseTemplate.currentIndex = newIndex
+            chooseTemplateDetail.currentIndex = newIndex
+            
+            // 更新编辑数据
+            updateEditableData()
+        }
+        
+        console.log("删除后调整索引到:", chooseTemplateDetail.currentIndex, "总模板数:", templateCount)
+    }
     Connections{
         target: $reportManager
         function onTemplateListChanged(){
@@ -150,16 +329,39 @@ Rectangle {
                     iconUrl: ""
                 })
             }
+            
+            // 更新两个下拉框（正常情况下都是相同的模板列表）
             chooseTemplate.scoreTypes = templateLists
             chooseTemplateDetail.scoreTypes = templateLists
-            updateEditableData()
+            
+            // 只有不是新模板状态时才更新数据
+            if (!isNewTemplate) {
+                updateEditableData()
+            }
         }
         
         function onTemplateSaveResult(success, message){
             if (success) {
                 messageManager.success("保存成功！")
+                // 保存成功后重置新模板状态
+                if (isNewTemplate) {
+                    isNewTemplate = false
+                    newTemplateIndex = -1
+                    // 保存成功后，新模板变成正式模板，同步两个下拉框的索引
+                    chooseTemplate.currentIndex = chooseTemplateDetail.currentIndex
+                }
             } else {
                 messageManager.error("保存失败:" + message)
+            }
+        }
+        
+        function onTemplateDeleteResult(success, message){
+            if (success) {
+                messageManager.success("删除成功！")
+                // 删除成功后智能调整索引
+                handleTemplateIndexAfterDelete()
+            } else {
+                messageManager.error("删除失败:" + message)
             }
         }
     }
@@ -178,17 +380,6 @@ Rectangle {
             width: parent.width - reportColumn.leftPadding - reportColumn.rightPadding
             visible: tabswitcher.currentIndex === 0
             spacing: 8
-            Text {
-                font.family: "Alibaba PuHuiTi 3.0"
-                font.weight: Font.Normal
-                font.pixelSize: 16
-                color: "#D9000000"
-                text: "输入报告："
-            }
-            MultiLineTextInput{
-                width: parent.width
-                height: 300
-            }
             Row{
                 height: 29
                 Text {
@@ -203,7 +394,24 @@ Rectangle {
                     id:chooseTemplate
                     anchors.verticalCenter: parent.verticalCenter
                     scoreTypes: []
+                    onCurrentIndexChanged: {
+                        // 在报告页面切换模板时，同步到设置页面（仅在非编辑和非新模板状态下）
+                        if (!isEdit && !isNewTemplate && chooseTemplateDetail.currentIndex !== currentIndex) {
+                            chooseTemplateDetail.currentIndex = currentIndex
+                        }
+                    }
                 }
+            }
+            Text {
+                font.family: "Alibaba PuHuiTi 3.0"
+                font.weight: Font.Normal
+                font.pixelSize: 16
+                color: "#D9000000"
+                text: "输入报告："
+            }
+            MultiLineTextInput{
+                width: parent.width
+                height: 300
             }
         }
         Column{
@@ -236,8 +444,12 @@ Rectangle {
                     enabled: !isEdit
                     scoreTypes: []
                     onCurrentIndexChanged: {
-                        if (!isEdit) {
+                        if (!isEdit && !isNewTemplate) {
                             updateEditableData()
+                            // 同步到报告页面的下拉框
+                            if (chooseTemplate.currentIndex !== currentIndex) {
+                                chooseTemplate.currentIndex = currentIndex
+                            }
                         }
                     }
                 }
@@ -250,12 +462,12 @@ Rectangle {
                     fontSize: 14
                     backgroundColor: "#FF5132"
                     textColor: "#ffffff"
-                    visible: !isEdit
+                    visible: !isEdit && !isNewTemplate && chooseTemplateDetail.currentIndex >= 0
                     anchors.right: parent.right
                     anchors.rightMargin: 16
                     anchors.verticalCenter: parent.verticalCenter
                     onClicked: {
-
+                        confirmDeleteTemplate()
                     }
                 }
                 CustomButton{
@@ -271,7 +483,7 @@ Rectangle {
                     anchors.rightMargin: 8
                     anchors.verticalCenter: parent.verticalCenter
                     onClicked: {
-
+                        createNewTemplate()
                     }
                 }
             }

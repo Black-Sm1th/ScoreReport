@@ -14,12 +14,15 @@ class ReportManager : public QObject
         
 signals:
     void templateSaveResult(bool success, const QString& message);
+    void templateDeleteResult(bool success, const QString& message);
 public:
     Q_INVOKABLE void refreshTemplate();
     Q_INVOKABLE void saveTemplate(const QString& templateId, const QVariantList& templateData);
+    Q_INVOKABLE void deleteTemplate(const QString& templateId);
 public slots:
     void onGetReportTemplateListResponse(bool success, const QString& message, const QJsonObject& data);
     void onSaveReportTemplateResponse(bool success, const QString& message, const QJsonObject& data);
+    void onDeleteReportTemplateResponse(bool success, const QString& message, const QJsonObject& data);
 private:
     ApiManager* m_apiManager;
 };

@@ -11,6 +11,7 @@ ReportManager::ReportManager(QObject *parent)
     m_apiManager = GET_SINGLETON(ApiManager);
     QObject::connect(m_apiManager, &ApiManager::getReportTemplateListResponse, this, &ReportManager::onGetReportTemplateListResponse);
     QObject::connect(m_apiManager, &ApiManager::saveReportTemplateResponse, this, &ReportManager::onSaveReportTemplateResponse);
+    QObject::connect(m_apiManager, &ApiManager::deleteReportTemplateResponse, this, &ReportManager::onDeleteReportTemplateResponse);
 }
 
 void ReportManager::refreshTemplate()
@@ -117,5 +118,32 @@ void ReportManager::onSaveReportTemplateResponse(bool success, const QString& me
     } else {
         qWarning() << "[ReportManager] 模板保存失败:" << message;
         emit templateSaveResult(false, message.isEmpty() ? "模板保存失败" : message);
+    }
+}
+
+void ReportManager::deleteTemplate(const QString& templateId)
+{
+    if (templateId.isEmpty()) {
+        qWarning() << "[ReportManager] 模板ID为空，无法删除";
+        emit templateDeleteResult(false, "模板ID无效");
+        return;
+    }
+    
+    qDebug() << "[ReportManager] 正在删除模板，ID:" << templateId;
+    
+    // 调用ApiManager的删除方法
+    m_apiManager->deleteReportTemplate(templateId);
+}
+
+void ReportManager::onDeleteReportTemplateResponse(bool success, const QString& message, const QJsonObject& data)
+{
+    if (success) {
+        qDebug() << "[ReportManager] 模板删除成功:" << message;
+        // 删除成功后刷新模板列表
+        refreshTemplate();
+        emit templateDeleteResult(true, "模板删除成功");
+    } else {
+        qWarning() << "[ReportManager] 模板删除失败:" << message;
+        emit templateDeleteResult(false, message.isEmpty() ? "模板删除失败" : message);
     }
 }
