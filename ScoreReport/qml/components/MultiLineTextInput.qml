@@ -27,7 +27,7 @@ Rectangle {
     
     // 背景样式
     color: backgroundColor
-    border.color: textArea.activeFocus ? focusedBorderColor : borderColor
+    border.color: textArea.activeFocus && !readOnly ? focusedBorderColor : borderColor
     border.width: borderWidth
     radius: inputRadius
     

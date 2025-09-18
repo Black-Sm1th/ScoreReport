@@ -953,7 +953,7 @@ ApplicationWindow {
                     font.pixelSize: 16
                     font.weight: Font.Medium
                     color: "#D9000000"
-                    text: qsTr("请选择评分方式")
+                    text: qsTr("看看我能帮您做哪些吧？")
                 }
 
                 // 按钮组
@@ -1710,6 +1710,7 @@ ApplicationWindow {
         color: "transparent"
         opacity: 0
         property bool isLeft: false
+        property bool isFirst: true
         // 应用启动完成后启动帮助定时器
         Component.onCompleted: {
             helpBubble.showBubble()
@@ -1762,11 +1763,12 @@ ApplicationWindow {
         // 帮助提示定时器 - 每30秒弹出一次
         Timer {
             id: helpBubbleTimer
-            interval: 120000  // 2分钟
+            interval: helpBubble.isFirst ? 20000 : 120000  // 2分钟
             repeat: false
             onTriggered: {
                 // 只有在没有其他对话框显示时才显示帮助气泡
                 if (!scoreDialog.visible && !scoringMethodDialog.visible && !contextMenu.visible && !chatWindow.visible) {
+                    helpBubble.isFirst = false
                     helpBubble.showBubble()
                 }
             }

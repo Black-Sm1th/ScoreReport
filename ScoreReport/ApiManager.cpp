@@ -349,17 +349,17 @@ void ApiManager::deleteReportTemplate(const QString& templateId)
 /**
  * @brief 生成质控报告接口实现
  * @param query 查询文本
- * @param templateId 模板ID
+ * @param templateContent 模板内容（JSON字符串）
  * @param language 语言设置（zh或en）
  * 
  * 发送生成质控报告请求到服务器的 /report/template/generateReport 端点。
  * 请求类型标记为 "generate-quality-report"，结果会通过 generateQualityReportResponse 信号返回。
  */
-void ApiManager::generateQualityReport(const QString& query, const QString& templateId, const QString& language)
+void ApiManager::generateQualityReport(const QString& query, const QString& templateContent, const QString& language)
 {
     QJsonObject requestData;
     requestData["query"] = query;
-    requestData["template"] = templateId;
+    requestData["template"] = templateContent;
     requestData["language"] = language;
     
     makePostRequest("/report/template/generateReport", requestData, "generate-quality-report");

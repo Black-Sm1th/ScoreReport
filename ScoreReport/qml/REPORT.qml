@@ -15,6 +15,8 @@ Rectangle {
     property int pendingRemoveIndex: -1
     property bool isNewTemplate: false
     property int newTemplateIndex: -1
+    property bool isGenerating: false
+    property int dotCount: 1
     signal exitScore()
     function resetValues(){
         tabswitcher.currentIndex = 0
@@ -25,6 +27,9 @@ Rectangle {
         isEdit = false
         isNewTemplate = false
         newTemplateIndex = -1
+        isGenerating = false
+        reportInput.text = ""
+        reportView.forceActiveFocus()
     }
     
     function updateEditableData() {
@@ -87,8 +92,6 @@ Rectangle {
         // 重置新模板状态
         isNewTemplate = false
         newTemplateIndex = -1
-        
-        console.log("已删除新模板，切换到索引:", chooseTemplateDetail.currentIndex)
     }
     
     function addNewEntry() {
@@ -145,7 +148,6 @@ Rectangle {
         isEdit = false
         
         // 重置新模板状态（保存成功后会在onTemplateSaveResult中处理）
-        console.log("正在保存模板数据，ID:", templateId, "是否新模板:", isNewTemplate)
     }
     ConfirmDialog {
         id: confirmDialog
@@ -252,8 +254,6 @@ Rectangle {
             }
         ]
         originalTemplateData = JSON.parse(JSON.stringify(editableTemplateData))
-        
-        console.log("创建新模板，索引:", newTemplateIndex)
     }
     
     function confirmDeleteTemplate() {
@@ -280,9 +280,43 @@ Rectangle {
     function executeDeleteTemplate() {
         var selectedTemplate = $reportManager.templateList[chooseTemplateDetail.currentIndex]
         if (selectedTemplate && selectedTemplate.id) {
-            console.log("删除模板，ID:", selectedTemplate.id)
             $reportManager.deleteTemplate(selectedTemplate.id)
         }
+    }
+    
+    function generateStructuredReport() {
+        // 获取输入的报告内容
+        var query = reportInput.text.trim()
+        if (query === "") {
+            messageManager.warning("请输入报告内容")
+            return
+        }
+        
+        // 检查是否选择了模板
+        if (chooseTemplate.currentIndex < 0 || $reportManager.templateList.length === 0) {
+            messageManager.warning("请选择一个模板")
+            return
+        }
+        
+        // 获取当前选择的模板数据
+        var selectedTemplate = $reportManager.templateList[chooseTemplate.currentIndex]
+        if (!selectedTemplate || !selectedTemplate.template) {
+            messageManager.warning("模板数据无效")
+            return
+        }
+        
+        // 将模板转换为QVariantList格式
+        var templateData = []
+        var templateContent = selectedTemplate.template
+        for (var key in templateContent) {
+            templateData.push({
+                key: key,
+                value: templateContent[key] || ""
+            })
+        }
+        // 调用C++生成报告方法
+        isGenerating = true
+        $reportManager.generateReport(query, templateData)
     }
     
     function handleTemplateIndexAfterDelete() {
@@ -314,9 +348,27 @@ Rectangle {
             // 更新编辑数据
             updateEditableData()
         }
-        
-        console.log("删除后调整索引到:", chooseTemplateDetail.currentIndex, "总模板数:", templateCount)
     }
+
+    Timer {
+        id: dotTimer
+        interval: 500  // 每500ms切换一次
+        running: isGenerating
+        repeat: true
+        onTriggered: {
+            dotCount = (dotCount % 3) + 1
+        }
+    }
+
+    // 生成省略号文本的函数
+    function getDots() {
+        var dots = ""
+        for (var i = 0; i < dotCount; i++) {
+            dots += "."
+        }
+        return dots
+    }
+
     Connections{
         target: $reportManager
         function onTemplateListChanged(){
@@ -364,6 +416,11 @@ Rectangle {
                 messageManager.error("删除失败:" + message)
             }
         }
+        
+        function onReportGenerateResult(success, message, data){
+            console.log(data)
+            isGenerating = false
+        }
     }
     Column{
         id: reportColumn
@@ -394,6 +451,7 @@ Rectangle {
                     id:chooseTemplate
                     anchors.verticalCenter: parent.verticalCenter
                     scoreTypes: []
+                    enabled: !isGenerating
                     onCurrentIndexChanged: {
                         // 在报告页面切换模板时，同步到设置页面（仅在非编辑和非新模板状态下）
                         if (!isEdit && !isNewTemplate && chooseTemplateDetail.currentIndex !== currentIndex) {
@@ -402,16 +460,21 @@ Rectangle {
                     }
                 }
             }
+
+
             Text {
                 font.family: "Alibaba PuHuiTi 3.0"
-                font.weight: Font.Normal
+                font.weight: isGenerating ? Font.Bold : Font.Normal
                 font.pixelSize: 16
                 color: "#D9000000"
-                text: "输入报告："
+                text: !isGenerating ? "请输入报告：" : "生成中" + getDots()
             }
             MultiLineTextInput{
+                id: reportInput
                 width: parent.width
                 height: 300
+                readOnly: isGenerating
+                placeholderText: "请输入您的报告内容..."
             }
         }
         Column{
@@ -620,6 +683,7 @@ Rectangle {
                 backgroundColor: "#1A006BFF"
                 textColor: "#006BFF"
                 onClicked: {
+                    $reportManager.endAnalysis()
                     resetValues()
                     exitScore()
                 }
@@ -630,16 +694,38 @@ Rectangle {
                 anchors.rightMargin: 24
                 text: qsTr("发送")
                 width: 88
-                visible: tabswitcher.currentIndex === 0
+                visible: tabswitcher.currentIndex === 0 && !isGenerating
+                enabled: chooseTemplate.currentIndex >= 0 && $reportManager.templateList.length > 0
                 height: 36
                 radius: 4
                 fontSize: 14
                 borderWidth: 0
-                backgroundColor: "#006BFF"
+                backgroundColor: enabled ? "#006BFF" : "#CCCCCC"
                 onClicked: {
-
+                    reportView.forceActiveFocus()
+                    generateStructuredReport()
                 }
             }
+
+            CustomButton {
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.right: parent.right
+                anchors.rightMargin: 24
+                text: qsTr("取消")
+                width: 88
+                visible: tabswitcher.currentIndex === 0 && isGenerating
+                enabled: chooseTemplate.currentIndex >= 0 && $reportManager.templateList.length > 0
+                height: 36
+                radius: 4
+                fontSize: 14
+                borderWidth: 0
+                backgroundColor: enabled ? "#006BFF" : "#CCCCCC"
+                onClicked: {
+                    $reportManager.endAnalysis()
+                    isGenerating = false
+                }
+            }
+
             CustomButton {
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.right: parent.right

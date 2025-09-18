@@ -84,17 +84,17 @@ Rectangle {
                     anchors.verticalCenter: parent.verticalCenter
                     
                     ScoreOptionCard {
-                        title: "TNM"
+                        title: "实体瘤分期(TNM)"
                         backgroundColor: "#FFFAF8"
                         iconUrl: "qrc:/image/TNM.png"
                     }
                     ScoreOptionCard {
-                        title: "CHAT"
+                        title: "影像知识库问答"
                         backgroundColor: "#F8FAFF"
                         iconUrl: "qrc:/image/CHAT.png"
                     }
                     ScoreOptionCard {
-                        title: "Report"
+                        title: "结构化管家"
                         backgroundColor: "#F8FAFF"
                         iconUrl: "qrc:/image/BIOSNAK.png"
                     }
@@ -199,7 +199,7 @@ Rectangle {
             onClicked: {
                 if(title === "CCLS"){
                     currentPageChanged(1)
-                }else if(title === "TNM"){
+                }else if(title === "TNM" || title === "实体瘤分期(TNM)"){
                     if($tnmManager.checkClipboard()){
                         currentPageChanged(2) // TNM页面索引
                         $tnmManager.startAnalysis()
@@ -214,7 +214,7 @@ Rectangle {
                         messageManager.warning(qsTr("剪贴板为空，请先复制内容"))
                     }
                 }
-                else if(title === "CHAT"){
+                else if(title === "影像知识库问答"){
                     currentPageChanged(6)
                 }
                 else if(title === "UCLS MRS"){
@@ -223,7 +223,7 @@ Rectangle {
                 else if(title === "UCLS CTS"){
                     currentPageChanged(4)
                 }
-                else if(title === "Report"){
+                else if(title === "结构化管家"){
                     $reportManager.refreshTemplate()
                     currentPageChanged(7)
                 }

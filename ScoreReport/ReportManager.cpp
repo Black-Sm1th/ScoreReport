@@ -9,9 +9,11 @@ ReportManager::ReportManager(QObject *parent)
 {
     settemplateList(QVariantList());
     m_apiManager = GET_SINGLETON(ApiManager);
+    m_languageManager = GET_SINGLETON(LanguageManager);
     QObject::connect(m_apiManager, &ApiManager::getReportTemplateListResponse, this, &ReportManager::onGetReportTemplateListResponse);
     QObject::connect(m_apiManager, &ApiManager::saveReportTemplateResponse, this, &ReportManager::onSaveReportTemplateResponse);
     QObject::connect(m_apiManager, &ApiManager::deleteReportTemplateResponse, this, &ReportManager::onDeleteReportTemplateResponse);
+    QObject::connect(m_apiManager, &ApiManager::generateQualityReportResponse, this, &ReportManager::onGenerateQualityReportResponse);
 }
 
 void ReportManager::refreshTemplate()
@@ -145,5 +147,49 @@ void ReportManager::onDeleteReportTemplateResponse(bool success, const QString& 
     } else {
         qWarning() << "[ReportManager] 模板删除失败:" << message;
         emit templateDeleteResult(false, message.isEmpty() ? "模板删除失败" : message);
+    }
+}
+
+void ReportManager::generateReport(const QString& query, const QVariantList& templateData)
+{
+    if (query.isEmpty()) {
+        qWarning() << "[ReportManager] 查询内容为空，无法生成报告";
+        emit reportGenerateResult(false, "查询内容不能为空", QJsonObject());
+        return;
+    }
+    
+    // 将QVariantList转换为JSON对象
+    QJsonObject templateObject;
+    
+    for (const QVariant& item : templateData) {
+        QVariantMap itemMap = item.toMap();
+        QString key = itemMap.value("key").toString();
+        QString value = itemMap.value("value").toString();
+        
+        if (!key.isEmpty()) {
+            templateObject[key] = value;
+        }
+    }
+    
+    // 将JSON对象转换为字符串
+    QJsonDocument templateDoc(templateObject);
+    QString templateContent = templateDoc.toJson(QJsonDocument::Compact);
+    
+    // 调用ApiManager的生成报告方法
+    m_apiManager->generateQualityReport(query, templateContent, m_languageManager->currentLanguage());
+}
+
+void ReportManager::endAnalysis() {
+    m_apiManager->abortRequestsByType("generate-quality-report");
+}
+
+void ReportManager::onGenerateQualityReportResponse(bool success, const QString& message, const QJsonObject& data)
+{
+    if (success) {
+        qDebug() << "[ReportManager] 报告生成成功:" << message;
+        emit reportGenerateResult(true, "报告生成成功", data);
+    } else {
+        qWarning() << "[ReportManager] 报告生成失败:" << message;
+        emit reportGenerateResult(false, message.isEmpty() ? "报告生成失败" : message, QJsonObject());
     }
 }

@@ -148,12 +148,12 @@ public:
     /**
      * @brief 生成质控报告
      * @param query 查询文本
-     * @param templateId 模板ID
+     * @param templateContent 模板内容（JSON字符串）
      * @param language 语言设置（zh或en）
      * 
      * 发送生成质控报告请求到服务器，结果通过 generateQualityReportResponse 信号返回
      */
-    void generateQualityReport(const QString& query, const QString& templateId, const QString& language);
+    void generateQualityReport(const QString& query, const QString& templateContent, const QString& language);
     
     /**
      * @brief 获取用户创建的模板列表
