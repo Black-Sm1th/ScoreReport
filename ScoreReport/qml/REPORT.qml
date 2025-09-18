@@ -17,6 +17,7 @@ Rectangle {
     property int newTemplateIndex: -1
     property bool isGenerating: false
     property int dotCount: 1
+    property bool isShowResult: false
     signal exitScore()
     function resetValues(){
         tabswitcher.currentIndex = 0
@@ -26,6 +27,7 @@ Rectangle {
         editableTemplateData = []
         isEdit = false
         isNewTemplate = false
+        isShowResult = false
         newTemplateIndex = -1
         isGenerating = false
         reportInput.text = ""
@@ -417,8 +419,14 @@ Rectangle {
             }
         }
         
-        function onReportGenerateResult(success, message, data){
-            console.log(data)
+        function onReportGenerateResult(success){
+            if(success){
+                reportInput.text = ""
+                isShowResult = true
+            }else{
+                messageManager.error("生成报告失败！")
+                isShowResult = false
+            }
             isGenerating = false
         }
     }
@@ -435,7 +443,7 @@ Rectangle {
         }
         Column {
             width: parent.width - reportColumn.leftPadding - reportColumn.rightPadding
-            visible: tabswitcher.currentIndex === 0
+            visible: tabswitcher.currentIndex === 0 && !isShowResult
             spacing: 8
             Row{
                 height: 29
@@ -477,6 +485,101 @@ Rectangle {
                 placeholderText: "请输入您的报告内容..."
             }
         }
+
+        Column {
+            width: parent.width - reportColumn.leftPadding - reportColumn.rightPadding
+            visible: tabswitcher.currentIndex === 0 && isShowResult
+            height: 630
+            spacing: 8
+            Text {
+                id:resultText
+                font.family: "Alibaba PuHuiTi 3.0"
+                font.weight: Font.Bold
+                font.pixelSize: 16
+                color: "#D9000000"
+                text: "结构化报告结果:"
+            }
+            Rectangle{
+                width: parent.width
+                height: parent.height - 8 - resultText.height
+                color: "#F5F5F5"
+                radius: 12
+                ScrollView {
+                    clip: true
+                    ScrollBar.vertical.policy: ScrollBar.AsNeeded
+                    anchors.fill: parent
+                    Column {
+                        id: rangeResultCol
+                        spacing: 16
+                        width: parent.width
+                        padding: 16
+                        Repeater {
+                            model: {
+                                var items = []
+                                if ($reportManager.resultMap && typeof $reportManager.resultMap === 'object') {
+                                    for (var key in $reportManager.resultMap) {
+                                        if ($reportManager.resultMap.hasOwnProperty(key)) {
+                                            items.push({
+                                                key: key,
+                                                value: $reportManager.resultMap[key] || ""
+                                            })
+                                        }
+                                    }
+                                }
+                                return items
+                            }
+                            
+                            delegate: Row {
+                                height: resultCol.height
+                                spacing: 16
+                                Column{
+                                    id:resultCol
+                                    width: 364
+                                    spacing: 8
+                                    Text {
+                                        font.family: "Alibaba PuHuiTi 3.0"
+                                        font.weight: Font.Normal
+                                        font.pixelSize: 16
+                                        color: "#D9000000"
+                                        text: modelData.key + ":"
+                                    }
+                                    MultiLineTextInput{
+                                        width: parent.width
+                                        height: 80
+                                        backgroundColor: "#ffffff"
+                                        readOnly: true
+                                        placeholderText: ""
+                                        text: (modelData.value && modelData.value.toString().trim() !== "") ? modelData.value.toString() : "无内容"
+                                    }
+                                }
+                                CustomButton {
+                                    id: copyBtn
+                                    text: "复制"
+                                    width: 60
+                                    height: 28
+                                    fontSize: 14
+                                    borderWidth: 0
+                                    anchors.bottom: parent.bottom
+                                    radius: 4
+                                    backgroundColor: "#006BFF"
+                                    onClicked: {
+                                        var valueToProcess = modelData.value
+                                        if (valueToProcess === null || valueToProcess === undefined) {
+                                            valueToProcess = ""
+                                        } else {
+                                            valueToProcess = valueToProcess.toString()
+                                        }
+                                        $reportManager.copyToClipboard(valueToProcess)
+                                        messageManager.success("已复制")
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         Column{
             width: parent.width - reportColumn.leftPadding - reportColumn.rightPadding
             height: 630
@@ -694,7 +797,7 @@ Rectangle {
                 anchors.rightMargin: 24
                 text: qsTr("发送")
                 width: 88
-                visible: tabswitcher.currentIndex === 0 && !isGenerating
+                visible: tabswitcher.currentIndex === 0 && !isGenerating && !isShowResult
                 enabled: chooseTemplate.currentIndex >= 0 && $reportManager.templateList.length > 0
                 height: 36
                 radius: 4
@@ -713,16 +816,56 @@ Rectangle {
                 anchors.rightMargin: 24
                 text: qsTr("取消")
                 width: 88
-                visible: tabswitcher.currentIndex === 0 && isGenerating
-                enabled: chooseTemplate.currentIndex >= 0 && $reportManager.templateList.length > 0
+                visible: tabswitcher.currentIndex === 0 && isGenerating && !isShowResult
                 height: 36
                 radius: 4
                 fontSize: 14
                 borderWidth: 0
-                backgroundColor: enabled ? "#006BFF" : "#CCCCCC"
+                backgroundColor: "#006BFF"
                 onClicked: {
                     $reportManager.endAnalysis()
                     isGenerating = false
+                }
+            }
+
+            CustomButton {
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.right: copyAll.left
+                anchors.rightMargin: 12
+                text: qsTr("返回")
+                width: 88
+                visible: tabswitcher.currentIndex === 0 && !isGenerating && isShowResult
+                height: 36
+                radius: 4
+                fontSize: 14
+                borderWidth: 0
+                backgroundColor: "#006BFF"
+                onClicked: {
+                    isShowResult = false
+                }
+            }
+
+            CustomButton {
+                id: copyAll
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.right: parent.right
+                anchors.rightMargin: 24
+                text: qsTr("复制全部")
+                width: 88
+                visible: tabswitcher.currentIndex === 0 && !isGenerating && isShowResult
+                height: 36
+                radius: 4
+                fontSize: 14
+                borderWidth: 0
+                backgroundColor: "#006BFF"
+                onClicked: {
+                    var string = ""
+                    for (var key in $reportManager.resultMap) {
+                        if ($reportManager.resultMap.hasOwnProperty(key)) {
+                            string += (key + "：\n" + $reportManager.resultMap[key] + "\n")
+                        }
+                    }
+                    $reportManager.copyToClipboard(string)
                 }
             }
 

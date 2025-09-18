@@ -3,11 +3,13 @@
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QDebug>
-
+#include <QClipboard>
+#include <QGuiApplication>
 ReportManager::ReportManager(QObject *parent)
     : QObject(parent) 
 {
     settemplateList(QVariantList());
+    setresultMap(QVariantMap());
     m_apiManager = GET_SINGLETON(ApiManager);
     m_languageManager = GET_SINGLETON(LanguageManager);
     QObject::connect(m_apiManager, &ApiManager::getReportTemplateListResponse, this, &ReportManager::onGetReportTemplateListResponse);
@@ -151,13 +153,7 @@ void ReportManager::onDeleteReportTemplateResponse(bool success, const QString& 
 }
 
 void ReportManager::generateReport(const QString& query, const QVariantList& templateData)
-{
-    if (query.isEmpty()) {
-        qWarning() << "[ReportManager] 查询内容为空，无法生成报告";
-        emit reportGenerateResult(false, "查询内容不能为空", QJsonObject());
-        return;
-    }
-    
+{   
     // 将QVariantList转换为JSON对象
     QJsonObject templateObject;
     
@@ -185,11 +181,52 @@ void ReportManager::endAnalysis() {
 
 void ReportManager::onGenerateQualityReportResponse(bool success, const QString& message, const QJsonObject& data)
 {
-    if (success) {
-        qDebug() << "[ReportManager] 报告生成成功:" << message;
-        emit reportGenerateResult(true, "报告生成成功", data);
+    if (success) {     
+        // 检查是否包含report字段
+        if (data.contains("report")) {
+            QJsonValue reportValue = data["report"];
+            
+            // 将report JSON转换为QVariantMap
+            QVariantMap reportMap;
+            
+            if (reportValue.isObject()) {
+                // 如果report是JSON对象，直接转换
+                QJsonObject reportObj = reportValue.toObject();
+                for (auto it = reportObj.begin(); it != reportObj.end(); ++it) {
+                    reportMap[it.key()] = it.value().toVariant();
+                }
+            } else if (reportValue.isString()) {
+                // 如果report是JSON字符串，先解析再转换
+                QString reportString = reportValue.toString();
+                QJsonParseError parseError;
+                QJsonDocument reportDoc = QJsonDocument::fromJson(reportString.toUtf8(), &parseError);
+                
+                if (parseError.error == QJsonParseError::NoError && reportDoc.isObject()) {
+                    QJsonObject reportObj = reportDoc.object();
+                    for (auto it = reportObj.begin(); it != reportObj.end(); ++it) {
+                        reportMap[it.key()] = it.value().toVariant();
+                    }
+                } else {
+                    qWarning() << "[ReportManager] 解析report JSON字符串失败:" << parseError.errorString();
+                }
+            }
+            
+            // 设置resultMap属性
+            setresultMap(reportMap);
+            qDebug() << reportMap;
+            emit reportGenerateResult(true);
+        } else {
+            qWarning() << "[ReportManager] 响应中没有report字段:" << data;
+            emit reportGenerateResult(false);
+        }
     } else {
         qWarning() << "[ReportManager] 报告生成失败:" << message;
-        emit reportGenerateResult(false, message.isEmpty() ? "报告生成失败" : message, QJsonObject());
+        emit reportGenerateResult(false);
     }
+}
+
+void ReportManager::copyToClipboard(const QString& content)
+{
+    QClipboard* clipboard = QGuiApplication::clipboard();
+    clipboard->setText(content);
 }
