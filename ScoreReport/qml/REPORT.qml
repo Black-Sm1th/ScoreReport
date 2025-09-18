@@ -479,8 +479,8 @@ Rectangle {
             }
             MultiLineTextInput{
                 id: reportInput
-                width: parent.width
-                height: 300
+                inputWidth: parent.width
+                inputHeight: 300
                 readOnly: isGenerating
                 placeholderText: "请输入您的报告内容..."
             }
@@ -544,8 +544,8 @@ Rectangle {
                                         text: modelData.key + ":"
                                     }
                                     MultiLineTextInput{
-                                        width: parent.width
-                                        height: 80
+                                        inputWidth: parent.width
+                                        inputHeight: 80
                                         backgroundColor: "#ffffff"
                                         readOnly: true
                                         placeholderText: ""

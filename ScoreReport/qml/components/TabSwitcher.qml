@@ -8,7 +8,7 @@ Rectangle {
     color: "#0A000000"
     radius: 8
     
-    property int currentIndex: 1
+    property int currentIndex: 0
     property var tabTitles: ["通用", "肾"]
     
     signal tabChanged(int index)

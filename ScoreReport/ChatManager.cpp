@@ -621,7 +621,7 @@ QString ChatManager::readWordDocumentWithPowerShell(const QString& filePath, con
     process.waitForFinished(POWERSHELL_TIMEOUT);
     
     if (process.exitCode() == 0) {
-        QString content = QString::fromLocal8Bit(process.readAllStandardOutput()).trimmed();
+        QString content = QString::fromUtf8(process.readAllStandardOutput()).trimmed();
         if (!content.isEmpty()) {
             return content;
         }
@@ -787,7 +787,7 @@ QString FileReaderThread::readWordFileWithProgress(const QString& filePath, cons
     emitProgress(90);
     
     if (process.exitCode() == 0) {
-        QString content = QString::fromLocal8Bit(process.readAllStandardOutput()).trimmed();
+        QString content = QString::fromUtf8(process.readAllStandardOutput()).trimmed();
         if (!content.isEmpty()) {
             return content;
         }
@@ -1086,8 +1086,8 @@ int ChatManager::cleanupHangingWordProcesses()
     
     // 等待最多10秒完成清理
     if (process.waitForFinished(10000)) {
-        QString output = QString::fromLocal8Bit(process.readAllStandardOutput());
-        QString errorOutput = QString::fromLocal8Bit(process.readAllStandardError());
+        QString output = QString::fromUtf8(process.readAllStandardOutput());
+        QString errorOutput = QString::fromUtf8(process.readAllStandardError());
         
         if (!output.trimmed().isEmpty()) {
             qDebug() << "[ChatManager] Word cleanup output:" << output;

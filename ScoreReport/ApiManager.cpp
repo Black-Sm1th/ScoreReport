@@ -69,7 +69,7 @@ void ApiManager::makePostRequest(const QString& endpoint, const QJsonObject& dat
     }
     
     QByteArray body = QJsonDocument(data).toJson(QJsonDocument::Indented);
-    qDebug().noquote() << "[ApiManager] POST request body:" << QString::fromLocal8Bit(body);
+    qDebug().noquote() << "[ApiManager] POST request body:" << QString::fromUtf8(body);
     
     QNetworkReply* reply = m_networkManager->post(request, body);
     m_activeReplies.insert(reply);  // 跟踪活跃的请求
@@ -196,7 +196,7 @@ void ApiManager::streamChat(const QString& query, const QString& userId, const Q
     request.setRawHeader("X-Request-Type", "stream-chat");
     
     QByteArray body = QJsonDocument(requestData).toJson(QJsonDocument::Indented);
-    qDebug().noquote() << "[ApiManager] Stream chat request body:" << QString::fromLocal8Bit(body);
+    qDebug().noquote() << "[ApiManager] Stream chat request body:" << QString::fromUtf8(body);
     
     QNetworkReply* reply = m_networkManager->post(request, body);
     m_activeReplies.insert(reply);
@@ -522,7 +522,7 @@ void ApiManager::onNetworkReply(QNetworkReply* reply)
     if (reply->error() == QNetworkReply::NoError) {
         // 网络请求成功，解析响应数据
         QByteArray responseData = reply->readAll();
-        qDebug().noquote() << "[ApiManager] Response data:" << QString::fromLocal8Bit(responseData);
+        qDebug().noquote() << "[ApiManager] Response data:" << QString::fromUtf8(responseData);
         
         // 对于流式聊天请求，特殊处理
         if (requestType == "stream-chat") {
