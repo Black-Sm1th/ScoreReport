@@ -365,7 +365,6 @@ void LoginManager::processScreenshotArea(int x, int y, int width, int height)
 
 void LoginManager::changeMouseStatus(bool type)
 {
-    qDebug() << "type:" << type;
     if (!type) {
         m_mouseListener->stop();
     }
