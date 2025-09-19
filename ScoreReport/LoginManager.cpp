@@ -1,6 +1,5 @@
 ﻿#include "LoginManager.h"
 #include "ApiManager.h"
-#include "OCRHelper.h"
 #include <QClipboard>
 #include <QGuiApplication>
 #include <QScreen>

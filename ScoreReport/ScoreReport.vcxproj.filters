@@ -91,9 +91,6 @@
     <QtMoc Include="GlobalMouseListener.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="OCRHelper.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
     <QtMoc Include="ReportManager.h">
       <Filter>Header Files</Filter>
     </QtMoc>
@@ -120,9 +117,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="GlobalMouseListener.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="OCRHelper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ReportManager.cpp">
