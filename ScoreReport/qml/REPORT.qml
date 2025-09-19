@@ -18,6 +18,7 @@ Rectangle {
     property bool isGenerating: false
     property int dotCount: 1
     property bool isShowResult: false
+    property string currentTemplateName: ""
     signal exitScore()
     function resetValues(){
         tabswitcher.currentIndex = 0
@@ -30,12 +31,15 @@ Rectangle {
         isShowResult = false
         newTemplateIndex = -1
         isGenerating = false
+        currentTemplateName = ""
         reportInput.text = ""
         reportView.forceActiveFocus()
     }
     
     function updateEditableData() {
         var items = []
+        currentTemplateName = ""
+        
         if ($reportManager.templateList.length > 0 && chooseTemplateDetail.currentIndex < $reportManager.templateList.length) {
             var selectedTemplate = $reportManager.templateList[chooseTemplateDetail.currentIndex]
             if (selectedTemplate && selectedTemplate.template) {
@@ -46,6 +50,8 @@ Rectangle {
                         value: templateData[key] || ""
                     })
                 }
+                // 设置当前模板名称
+                currentTemplateName = selectedTemplate.templateName || ""
             }
         }
         editableTemplateData = []  // 先清空以触发绑定更新
@@ -61,7 +67,16 @@ Rectangle {
             // 取消时直接恢复到原始数据，不需要处理当前输入（我们要丢弃这些修改）
             editableTemplateData = []  // 先清空以触发绑定更新
             editableTemplateData = JSON.parse(JSON.stringify(originalTemplateData)) // 深拷贝恢复
+            
+            // 还原模板名称
+            if ($reportManager.templateList.length > 0 && chooseTemplateDetail.currentIndex < $reportManager.templateList.length) {
+                var selectedTemplate = $reportManager.templateList[chooseTemplateDetail.currentIndex]
+                if (selectedTemplate) {
+                    currentTemplateName = selectedTemplate.templateName || ""
+                }
+            }
         }
+        isEdit = false
     }
     
     function removeNewTemplateFromFrontend() {
@@ -71,10 +86,14 @@ Rectangle {
             var template = $reportManager.templateList[i]
             templateLists.push({
                 value: template.id,
-                text: "模板" + (i + 1),
+                text: template.templateName,
                 iconUrl: ""
             })
         }
+        
+        // 先重置索引避免越界
+        chooseTemplate.currentIndex = -1
+        chooseTemplateDetail.currentIndex = -1
         
         // 两个下拉框都恢复到原始模板列表
         chooseTemplate.scoreTypes = templateLists
@@ -86,8 +105,6 @@ Rectangle {
             chooseTemplateDetail.currentIndex = 0
             updateEditableData()
         } else {
-            chooseTemplate.currentIndex = -1
-            chooseTemplateDetail.currentIndex = -1
             editableTemplateData = []
         }
         
@@ -140,8 +157,15 @@ Rectangle {
             }
         }
         
+        // 验证模板名称不能为空
+        var templateName = currentTemplateName.trim()
+        if (templateName === "") {
+            messageManager.warning("模板名称不能为空")
+            return
+        }
+        
         // 调用C++的保存方法
-        $reportManager.saveTemplate(templateId, editableTemplateData)
+        $reportManager.saveTemplate(templateId, templateName, editableTemplateData)
         
         // 更新原始数据为当前编辑的数据
         originalTemplateData = JSON.parse(JSON.stringify(editableTemplateData))
@@ -203,10 +227,14 @@ Rectangle {
         // 创建一个新的模板对象
         var newTemplate = {
             id: "new_template_" + Date.now(), // 临时ID
+            templateName: "", // 默认模板名称
             template: {
                 "词条名1": "词条描述1"  // 默认添加一个词条
             }
         }
+        
+        // 设置当前模板名称
+        currentTemplateName = ""
         
         // 将新模板添加到现有模板列表
         var currentTemplateList = JSON.parse(JSON.stringify($reportManager.templateList))
@@ -218,7 +246,7 @@ Rectangle {
             var template = currentTemplateList[i]
             templateLists.push({
                 value: template.id,
-                text: "模板" + (i + 1),
+                text: template.templateName,
                 iconUrl: ""
             })
         }
@@ -229,21 +257,26 @@ Rectangle {
             var reportTemplate = $reportManager.templateList[j]
             reportTemplateList.push({
                 value: reportTemplate.id,
-                text: "模板" + (j + 1),
+                text: reportTemplate.templateName,
                 iconUrl: ""
             })
         }
-        chooseTemplate.scoreTypes = reportTemplateList
-        
-        // 设置页面的下拉框包含新模板
-        chooseTemplateDetail.scoreTypes = templateLists
         
         // 设置新模板状态
         isNewTemplate = true
         newTemplateIndex = currentTemplateList.length - 1
         
-        // 切换到新模板
+        // 先重置索引避免越界
+        chooseTemplate.currentIndex = -1
+        chooseTemplateDetail.currentIndex = -1
+        
+        // 然后更新数组
+        chooseTemplate.scoreTypes = reportTemplateList
+        chooseTemplateDetail.scoreTypes = templateLists
+        
+        // 最后设置正确的索引
         chooseTemplateDetail.currentIndex = newTemplateIndex
+        // 报告页面保持-1，因为新模板不在其列表中
         
         // 设置编辑模式
         isEdit = true
@@ -273,7 +306,8 @@ Rectangle {
         
         // 配置确认对话框
         confirmDialog.title = "删除模板"
-        confirmDialog.message = "确定要删除模板" + (chooseTemplateDetail.currentIndex + 1) + "吗？"
+        var templateName = selectedTemplate.templateName || ("模板" + (chooseTemplateDetail.currentIndex + 1))
+        confirmDialog.message = "确定要删除 \"" + templateName + "\" 吗？"
         
         // 显示确认对话框
         confirmDialog.show()
@@ -326,7 +360,7 @@ Rectangle {
         var templateCount = $reportManager.templateList.length
         
         if (templateCount === 0) {
-            // 没有模板了
+            // 没有模板了，先重置索引
             chooseTemplate.currentIndex = -1
             chooseTemplateDetail.currentIndex = -1
             editableTemplateData = []
@@ -343,7 +377,11 @@ Rectangle {
                 newIndex = Math.max(0, Math.min(chooseTemplateDetail.currentIndex, templateCount - 1))
             }
             
-            // 同步更新两个下拉框的索引
+            // 先重置索引避免越界
+            chooseTemplate.currentIndex = -1
+            chooseTemplateDetail.currentIndex = -1
+            
+            // 然后同步更新两个下拉框的索引
             chooseTemplate.currentIndex = newIndex
             chooseTemplateDetail.currentIndex = newIndex
             
@@ -379,14 +417,31 @@ Rectangle {
                 var template = $reportManager.templateList[i]
                 templateLists.push({
                     value: template.id,
-                    text: "模板" + (i + 1),
+                    text: template.templateName,
                     iconUrl: ""
                 })
             }
             
+            // 保存当前索引
+            var oldChooseIndex = chooseTemplate.currentIndex
+            var oldDetailIndex = chooseTemplateDetail.currentIndex
+            
+            // 先重置索引避免越界
+            chooseTemplate.currentIndex = -1
+            chooseTemplateDetail.currentIndex = -1
+            
             // 更新两个下拉框（正常情况下都是相同的模板列表）
             chooseTemplate.scoreTypes = templateLists
             chooseTemplateDetail.scoreTypes = templateLists
+            
+            // 恢复有效的索引
+            if (templateLists.length > 0) {
+                var newChooseIndex = Math.min(Math.max(0, oldChooseIndex), templateLists.length - 1)
+                var newDetailIndex = Math.min(Math.max(0, oldDetailIndex), templateLists.length - 1)
+                
+                chooseTemplate.currentIndex = newChooseIndex
+                chooseTemplateDetail.currentIndex = newDetailIndex
+            }
             
             // 只有不是新模板状态时才更新数据
             if (!isNewTemplate) {
@@ -600,14 +655,35 @@ Rectangle {
                     font.weight: Font.Normal
                     font.pixelSize: 16
                     color: "#D9000000"
-                    text: "选择模板："
+                    text: isEdit ? "模板名称：" : "选择模板："
                     anchors.verticalCenter: parent.verticalCenter
                 }
+                
+                // 编辑模式下显示文本输入框
+                SingleLineTextInput{
+                    id: templateNameInput
+                    inputWidth: 120
+                    inputHeight: 29
+                    backgroundColor: "#ffffff"
+                    borderColor: "#E6EAF2"
+                    fontSize: 14
+                    anchors.left: chooseTemplateText.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    visible: isEdit
+                    text: currentTemplateName
+                    placeholderText: "请输入模板名称"
+                    onEditingFinished: {
+                        currentTemplateName = text
+                    }
+                }
+                
+                // 非编辑模式下显示下拉框
                 ScoreTypeDropdown{
                     id:chooseTemplateDetail
                     anchors.left: chooseTemplateText.right
                     anchors.verticalCenter: parent.verticalCenter
                     enabled: !isEdit
+                    visible: !isEdit
                     scoreTypes: []
                     onCurrentIndexChanged: {
                         if (!isEdit && !isNewTemplate) {
@@ -823,6 +899,7 @@ Rectangle {
                 borderWidth: 0
                 backgroundColor: "#006BFF"
                 onClicked: {
+                    reportView.forceActiveFocus()
                     $reportManager.endAnalysis()
                     isGenerating = false
                 }
@@ -958,3 +1035,4 @@ Rectangle {
         }
     }
 }
+

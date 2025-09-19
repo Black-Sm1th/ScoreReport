@@ -313,15 +313,17 @@ void ApiManager::getCancerDiagnoseType(const QString& content, const QString& la
 /**
  * @brief 保存报告模板接口实现
  * @param templateContent 模板内容（JSON字符串）
+ * @param templateName 模板名称
  * @param templateId 模板ID（可选，用于更新现有模板）
  * 
  * 发送保存模板请求到服务器的 /report/template/save 端点。
  * 请求类型标记为 "save-report-template"，结果会通过 saveReportTemplateResponse 信号返回。
  */
-void ApiManager::saveReportTemplate(const QString& templateContent, const QString& templateId)
+void ApiManager::saveReportTemplate(const QString& templateContent, const QString& templateName, const QString& templateId)
 {
     QJsonObject requestData;
     requestData["template"] = templateContent;  // template字段作为JSON字符串
+    requestData["templateName"] = templateName;  // 新增模板名称字段
     
     // 如果提供了模板ID，则添加到请求中（用于更新现有模板）
     if (!templateId.isEmpty()) {

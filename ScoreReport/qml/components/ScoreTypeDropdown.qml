@@ -60,8 +60,8 @@ Rectangle {
         Image {
             id: selectedIcon
             anchors.verticalCenter: parent.verticalCenter
-            source: scoreTypes.length > 0 ? scoreTypes[currentIndex].iconUrl : ""
-            visible: scoreTypes.length > 0 && scoreTypes[currentIndex].iconUrl !== "" // 只有选中具体类型时才显示图标，全部类型不显示
+            source: (scoreTypes.length > 0 && currentIndex >= 0 && currentIndex < scoreTypes.length) ? scoreTypes[currentIndex].iconUrl : ""
+            visible: (scoreTypes.length > 0 && currentIndex >= 0 && currentIndex < scoreTypes.length) && scoreTypes[currentIndex].iconUrl !== "" // 只有选中具体类型时才显示图标，全部类型不显示
             width: 14
             height: 14
             opacity: enabled ? 1.0 : 0.6
@@ -70,7 +70,7 @@ Rectangle {
         // 选中的文本
         Text {
             id: selectedText
-            text: scoreTypes.length > 0 ? scoreTypes[currentIndex].text : ""
+            text: (scoreTypes.length > 0 && currentIndex >= 0 && currentIndex < scoreTypes.length) ? scoreTypes[currentIndex].text : ""
             font.family: "Alibaba PuHuiTi 3.0"
             font.pixelSize: 14
             color: enabled ? "#D9000000" : "#BFBFBF"

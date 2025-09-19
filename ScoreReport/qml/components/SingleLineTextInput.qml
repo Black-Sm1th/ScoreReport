@@ -42,12 +42,11 @@ Rectangle {
     TextField {
         id: textField
         anchors.fill: parent
-        
         font.pixelSize: fontSize
         font.family: "Alibaba PuHuiTi 3.0"
         color: textColor
         selectByMouse: !readOnly
-        
+        padding: 4
         placeholderText: !readOnly ? singleLineTextInput.placeholderText : ""
         placeholderTextColor: placeholderColor
         

@@ -25,7 +25,7 @@ Rectangle {
             height: 32
             Text {
                 id:chooseText
-                text: qsTr("请选择评分方案")
+                text: qsTr("看看我能帮您做哪些吧？")
                 color: "#000000"
                 font.family: "Alibaba PuHuiTi 3.0"
                 font.weight: Font.Bold

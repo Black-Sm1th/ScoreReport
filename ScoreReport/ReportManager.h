@@ -21,7 +21,7 @@ signals:
     void reportGenerateResult(bool success);
 public:
     Q_INVOKABLE void refreshTemplate();
-    Q_INVOKABLE void saveTemplate(const QString& templateId, const QVariantList& templateData);
+    Q_INVOKABLE void saveTemplate(const QString& templateId, const QString& templateName, const QVariantList& templateData);
     Q_INVOKABLE void deleteTemplate(const QString& templateId);
     Q_INVOKABLE void generateReport(const QString& query, const QVariantList& templateData);
     Q_INVOKABLE void endAnalysis();

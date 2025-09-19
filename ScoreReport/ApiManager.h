@@ -131,11 +131,12 @@ public:
     /**
      * @brief 保存报告模板
      * @param templateContent 模板内容（JSON字符串）
+     * @param templateName 模板名称
      * @param templateId 模板ID（可选，用于更新现有模板）
      * 
      * 发送保存模板请求到服务器，结果通过 saveReportTemplateResponse 信号返回
      */
-    void saveReportTemplate(const QString& templateContent, const QString& templateId = "");
+    void saveReportTemplate(const QString& templateContent, const QString& templateName, const QString& templateId = "");
     
     /**
      * @brief 删除报告模板

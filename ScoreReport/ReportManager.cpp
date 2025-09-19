@@ -54,7 +54,7 @@ void ReportManager::onGetReportTemplateListResponse(bool success, const QString&
                 // 提取id和template字段
                 QString id = templateItem.value("id").toString();
                 QString templateJsonString = templateItem.value("template").toString();
-                
+                QString templateName = templateItem.value("templateName").toString();
                 // 解析template字段中的JSON字符串
                 QJsonParseError parseError;
                 QJsonDocument templateDoc = QJsonDocument::fromJson(templateJsonString.toUtf8(), &parseError);
@@ -72,7 +72,7 @@ void ReportManager::onGetReportTemplateListResponse(bool success, const QString&
                         templateContentMap[it.key()] = it.value().toString();
                     }
                     templateMap["template"] = templateContentMap;
-                    
+                    templateMap["templateName"] = templateName;
                     // 添加到列表中
                     newTemplateList.append(templateMap);
                 } else {
@@ -87,8 +87,15 @@ void ReportManager::onGetReportTemplateListResponse(bool success, const QString&
     emit templateListChanged();
 }
 
-void ReportManager::saveTemplate(const QString& templateId, const QVariantList& templateData)
+void ReportManager::saveTemplate(const QString& templateId, const QString& templateName, const QVariantList& templateData)
 {
+    // 验证模板名称不能为空
+    if (templateName.trimmed().isEmpty()) {
+        qWarning() << "[ReportManager] 模板名称不能为空";
+        emit templateSaveResult(false, "模板名称不能为空");
+        return;
+    }
+    
     // 将QVariantList转换为JSON对象
     QJsonObject templateObject;
     
@@ -105,17 +112,13 @@ void ReportManager::saveTemplate(const QString& templateId, const QVariantList& 
     // 将JSON对象转换为字符串
     QJsonDocument templateDoc(templateObject);
     QString templateContent = templateDoc.toJson(QJsonDocument::Compact);
-    
-    qDebug() << "[ReportManager] 保存模板 ID:" << templateId << "内容:" << templateContent;
-    
     // 调用ApiManager的保存方法
-    m_apiManager->saveReportTemplate(templateContent, templateId);
+    m_apiManager->saveReportTemplate(templateContent, templateName, templateId);
 }
 
 void ReportManager::onSaveReportTemplateResponse(bool success, const QString& message, const QJsonObject& data)
 {
     if (success) {
-        qDebug() << "[ReportManager] 模板保存成功:" << message;
         // 保存成功后刷新模板列表
         refreshTemplate();
         emit templateSaveResult(true, "模板保存成功");
@@ -132,9 +135,6 @@ void ReportManager::deleteTemplate(const QString& templateId)
         emit templateDeleteResult(false, "模板ID无效");
         return;
     }
-    
-    qDebug() << "[ReportManager] 正在删除模板，ID:" << templateId;
-    
     // 调用ApiManager的删除方法
     m_apiManager->deleteReportTemplate(templateId);
 }
@@ -142,7 +142,6 @@ void ReportManager::deleteTemplate(const QString& templateId)
 void ReportManager::onDeleteReportTemplateResponse(bool success, const QString& message, const QJsonObject& data)
 {
     if (success) {
-        qDebug() << "[ReportManager] 模板删除成功:" << message;
         // 删除成功后刷新模板列表
         refreshTemplate();
         emit templateDeleteResult(true, "模板删除成功");
@@ -213,7 +212,6 @@ void ReportManager::onGenerateQualityReportResponse(bool success, const QString&
             
             // 设置resultMap属性
             setresultMap(reportMap);
-            qDebug() << reportMap;
             emit reportGenerateResult(true);
         } else {
             qWarning() << "[ReportManager] 响应中没有report字段:" << data;
