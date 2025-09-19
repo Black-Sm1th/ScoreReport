@@ -235,7 +235,7 @@ Rectangle {
                     Rectangle {
                         width: parent.width - 48
                         height: cancerColumn.height + 32
-                        visible: $tnmManager.showCancerSelection
+                        visible: $tnmManager.showCancerSelection && $tnmManager.cancerTypes.length > 0
                         color: "#ECF3FF"
                         radius: 8
 
@@ -271,34 +271,6 @@ Rectangle {
                                         onClicked: {
                                             $tnmManager.selectCancerType(modelData.name)
                                         }
-                                    }
-                                }
-                            }
-
-                            // 跳过选择按钮
-                            Rectangle {
-                                width: parent.width
-                                height: 40
-                                color: skipMouseArea.containsMouse ? "#F5F5F5" : "#FFFFFF"
-                                radius: 8
-                                border.color: "#E0E0E0"
-                                border.width: 1
-
-                                Text {
-                                    anchors.centerIn: parent
-                                    font.family: "Alibaba PuHuiTi 3.0"
-                                    font.pixelSize: 14
-                                    color: "#D9000000"
-                                    text: qsTr("跳过选择，默认使用肾肿瘤标准")
-                                }
-
-                                MouseArea {
-                                    id: skipMouseArea
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: {
-                                        $tnmManager.skipCancerSelection()
                                     }
                                 }
                             }
