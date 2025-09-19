@@ -857,16 +857,17 @@ ApplicationWindow {
 
         function showDialog() {
             // 计算弹窗位置
-            $loginManager.changeMouseStatus(true)
-            updateDialogPosition()
-            // 暂停帮助定时器
-            helpBubbleTimer.stop()
-            if (helpBubble.visible) {
-                helpBubble.hideBubble()
-            }
             visible = true
-            opacity = 1
-            autoHideTimer.restart()
+            updateDialogPosition()
+            Qt.callLater(function(){
+                // 暂停帮助定时器
+                helpBubbleTimer.stop()
+                if (helpBubble.visible) {
+                    helpBubble.hideBubble()
+                }
+                opacity = 1
+                autoHideTimer.restart()
+            })
         }
 
         function updateDialogPosition() {

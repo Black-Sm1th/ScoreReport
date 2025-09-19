@@ -7,6 +7,7 @@
 #include <QStandardPaths>
 #include <QDir>
 #include <QDateTime>
+#include <QTimer>
 LoginManager::LoginManager(QObject* parent)
     : QObject(parent)
     , m_apiManager(nullptr)
@@ -241,7 +242,9 @@ void LoginManager::onTextSelected(const QString& text)
 {
     // 获取当前鼠标位置
     m_currentStr = text.trimmed();
-    m_timer->start(800);
+    currentPos = QCursor::pos();
+    changeMouseStatus(true);
+    m_timer->start(500);
 }
 
 void LoginManager::onMouseEvent(GlobalMouseListener::MouseButton button, int delta, QPoint pos)
@@ -252,8 +255,7 @@ void LoginManager::onMouseEvent(GlobalMouseListener::MouseButton button, int del
 
 void LoginManager::onTimeout()
 {
-    QPoint mousePos = QCursor::pos();
-    emit textSelectionDetected(m_currentStr, mousePos.x(), mousePos.y());
+    emit textSelectionDetected(m_currentStr, currentPos.x(), currentPos.y());
 }
 
 void LoginManager::loadUserList()
@@ -363,6 +365,7 @@ void LoginManager::processScreenshotArea(int x, int y, int width, int height)
 
 void LoginManager::changeMouseStatus(bool type)
 {
+    qDebug() << "type:" << type;
     if (!type) {
         m_mouseListener->stop();
     }

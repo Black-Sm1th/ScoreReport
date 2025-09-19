@@ -67,6 +67,7 @@ private:
     GlobalMouseListener* m_mouseListener;
     QTimer* m_timer;
     QString m_currentStr = "";
+    QPoint currentPos;
 };
 
 #endif // LOGINMANAGER_H 
