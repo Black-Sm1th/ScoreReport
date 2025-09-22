@@ -8,7 +8,7 @@ LanguageManager::LanguageManager(QObject *parent)
     , m_translator(new QTranslator(this))
     , m_engine(nullptr)
     , m_currentLanguage("zh")
-    , m_settings(new QSettings("ScoreReport", "Language", this))
+    , m_settings(new QSettings("AETHERMIND", "ScoreReport", this))
 {
     // 初始化可用语言列表
     m_availableLanguages << "zh" << "en";

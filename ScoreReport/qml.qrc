@@ -77,5 +77,6 @@
         <file>image/floatIcon/icon9.png</file>
         <file>image/floatIcon/icon10.png</file>
         <file>image/finger.png</file>
+        <file>image/clearCache.png</file>
     </qresource>
 </RCC>

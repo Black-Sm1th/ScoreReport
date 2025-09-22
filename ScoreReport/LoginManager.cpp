@@ -32,7 +32,7 @@ LoginManager::LoginManager(QObject* parent)
     connect(m_mouseListener, &GlobalMouseListener::mouseEvent,
         this, &LoginManager::onMouseEvent);
     // 初始化QSettings
-    m_settings = new QSettings("ScoreReport", "LoginCredentials", this);
+    m_settings = new QSettings("AETHERMIND", "ScoreReport", this);
     m_timer = new QTimer();
     m_timer->setSingleShot(true);
     connect(m_timer, &QTimer::timeout,
@@ -371,4 +371,17 @@ void LoginManager::changeMouseStatus(bool type)
     else {
         m_mouseListener->start();
     }
+}
+
+void LoginManager::clearAllCache()
+{
+    if (!m_settings) {
+        qWarning() << "[LoginManager] QSettings is null, cannot clear cache";
+        return;
+    }
+    // 清除LoginManager的所有设置
+    m_settings->clear();
+    m_settings->sync();
+    
+    qDebug() << "[LoginManager] Successfully cleared all application cache and reset properties";
 }

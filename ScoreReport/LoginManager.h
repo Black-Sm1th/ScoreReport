@@ -45,6 +45,7 @@ public:
     Q_INVOKABLE void saveShowDialogSetting(bool showDialog);
     Q_INVOKABLE void processScreenshotArea(int x, int y, int width, int height);
     Q_INVOKABLE void changeMouseStatus(bool type);
+    Q_INVOKABLE void clearAllCache();
 signals:
     void loginResult(bool success, const QString& message);
     void logoutSuccess();

@@ -17,7 +17,6 @@ Rectangle {
     function resetAllValue(){
         searchField.text = ""
         dropDown.currentIndex = 0
-        dropDown.currentText = "全部类型"
         $historyManager.searchType = ""
         datePicker.reset()
         $historyManager.searchDate = ""

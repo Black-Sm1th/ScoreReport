@@ -1282,6 +1282,63 @@ ApplicationWindow {
                     color: "#E0E0E0"
                 }
 
+                // 清除缓存选项
+                Rectangle {
+                    width: parent.width
+                    height: 40
+                    color: clearCacheMouseArea.containsMouse ? "#F5F5F5" : "transparent"
+                    radius: 6
+
+                    Row {
+                        id: contentArea5
+                        anchors.left: parent.left
+                        anchors.leftMargin: 12
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 8
+
+                        // 清除缓存图标
+                        Image{
+                            anchors.verticalCenter: parent.verticalCenter
+                            source: "qrc:/image/clearCache.png"  // 使用repeat图标表示重置/清除
+                        }
+
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            font.family: "Alibaba PuHuiTi 3.0"
+                            font.pixelSize: 14
+                            color: clearCacheMouseArea.containsMouse ? "#006BFF" : "#D9000000"
+                            text: qsTr("清除缓存")
+
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: 150
+                                    easing.type: Easing.OutQuad
+                                }
+                            }
+                        }
+                    }
+
+                    MouseArea {
+                        id: clearCacheMouseArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+
+                        onClicked: {
+                            contextMenu.hide()
+                            $loginManager.clearAllCache()
+                        }
+                    }
+                }
+
+                // 分隔线
+                Rectangle {
+                    width: parent.width - 16
+                    height: 1
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    color: "#E0E0E0"
+                }
+
                 Rectangle {
                     width: parent.width
                     height: 40
@@ -1611,7 +1668,7 @@ ApplicationWindow {
         // 移除y的Behavior，让y跟随高度变化同步更新
         onHeightChanged: {
             // 直接设置y坐标，不使用动画，这样y会跟随高度的动画进度同步变化
-            y = centerY - height / 2
+            y = Math.max(0, centerY - height / 2)
         }
         // 窗口阴影
         DropShadow {
