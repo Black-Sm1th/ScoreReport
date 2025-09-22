@@ -758,7 +758,7 @@ Rectangle {
                                 height: detailCol.height
                                 Column{
                                     id: detailCol
-                                    width: isEdit ? (scrollView.width - 100) / 2 : (scrollView.width - 40) / 2
+                                    width: isEdit ? (scrollView.width - 104) / 2 : (scrollView.width - 40) / 2
                                     spacing: 8
                                     Text {
                                         font.family: "Alibaba PuHuiTi 3.0"
@@ -786,7 +786,7 @@ Rectangle {
                                     }
                                 }
                                 Column{
-                                    width: isEdit ? (scrollView.width - 100) / 2 : (scrollView.width - 40) / 2
+                                    width: isEdit ? (scrollView.width - 104) / 2 : (scrollView.width - 40) / 2
                                     spacing: 8
                                     Text {
                                         font.family: "Alibaba PuHuiTi 3.0"
