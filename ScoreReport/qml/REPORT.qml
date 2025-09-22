@@ -408,6 +408,32 @@ Rectangle {
         }
         return dots
     }
+    
+    // 收集所有当前输入框的文本内容
+    function collectAllCurrentTexts() {
+        var allTexts = {}
+        var repeater = resultRepeater
+        if (repeater) {
+            for (var i = 0; i < repeater.count; i++) {
+                var item = repeater.itemAt(i)
+                if (item && item.children && item.children.length > 0) {
+                    var resultCol = item.children[0]  // Column
+                    if (resultCol && resultCol.children && resultCol.children.length > 1) {
+                        var textInput = resultCol.children[1]  // MultiLineTextInput
+                        if (textInput && textInput.text !== undefined) {
+                            // 获取对应的key，现在从$reportManager.resultMap获取
+                            var keys = Object.keys($reportManager.resultMap)
+                            if (i < keys.length) {
+                                var key = keys[i]
+                                allTexts[key] = textInput.text
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return allTexts
+    }
 
     Connections{
         target: $reportManager
@@ -568,7 +594,8 @@ Rectangle {
                         spacing: 16
                         width: parent.width
                         padding: 16
-                        Repeater {
+                            Repeater {
+                            id: resultRepeater
                             model: {
                                 var items = []
                                 if ($reportManager.resultMap && typeof $reportManager.resultMap === 'object') {
@@ -585,6 +612,7 @@ Rectangle {
                             }
                             
                             delegate: Row {
+                                id: resultRow
                                 height: resultCol.height
                                 spacing: 16
                                 Column{
@@ -599,10 +627,11 @@ Rectangle {
                                         text: modelData.key + ":"
                                     }
                                     MultiLineTextInput{
+                                        id: textInput
                                         inputWidth: parent.width
                                         inputHeight: 80
                                         backgroundColor: "#ffffff"
-                                        readOnly: true
+                                        readOnly: false
                                         placeholderText: ""
                                         text: (modelData.value && modelData.value.toString().trim() !== "") ? modelData.value.toString() : "无内容"
                                     }
@@ -618,7 +647,8 @@ Rectangle {
                                     radius: 4
                                     backgroundColor: "#006BFF"
                                     onClicked: {
-                                        var valueToProcess = modelData.value
+                                        // 直接从当前输入框获取文本内容
+                                        var valueToProcess = textInput.text
                                         if (valueToProcess === null || valueToProcess === undefined) {
                                             valueToProcess = ""
                                         } else {
@@ -936,13 +966,17 @@ Rectangle {
                 borderWidth: 0
                 backgroundColor: "#006BFF"
                 onClicked: {
+                    // 直接收集所有输入框的当前文本
+                    var allTexts = collectAllCurrentTexts()
+                    
                     var string = ""
-                    for (var key in $reportManager.resultMap) {
-                        if ($reportManager.resultMap.hasOwnProperty(key)) {
-                            string += (key + "：\n" + $reportManager.resultMap[key] + "\n")
+                    for (var key in allTexts) {
+                        if (allTexts.hasOwnProperty(key)) {
+                            string += (key + "：\n" + allTexts[key] + "\n")
                         }
                     }
                     $reportManager.copyToClipboard(string)
+                    messageManager.success("已复制全部内容")
                 }
             }
 
