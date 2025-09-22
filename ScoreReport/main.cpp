@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
     QCoreApplication::setOrganizationName("AETHERMIND");
     QCoreApplication::setOrganizationDomain("aethermind.com");
     QCoreApplication::setApplicationName("ScoreReport");
-    QCoreApplication::setApplicationVersion("0.9.0");
+    QCoreApplication::setApplicationVersion("0.9.1");
 
     QQmlApplicationEngine engine;
     // 使用单例模式获取实例
