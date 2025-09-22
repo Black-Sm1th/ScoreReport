@@ -28,6 +28,7 @@ Rectangle {
     // 信号
     signal accepted()
     signal editingFinished()
+    signal focusChanged(bool hasFocus)
     
     // 设置尺寸
     width: inputWidth
@@ -57,6 +58,7 @@ Rectangle {
         // 信号连接
         onAccepted: singleLineTextInput.accepted()
         onEditingFinished: singleLineTextInput.editingFinished()
+        onActiveFocusChanged: singleLineTextInput.focusChanged(activeFocus)
     }
     
     // 边框颜色动画

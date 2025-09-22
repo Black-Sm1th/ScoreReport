@@ -41,6 +41,10 @@ Rectangle {
             handleFileAddition(filePaths)
         }
     }
+    function sendText(text) {
+        messageInput.text = text
+        sendMessage();
+    }
 
     Column {
         id: chatColumn

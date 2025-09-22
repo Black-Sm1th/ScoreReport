@@ -869,6 +869,8 @@ ApplicationWindow {
                 }
                 opacity = 1
                 autoHideTimer.restart()
+                // 取消输入框的聚焦，让焦点回到主窗口
+                scoringMethodContent.forceActiveFocus()
             })
         }
 
@@ -956,7 +958,7 @@ ApplicationWindow {
                     font.pixelSize: 16
                     font.weight: Font.Medium
                     color: "#D9000000"
-                    text: qsTr("看看我能帮您做哪些吧？")
+                    text: qsTr("看看我能帮您做哪些吧?")
                 }
 
                 // 按钮组
@@ -1016,23 +1018,48 @@ ApplicationWindow {
                 }
 
                 SingleLineTextInput{
-                    inputWidth: 120
-                    inputHeight: 29
+                    id: questionInput
+                    inputWidth: 168
+                    inputHeight: 32
                     backgroundColor: "#ffffff"
                     borderColor: "#E6EAF2"
                     fontSize: 14
                     placeholderText: "请输入您的问题..."
                     Keys.onPressed: {
                         if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-                            console.log("111111")
+                            if(questionInput.text === ""){
+                                return
+                            }
+                            var text = scoringMethodDialog.currentText + "\n" + questionInput.text
+                            scoringMethodDialog.hideDialog()
+                            chatWindow.show()
+                            chatWindowContent.sendText(text)
+                            questionInput.text = ""
                         }
+                    }
+                    onFocusChanged: {
+                        if (hasFocus) {
+                            // 输入框获得焦点时停止自动隐藏定时器
+                            autoHideTimer.stop()
+                        } else {
+                            // 输入框失去焦点时重新启动自动隐藏定时器
+                            autoHideTimer.restart()
+                        }
+                    }
+                    onTextChanged: {
+                        // 用户正在输入时停止自动隐藏定时器
+                        autoHideTimer.stop()
                     }
                     MouseArea{
                         id: inputArea
                         anchors.fill: parent
                         hoverEnabled: true
-                        acceptedButtons: Qt.NoButton
+                        acceptedButtons: Qt.LeftButton
                         cursorShape: Qt.IBeamCursor
+                        onClicked: {
+                            // 点击输入框区域时强制聚焦
+                            questionInput.forceActiveFocus()
+                        }
                     }
                 }
             }
