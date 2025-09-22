@@ -25,6 +25,7 @@ LoginManager::LoginManager(QObject* parent)
     setrememberPassword(false);
     setuserList(QVariantList());
     setshowDialogOnTextSelection(false);  // 默认不显示弹窗
+    setshowHelpBubble(true);  // 默认显示聊天气泡
     m_selector = new GlobalTextMonitor();
     m_mouseListener = new GlobalMouseListener();
     connect(m_selector, &GlobalTextMonitor::textSelected,
@@ -137,13 +138,15 @@ void LoginManager::loadSavedCredentials()
     QString password = m_settings->value("password", "").toString();
     bool remember = m_settings->value("rememberPassword", false).toBool();
     bool showDialog = m_settings->value("showDialogOnTextSelection", false).toBool();
+    bool showHelpBubble = m_settings->value("showHelpBubble", true).toBool();
     
     setsavedUsername(username);
     setsavedPassword(remember ? password : "");
     setrememberPassword(remember);
     setshowDialogOnTextSelection(showDialog);
+    setshowHelpBubble(showHelpBubble);
     
-    qDebug() << "[LoginManager] Loaded saved credentials, username:" << username << "remember:" << remember << "showDialog:" << showDialog;
+    qDebug() << "[LoginManager] Loaded saved credentials, username:" << username << "remember:" << remember << "showDialog:" << showDialog << "showHelpBubble:" << showHelpBubble;
 }
 
 
@@ -382,6 +385,20 @@ void LoginManager::clearAllCache()
     // 清除LoginManager的所有设置
     m_settings->clear();
     m_settings->sync();
+    setshowHelpBubble(true);
     
     qDebug() << "[LoginManager] Successfully cleared all application cache and reset properties";
+}
+
+void LoginManager::saveHelpBubbleSetting(bool showHelpBubble)
+{
+    if (!m_settings) {
+        return;
+    }
+    
+    setshowHelpBubble(showHelpBubble);
+    m_settings->setValue("showHelpBubble", showHelpBubble);
+    m_settings->sync();
+    
+    qDebug() << "[LoginManager] Help bubble setting changed to:" << showHelpBubble;
 }

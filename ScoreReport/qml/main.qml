@@ -163,8 +163,10 @@ ApplicationWindow {
             onExited: {
                 if(scoreDialog.isEntered == false){
                     disabledTimer.start()
-                    // 鼠标离开时重启帮助定时器
-                    helpBubbleTimer.restart()
+                    // 鼠标离开时重启帮助定时器（仅在开启设置时）
+                    if ($loginManager.showHelpBubble) {
+                        helpBubbleTimer.restart()
+                    }
                 }
             }
             onPositionChanged: {
@@ -366,8 +368,8 @@ ApplicationWindow {
                 // 恢复正常缩放和透明度
                 contentRect.scale = 1.0
                 contentRect.opacity = 1.0
-                // 对话框隐藏后重启帮助定时器
-                if (!mouseArea.containsMouse) {
+                // 对话框隐藏后重启帮助定时器（仅在开启设置时）
+                if (!mouseArea.containsMouse && $loginManager.showHelpBubble) {
                     helpBubbleTimer.restart()
                 }
             }
@@ -848,7 +850,7 @@ ApplicationWindow {
                 }
             }
             function onMouseEvent(){
-                if(tnmBtn.containsMouse || renalBtn.containsMouse){
+                if(tnmBtn.containsMouse || renalBtn.containsMouse || inputArea.containsMouse){
                     return
                 }
                 scoringMethodDialog.hideDialog()
@@ -908,8 +910,8 @@ ApplicationWindow {
             visible = false
             // 清理上次处理的文本记录，允许相同文本再次触发
             lastProcessedText = ""
-            // 重启帮助定时器
-            if (!scoreDialog.visible && !contextMenu.visible && !chatWindow.visible) {
+            // 重启帮助定时器（仅在开启设置时）
+            if (!scoreDialog.visible && !contextMenu.visible && !chatWindow.visible && $loginManager.showHelpBubble) {
                 helpBubbleTimer.restart()
             }
         }
@@ -917,7 +919,7 @@ ApplicationWindow {
         Rectangle {
             id: scoringMethodContent
             width: 200
-            height: 100
+            height: 150
             color: "white"
             radius: 16
             scale: scoringMethodDialog.opacity
@@ -1012,6 +1014,27 @@ ApplicationWindow {
                         }
                     }
                 }
+
+                SingleLineTextInput{
+                    inputWidth: 120
+                    inputHeight: 29
+                    backgroundColor: "#ffffff"
+                    borderColor: "#E6EAF2"
+                    fontSize: 14
+                    placeholderText: "请输入您的问题..."
+                    Keys.onPressed: {
+                        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                            console.log("111111")
+                        }
+                    }
+                    MouseArea{
+                        id: inputArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        acceptedButtons: Qt.NoButton
+                        cursorShape: Qt.IBeamCursor
+                    }
+                }
             }
         }
     }
@@ -1077,8 +1100,8 @@ ApplicationWindow {
         // 隐藏菜单
         function hide() {
             visible = false
-            // 重启帮助定时器
-            if (!scoreDialog.visible && !scoringMethodDialog.visible && !chatWindow.visible) {
+            // 重启帮助定时器（仅在开启设置时）
+            if (!scoreDialog.visible && !scoringMethodDialog.visible && !chatWindow.visible && $loginManager.showHelpBubble) {
                 helpBubbleTimer.restart()
             }
         }
@@ -1213,6 +1236,65 @@ ApplicationWindow {
                             // 切换弹窗显示设置
                             var newSetting = !$loginManager.showDialogOnTextSelection
                             $loginManager.saveShowDialogSetting(newSetting)
+                            contextMenu.hide()
+                        }
+                    }
+                }
+
+                // 分隔线
+                Rectangle {
+                    width: parent.width - 16
+                    height: 1
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    color: "#E0E0E0"
+                }
+
+                // 聊天气泡控制选项
+                Rectangle {
+                    width: parent.width
+                    height: 40
+                    color: helpBubbleMouseArea.containsMouse ? "#F5F5F5" : "transparent"
+                    radius: 6
+
+                    Row {
+                        id: contentAreaHelpBubble
+                        anchors.left: parent.left
+                        anchors.leftMargin: 12
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 8
+
+                        // 聊天气泡图标
+                        Image{
+                            anchors.verticalCenter: parent.verticalCenter
+                            source: "qrc:/image/chatBubble.png"
+                        }
+
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            font.family: "Alibaba PuHuiTi 3.0"
+                            font.pixelSize: 14
+                            color: helpBubbleMouseArea.containsMouse ? "#006BFF" : "#D9000000"
+                            text: qsTr("聊天气泡") + " (" + ($loginManager.showHelpBubble ? qsTr("开启") : qsTr("关闭")) + ")"
+
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: 150
+                                    easing.type: Easing.OutQuad
+                                }
+                            }
+                        }
+                    }
+
+                    MouseArea {
+                        id: helpBubbleMouseArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+
+                        onClicked: {
+                            // 切换聊天气泡显示设置
+                            var newSetting = !$loginManager.showHelpBubble
+                            $loginManager.saveHelpBubbleSetting(newSetting)
                             contextMenu.hide()
                         }
                     }
@@ -1640,8 +1722,8 @@ ApplicationWindow {
                     helpBubble.hideBubble()
                 }
             } else {
-                // 窗口隐藏时重启帮助定时器
-                if (!scoreDialog.visible && !scoringMethodDialog.visible && !contextMenu.visible) {
+                // 窗口隐藏时重启帮助定时器（仅在开启设置时）
+                if (!scoreDialog.visible && !scoringMethodDialog.visible && !contextMenu.visible && $loginManager.showHelpBubble) {
                     helpBubbleTimer.restart()
                 }
             }
@@ -1773,6 +1855,26 @@ ApplicationWindow {
         Component.onCompleted: {
             helpBubble.showBubble()
         }
+        
+        // 监听showHelpBubble属性变化
+        Connections {
+            target: $loginManager
+            function onShowHelpBubbleChanged() {
+                if (!$loginManager.showHelpBubble) {
+                    // 如果关闭了聊天气泡设置，立即隐藏当前气泡并停止定时器
+                    helpBubbleTimer.stop()
+                    autoHideBubbleTimer.stop()
+                    if (helpBubble.visible) {
+                        helpBubble.hideBubble()
+                    }
+                } else {
+                    // 如果开启了聊天气泡设置，重新启动定时器
+                    if (!scoreDialog.visible && !scoringMethodDialog.visible && !contextMenu.visible && !chatWindow.visible) {
+                        helpBubbleTimer.restart()
+                    }
+                }
+            }
+        }
         // 透明度动画
         Behavior on opacity {
             NumberAnimation {
@@ -1824,8 +1926,8 @@ ApplicationWindow {
             interval: helpBubble.isFirst ? 20000 : 120000  // 2分钟
             repeat: false
             onTriggered: {
-                // 只有在没有其他对话框显示时才显示帮助气泡
-                if (!scoreDialog.visible && !scoringMethodDialog.visible && !contextMenu.visible && !chatWindow.visible) {
+                // 只有在没有其他对话框显示时且开启了聊天气泡设置时才显示帮助气泡
+                if (!scoreDialog.visible && !scoringMethodDialog.visible && !contextMenu.visible && !chatWindow.visible && $loginManager.showHelpBubble) {
                     helpBubble.isFirst = false
                     helpBubble.showBubble()
                 }
@@ -1920,7 +2022,9 @@ ApplicationWindow {
             // 延迟隐藏窗口
             Qt.callLater(function() {
                 visible = false
-                helpBubbleTimer.restart()
+                if ($loginManager.showHelpBubble) {
+                    helpBubbleTimer.restart()
+                }
             })
         }
 

@@ -30,6 +30,7 @@ class LoginManager : public QObject
     QUICK_PROPERTY(bool, isAdding)
     QUICK_PROPERTY(bool, isRegistering)
     QUICK_PROPERTY(bool, showDialogOnTextSelection)
+    QUICK_PROPERTY(bool, showHelpBubble)
     SINGLETON_CLASS(LoginManager)
 
 public:
@@ -46,6 +47,7 @@ public:
     Q_INVOKABLE void processScreenshotArea(int x, int y, int width, int height);
     Q_INVOKABLE void changeMouseStatus(bool type);
     Q_INVOKABLE void clearAllCache();
+    Q_INVOKABLE void saveHelpBubbleSetting(bool showHelpBubble);
 signals:
     void loginResult(bool success, const QString& message);
     void logoutSuccess();

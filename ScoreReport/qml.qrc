@@ -78,5 +78,6 @@
         <file>image/floatIcon/icon10.png</file>
         <file>image/finger.png</file>
         <file>image/clearCache.png</file>
+        <file>image/chatBubble.png</file>
     </qresource>
 </RCC>

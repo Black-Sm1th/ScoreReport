@@ -963,24 +963,6 @@ Rectangle {
                     isEdit = true
                 }
             }
-
-            CustomButton {
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.right: saveBtn.left
-                anchors.rightMargin: 12
-                text: qsTr("取消")
-                width: 88
-                visible: tabswitcher.currentIndex === 1 && isEdit
-                height: 36
-                radius: 4
-                fontSize: 14
-                borderWidth: 0
-                backgroundColor: "#006BFF"
-                onClicked: {
-                    restoreOriginalData()  // 恢复到编辑前的数据
-                    isEdit = false
-                }
-            }
             CustomButton {
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.right: addBtn.left
@@ -994,6 +976,7 @@ Rectangle {
                 borderWidth: 0
                 backgroundColor: "#006BFF"
                 onClicked: {
+                    reportView.forceActiveFocus()
                     restoreOriginalData()  // 恢复到编辑前的数据
                     isEdit = false
                 }
