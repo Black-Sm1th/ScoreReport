@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QString>
 #include <QVariantList>
+#include <QStringList>
 
 #include "CommonFunc.h"
 #include "LanguageManager.h"
@@ -13,7 +14,7 @@ class ReportManager : public QObject
     Q_OBJECT
         SINGLETON_CLASS(ReportManager)
         QUICK_PROPERTY(QVariantList, templateList)
-        QUICK_PROPERTY(QVariantMap, resultMap)
+        QUICK_PROPERTY(QVariantList, resultList)
         
 signals:
     void templateSaveResult(bool success, const QString& message);
@@ -34,6 +35,7 @@ public slots:
 private:
     ApiManager* m_apiManager;
     LanguageManager* m_languageManager;
+    QStringList m_fieldOrder; // 记录字段顺序
 };
 
 #endif // REPORTMANAGER_H 

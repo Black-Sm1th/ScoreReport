@@ -9,7 +9,7 @@ ReportManager::ReportManager(QObject *parent)
     : QObject(parent) 
 {
     settemplateList(QVariantList());
-    setresultMap(QVariantMap());
+    setresultList(QVariantList());
     m_apiManager = GET_SINGLETON(ApiManager);
     m_languageManager = GET_SINGLETON(LanguageManager);
     QObject::connect(m_apiManager, &ApiManager::getReportTemplateListResponse, this, &ReportManager::onGetReportTemplateListResponse);
@@ -59,19 +59,38 @@ void ReportManager::onGetReportTemplateListResponse(bool success, const QString&
                 QJsonParseError parseError;
                 QJsonDocument templateDoc = QJsonDocument::fromJson(templateJsonString.toUtf8(), &parseError);
                 
-                if (parseError.error == QJsonParseError::NoError && templateDoc.isObject()) {
-                    QJsonObject templateContent = templateDoc.object();
-                    
+                if (parseError.error == QJsonParseError::NoError) {
                     // 构建最终的数据结构
                     QVariantMap templateMap;
                     templateMap["id"] = id;
                     
-                    // 将template内容转换为QVariantMap
-                    QVariantMap templateContentMap;
-                    for (auto it = templateContent.begin(); it != templateContent.end(); ++it) {
-                        templateContentMap[it.key()] = it.value().toString();
+                    // 支持新的JSON数组格式和旧的JSON对象格式
+                    QVariantList templateContentList;
+                    
+                    if (templateDoc.isArray()) {
+                        // 新格式：JSON数组，保持顺序
+                        QJsonArray templateArray = templateDoc.array();
+                        for (const QJsonValue& fieldValue : templateArray) {
+                            if (fieldValue.isObject()) {
+                                QJsonObject fieldObj = fieldValue.toObject();
+                                QVariantMap fieldMap;
+                                fieldMap["key"] = fieldObj.value("key").toString();
+                                fieldMap["value"] = fieldObj.value("value").toString();
+                                templateContentList.append(fieldMap);
+                            }
+                        }
+                    } else if (templateDoc.isObject()) {
+                        // 旧格式：JSON对象，为了向后兼容
+                        QJsonObject templateContent = templateDoc.object();
+                        for (auto it = templateContent.begin(); it != templateContent.end(); ++it) {
+                            QVariantMap fieldMap;
+                            fieldMap["key"] = it.key();
+                            fieldMap["value"] = it.value().toString();
+                            templateContentList.append(fieldMap);
+                        }
                     }
-                    templateMap["template"] = templateContentMap;
+                    
+                    templateMap["template"] = templateContentList;
                     templateMap["templateName"] = templateName;
                     // 添加到列表中
                     newTemplateList.append(templateMap);
@@ -96,8 +115,8 @@ void ReportManager::saveTemplate(const QString& templateId, const QString& templ
         return;
     }
     
-    // 将QVariantList转换为JSON对象
-    QJsonObject templateObject;
+    // 将QVariantList转换为JSON数组以保持字段顺序
+    QJsonArray templateArray;
     
     for (const QVariant& item : templateData) {
         QVariantMap itemMap = item.toMap();
@@ -105,12 +124,15 @@ void ReportManager::saveTemplate(const QString& templateId, const QString& templ
         QString value = itemMap.value("value").toString();
         
         if (!key.isEmpty()) {
-            templateObject[key] = value;
+            QJsonObject fieldObject;
+            fieldObject["key"] = key;
+            fieldObject["value"] = value;
+            templateArray.append(fieldObject);
         }
     }
     
-    // 将JSON对象转换为字符串
-    QJsonDocument templateDoc(templateObject);
+    // 将JSON数组转换为字符串
+    QJsonDocument templateDoc(templateArray);
     QString templateContent = templateDoc.toJson(QJsonDocument::Compact);
     // 调用ApiManager的保存方法
     m_apiManager->saveReportTemplate(templateContent, templateName, templateId);
@@ -153,8 +175,9 @@ void ReportManager::onDeleteReportTemplateResponse(bool success, const QString& 
 
 void ReportManager::generateReport(const QString& query, const QVariantList& templateData)
 {   
-    // 将QVariantList转换为JSON对象
+    // 为了API兼容性，发送JSON对象格式，但记录字段顺序
     QJsonObject templateObject;
+    m_fieldOrder.clear(); // 清空之前的字段顺序
     
     for (const QVariant& item : templateData) {
         QVariantMap itemMap = item.toMap();
@@ -163,10 +186,11 @@ void ReportManager::generateReport(const QString& query, const QVariantList& tem
         
         if (!key.isEmpty()) {
             templateObject[key] = value;
+            m_fieldOrder.append(key); // 记录字段顺序
         }
     }
     
-    // 将JSON对象转换为字符串
+    // 将JSON对象转换为字符串（保持API兼容性）
     QJsonDocument templateDoc(templateObject);
     QString templateContent = templateDoc.toJson(QJsonDocument::Compact);
     
@@ -185,17 +209,17 @@ void ReportManager::onGenerateQualityReportResponse(bool success, const QString&
         if (data.contains("report")) {
             QJsonValue reportValue = data["report"];
             
-            // 将report JSON转换为QVariantMap
-            QVariantMap reportMap;
+            // 首先收集所有字段数据到临时Map中
+            QVariantMap tempReportMap;
             
             if (reportValue.isObject()) {
-                // 如果report是JSON对象，直接转换
+                // JSON对象格式
                 QJsonObject reportObj = reportValue.toObject();
                 for (auto it = reportObj.begin(); it != reportObj.end(); ++it) {
-                    reportMap[it.key()] = it.value().toVariant();
+                    tempReportMap[it.key()] = it.value().toVariant();
                 }
             } else if (reportValue.isString()) {
-                // 如果report是JSON字符串，先解析再转换
+                // JSON字符串格式
                 QString reportString = reportValue.toString();
                 QJsonParseError parseError;
                 QJsonDocument reportDoc = QJsonDocument::fromJson(reportString.toUtf8(), &parseError);
@@ -203,15 +227,36 @@ void ReportManager::onGenerateQualityReportResponse(bool success, const QString&
                 if (parseError.error == QJsonParseError::NoError && reportDoc.isObject()) {
                     QJsonObject reportObj = reportDoc.object();
                     for (auto it = reportObj.begin(); it != reportObj.end(); ++it) {
-                        reportMap[it.key()] = it.value().toVariant();
+                        tempReportMap[it.key()] = it.value().toVariant();
                     }
                 } else {
                     qWarning() << "[ReportManager] 解析report JSON字符串失败:" << parseError.errorString();
                 }
             }
             
-            // 设置resultMap属性
-            setresultMap(reportMap);
+            // 根据记录的字段顺序重新排列结果
+            QVariantList reportList;
+            for (const QString& key : m_fieldOrder) {
+                if (tempReportMap.contains(key)) {
+                    QVariantMap fieldMap;
+                    fieldMap["key"] = key;
+                    fieldMap["value"] = tempReportMap[key];
+                    reportList.append(fieldMap);
+                }
+            }
+            
+            // 添加任何不在原顺序中的额外字段（如果有的话）
+            for (auto it = tempReportMap.begin(); it != tempReportMap.end(); ++it) {
+                if (!m_fieldOrder.contains(it.key())) {
+                    QVariantMap fieldMap;
+                    fieldMap["key"] = it.key();
+                    fieldMap["value"] = it.value();
+                    reportList.append(fieldMap);
+                }
+            }
+            
+            // 设置resultList属性
+            setresultList(reportList);
             emit reportGenerateResult(true);
         } else {
             qWarning() << "[ReportManager] 响应中没有report字段:" << data;

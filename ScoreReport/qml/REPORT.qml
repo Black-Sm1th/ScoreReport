@@ -44,11 +44,23 @@ Rectangle {
             var selectedTemplate = $reportManager.templateList[chooseTemplateDetail.currentIndex]
             if (selectedTemplate && selectedTemplate.template) {
                 var templateData = selectedTemplate.template
-                for (var key in templateData) {
-                    items.push({
-                        key: key,
-                        value: templateData[key] || ""
-                    })
+                // 模版数据现在是一个数组，直接复制即可保持顺序
+                if (Array.isArray(templateData)) {
+                    for (var i = 0; i < templateData.length; i++) {
+                        var item = templateData[i]
+                        items.push({
+                            key: item.key || "",
+                            value: item.value || ""
+                        })
+                    }
+                } else {
+                    // 向后兼容旧的对象格式
+                    for (var key in templateData) {
+                        items.push({
+                            key: key,
+                            value: templateData[key] || ""
+                        })
+                    }
                 }
                 // 设置当前模板名称
                 currentTemplateName = selectedTemplate.templateName || ""
@@ -228,9 +240,10 @@ Rectangle {
         var newTemplate = {
             id: "new_template_" + Date.now(), // 临时ID
             templateName: "", // 默认模板名称
-            template: {
-                "词条名1": "词条描述1"  // 默认添加一个词条
-            }
+            template: [{
+                key: "词条名1",
+                value: "词条描述1"
+            }]  // 默认添加一个词条（使用数组格式保持顺序）
         }
         
         // 设置当前模板名称
@@ -344,11 +357,24 @@ Rectangle {
         // 将模板转换为QVariantList格式
         var templateData = []
         var templateContent = selectedTemplate.template
-        for (var key in templateContent) {
-            templateData.push({
-                key: key,
-                value: templateContent[key] || ""
-            })
+        
+        // 模版数据现在是一个数组，直接使用即可保持顺序
+        if (Array.isArray(templateContent)) {
+            for (var i = 0; i < templateContent.length; i++) {
+                var item = templateContent[i]
+                templateData.push({
+                    key: item.key || "",
+                    value: item.value || ""
+                })
+            }
+        } else {
+            // 向后兼容旧的对象格式
+            for (var key in templateContent) {
+                templateData.push({
+                    key: key,
+                    value: templateContent[key] || ""
+                })
+            }
         }
         // 调用C++生成报告方法
         isGenerating = true
@@ -421,10 +447,10 @@ Rectangle {
                     if (resultCol && resultCol.children && resultCol.children.length > 1) {
                         var textInput = resultCol.children[1]  // MultiLineTextInput
                         if (textInput && textInput.text !== undefined) {
-                            // 获取对应的key，现在从$reportManager.resultMap获取
-                            var keys = Object.keys($reportManager.resultMap)
-                            if (i < keys.length) {
-                                var key = keys[i]
+                            // 获取对应的key，现在从$reportManager.resultList获取
+                            if (i < $reportManager.resultList.length) {
+                                var resultItem = $reportManager.resultList[i]
+                                var key = resultItem.key
                                 allTexts[key] = textInput.text
                             }
                         }
@@ -596,20 +622,7 @@ Rectangle {
                         padding: 16
                             Repeater {
                             id: resultRepeater
-                            model: {
-                                var items = []
-                                if ($reportManager.resultMap && typeof $reportManager.resultMap === 'object') {
-                                    for (var key in $reportManager.resultMap) {
-                                        if ($reportManager.resultMap.hasOwnProperty(key)) {
-                                            items.push({
-                                                key: key,
-                                                value: $reportManager.resultMap[key] || ""
-                                            })
-                                        }
-                                    }
-                                }
-                                return items
-                            }
+                            model: $reportManager.resultList || []
                             
                             delegate: Row {
                                 id: resultRow
