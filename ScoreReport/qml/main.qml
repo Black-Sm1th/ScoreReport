@@ -823,6 +823,25 @@ ApplicationWindow {
             }
         }
 
+        // 显示延迟定时器，确保位置设置完成后再显示
+        Timer {
+            id: showDelayTimer
+            interval: 50  // 10ms 延迟
+            repeat: false
+            onTriggered: {
+                // 暂停帮助定时器
+                helpBubbleTimer.stop()
+                if (helpBubble.visible) {
+                    helpBubble.hideBubble()
+                }
+                // 现在显示对话框，位置已经是正确的了
+                scoringMethodDialog.opacity = 1
+                autoHideTimer.restart()
+                // 取消输入框的聚焦，让焦点回到主窗口
+                scoringMethodContent.forceActiveFocus()
+            }
+        }
+
         // 存储鼠标位置
         property int lastMouseX: 0
         property int lastMouseY: 0
@@ -858,56 +877,43 @@ ApplicationWindow {
         }
 
         function showDialog() {
-            // 计算弹窗位置
+            // 先计算目标位置（在窗口显示之前）
+            var spacing = 10
+            var targetX = lastMouseX - width / 2
+            var targetY = lastMouseY - height - spacing
+
+            // 边界检查
+            if (targetX < 10) {
+                targetX = 10
+            } else if (targetX + width > Screen.width - 10) {
+                targetX = Screen.width - width - 10
+            }
+
+            if (targetY < 10) {
+                targetY = lastMouseY + spacing
+                if (targetY + height > Screen.height - 10) {
+                    targetY = (Screen.height - height) / 2
+                }
+            }
+
+            if (targetY + height > Screen.height - 10) {
+                targetY = Screen.height - height - 10
+            }
+
+            // 在显示窗口之前设置位置和透明度
+            x = targetX
+            y = targetY
+            opacity = 0
             visible = true
-            updateDialogPosition()
-            Qt.callLater(function(){
-                // 暂停帮助定时器
-                helpBubbleTimer.stop()
-                if (helpBubble.visible) {
-                    helpBubble.hideBubble()
-                }
-                opacity = 1
-                autoHideTimer.restart()
-                // 取消输入框的聚焦，让焦点回到主窗口
-                scoringMethodContent.forceActiveFocus()
-            })
-        }
-
-        function updateDialogPosition() {
-            var spacing = 10  // 与鼠标位置的间距
-            var newX = lastMouseX - width / 2  // 水平居中对齐鼠标位置
-            var newY = lastMouseY - height - spacing  // 显示在鼠标上方
-
-            // 确保不超出屏幕边界
-            if (newX < 10) {
-                newX = 10  // 左边界
-            } else if (newX + width > Screen.width - 10) {
-                newX = Screen.width - width - 10  // 右边界
-            }
-
-            // 垂直方向调整
-            if (newY < 10) {
-                // 如果上方空间不够，显示在鼠标下方
-                newY = lastMouseY + spacing
-                // 如果下方也放不下，就放在屏幕中央
-                if (newY + height > Screen.height - 10) {
-                    newY = (Screen.height - height) / 2
-                }
-            }
-
-            // 确保不超出下边界
-            if (newY + height > Screen.height - 10) {
-                newY = Screen.height - height - 10
-            }
-
-            x = newX
-            y = newY
+            
+            // 使用延迟定时器确保位置设置完成后再显示
+            showDelayTimer.restart()
         }
 
         function hideDialog() {
             $loginManager.changeMouseStatus(false)
             autoHideTimer.stop()
+            showDelayTimer.stop()  // 停止延迟显示定时器
             opacity = 0
             visible = false
             // 清理上次处理的文本记录，允许相同文本再次触发
