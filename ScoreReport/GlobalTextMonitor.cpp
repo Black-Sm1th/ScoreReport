@@ -13,85 +13,9 @@
 
 GlobalTextMonitor::GlobalTextMonitor(QObject* parent)
     : QObject(parent)
-    , m_workerThread(nullptr)
-    , m_worker(nullptr)
-    , m_isMonitoring(false)
-    , m_checkInterval(100) // 100ms检查间隔
-{
-    // 创建工作线程
-    m_workerThread = new QThread(this);
-    
-    // 创建工作对象
-    m_worker = new TextMonitorWorker(m_checkInterval);
-    
-    // 将工作对象移到工作线程中
-    m_worker->moveToThread(m_workerThread);
-    
-    // 连接信号
-    connect(m_worker, &TextMonitorWorker::textSelected, 
-            this, &GlobalTextMonitor::onWorkerTextSelected);
-    
-    // 连接线程生命周期信号
-    connect(m_workerThread, &QThread::finished, 
-            m_worker, &QObject::deleteLater);
-    
-    // 启动工作线程
-    m_workerThread->start();
-}
-
-GlobalTextMonitor::~GlobalTextMonitor()
-{
-    stopMonitoring();
-    
-    // 停止并清理工作线程
-    if (m_workerThread) {
-        m_workerThread->quit();
-        m_workerThread->wait();
-    }
-}
-
-void GlobalTextMonitor::startMonitoring()
-{
-    if (m_isMonitoring) {
-        return;
-    }
-
-    m_isMonitoring = true;
-    
-    // 通过Qt信号槽机制启动工作线程中的监控
-    QMetaObject::invokeMethod(m_worker, "startMonitoring", Qt::QueuedConnection);
-}
-
-void GlobalTextMonitor::stopMonitoring()
-{
-    if (!m_isMonitoring) {
-        return;
-    }
-
-    m_isMonitoring = false;
-    
-    // 通过Qt信号槽机制停止工作线程中的监控
-    QMetaObject::invokeMethod(m_worker, "stopMonitoring", Qt::QueuedConnection);
-}
-
-bool GlobalTextMonitor::isMonitoring() const
-{
-    return m_isMonitoring;
-}
-
-void GlobalTextMonitor::onWorkerTextSelected(const QString& selectedText)
-{
-    // 从工作线程接收到文本选中信号，转发给外部
-    emit textSelected(selectedText);
-}
-
-// ========== TextMonitorWorker 类实现 ==========
-
-TextMonitorWorker::TextMonitorWorker(int checkInterval, QObject* parent)
-    : QObject(parent)
     , m_timer(new QTimer(this))
     , m_isMonitoring(false)
-    , m_checkInterval(checkInterval)
+    , m_checkInterval(100) // 100ms检查间隔
 #ifdef Q_OS_WIN
     , m_automation(nullptr)
     , m_rootElement(nullptr)
@@ -99,19 +23,19 @@ TextMonitorWorker::TextMonitorWorker(int checkInterval, QObject* parent)
 #endif
 {
     // 连接定时器信号
-    connect(m_timer, &QTimer::timeout, this, &TextMonitorWorker::checkTextSelection);
-    
+    connect(m_timer, &QTimer::timeout, this, &GlobalTextMonitor::checkTextSelection);
+
     // 初始化UI Automation
     initializeUIAutomation();
 }
 
-TextMonitorWorker::~TextMonitorWorker()
+GlobalTextMonitor::~GlobalTextMonitor()
 {
     stopMonitoring();
     cleanupUIAutomation();
 }
 
-void TextMonitorWorker::startMonitoring()
+void GlobalTextMonitor::startMonitoring()
 {
     if (m_isMonitoring) {
         return;
@@ -135,7 +59,7 @@ void TextMonitorWorker::startMonitoring()
     m_timer->start(m_checkInterval);
 }
 
-void TextMonitorWorker::stopMonitoring()
+void GlobalTextMonitor::stopMonitoring()
 {
     if (!m_isMonitoring) {
         return;
@@ -148,7 +72,12 @@ void TextMonitorWorker::stopMonitoring()
     m_timer->stop();
 }
 
-void TextMonitorWorker::checkTextSelection()
+bool GlobalTextMonitor::isMonitoring() const
+{
+    return m_isMonitoring;
+}
+
+void GlobalTextMonitor::checkTextSelection()
 {
     if (!m_isMonitoring) {
         return;
@@ -175,15 +104,14 @@ void TextMonitorWorker::checkTextSelection()
         m_lastSelectedText = m_currentSelectedText;
         m_currentSelectedText = selectedText;
 
-        // 修复：只在选中非空文本时才发出信号，避免取消选中时也触发信号
-        if (!selectedText.isEmpty() && selectedText != m_lastSelectedText) {
+        if (!selectedText.isEmpty()) {
             emit textSelected(selectedText);
         }
     }
 #endif
 }
 
-void TextMonitorWorker::initializeUIAutomation()
+void GlobalTextMonitor::initializeUIAutomation()
 {
 #ifdef Q_OS_WIN
     // 初始化COM
@@ -208,7 +136,7 @@ void TextMonitorWorker::initializeUIAutomation()
 #endif
 }
 
-void TextMonitorWorker::cleanupUIAutomation()
+void GlobalTextMonitor::cleanupUIAutomation()
 {
 #ifdef Q_OS_WIN
     if (m_rootElement) {
@@ -225,7 +153,7 @@ void TextMonitorWorker::cleanupUIAutomation()
 #endif
 }
 
-QString TextMonitorWorker::getSelectedTextFromElement(IUIAutomationElement* element)
+QString GlobalTextMonitor::getSelectedTextFromElement(IUIAutomationElement* element)
 {
 #ifdef Q_OS_WIN
     if (!element || !m_automation) {
@@ -271,7 +199,7 @@ QString TextMonitorWorker::getSelectedTextFromElement(IUIAutomationElement* elem
 #endif
 }
 
-QString TextMonitorWorker::getSelectedTextFromActiveWindow()
+QString GlobalTextMonitor::getSelectedTextFromActiveWindow()
 {
 #ifdef Q_OS_WIN
     if (!m_automation) {
@@ -339,7 +267,7 @@ QString TextMonitorWorker::getSelectedTextFromActiveWindow()
 #endif
 }
 
-bool TextMonitorWorker::isTextChanged(const QString& newText)
+bool GlobalTextMonitor::isTextChanged(const QString& newText)
 {
     QMutexLocker locker(&m_mutex);
 
@@ -361,7 +289,7 @@ bool TextMonitorWorker::isTextChanged(const QString& newText)
     return false;
 }
 
-bool TextMonitorWorker::isWindowChanged(HWND currentWindow)
+bool GlobalTextMonitor::isWindowChanged(HWND currentWindow)
 {
 #ifdef Q_OS_WIN
     return m_currentActiveWindow != currentWindow;
@@ -371,7 +299,7 @@ bool TextMonitorWorker::isWindowChanged(HWND currentWindow)
 #endif
 }
 
-void TextMonitorWorker::handleWindowSwitch(HWND newWindow, const QString& selectedText)
+void GlobalTextMonitor::handleWindowSwitch(HWND newWindow, const QString& selectedText)
 {
 #ifdef Q_OS_WIN
 
