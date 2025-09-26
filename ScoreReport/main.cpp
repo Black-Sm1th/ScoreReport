@@ -29,8 +29,8 @@ int main(int argc, char *argv[])
     // 设置应用程序信息，解决FileDialog的QSettings错误
     QCoreApplication::setOrganizationName("AETHERMIND");
     QCoreApplication::setOrganizationDomain("aethermind.com");
-    QCoreApplication::setApplicationName("ScoreReport");
-    QCoreApplication::setApplicationVersion("0.9.3");
+    QCoreApplication::setApplicationName("Knowledge");
+    QCoreApplication::setApplicationVersion("0.1.0");
 
     QQmlApplicationEngine engine;
     // 使用单例模式获取实例

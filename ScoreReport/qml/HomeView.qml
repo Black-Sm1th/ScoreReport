@@ -32,14 +32,14 @@ Rectangle {
                 font.pixelSize: 16
                 anchors.verticalCenter: parent.verticalCenter
             }
-            Rectangle{
-                height: 32
-                width:parent.width - chooseText.width - tabSwitcher.width
-            }
-            TabSwitcher {
-                id: tabSwitcher
-                anchors.verticalCenter: parent.verticalCenter
-            }
+            // Rectangle{
+            //     height: 32
+            //     width:parent.width - chooseText.width - tabSwitcher.width
+            // }
+            // TabSwitcher {
+            //     id: tabSwitcher
+            //     anchors.verticalCenter: parent.verticalCenter
+            // }
         }
 
         // 间距
@@ -62,15 +62,7 @@ Rectangle {
                 width: parent.width * 2  // 两个页面的宽度
                 height: parent.height
                 color: "transparent"
-                x: tabSwitcher.currentIndex === 0 ? 0 : -parent.width
-                
-                // 滑动动画
-                Behavior on x {
-                    NumberAnimation {
-                        duration: 300
-                        easing.type: Easing.OutCubic
-                    }
-                }
+                x: 0
                 
                 // 通用页面 (index 0)
                 Grid {
@@ -84,72 +76,72 @@ Rectangle {
                     anchors.verticalCenter: parent.verticalCenter
                     
                     ScoreOptionCard {
-                        title: "实体瘤分期(TNM)"
-                        backgroundColor: "#FFFAF8"
-                        iconUrl: "qrc:/image/TNM.png"
+                        title: "知识库管理"
+                        backgroundColor: "#F7FCFB"
+                        iconUrl: "qrc:/image/CCLS.png"
                     }
                     ScoreOptionCard {
                         title: "影像知识库问答"
                         backgroundColor: "#F8FAFF"
                         iconUrl: "qrc:/image/CHAT.png"
                     }
-                    ScoreOptionCard {
-                        title: "结构化管家"
-                        backgroundColor: "#F8FAFF"
-                        iconUrl: "qrc:/image/BIOSNAK.png"
-                    }
+                    // ScoreOptionCard {
+                    //     title: "结构化管家"
+                    //     backgroundColor: "#F8FAFF"
+                    //     iconUrl: "qrc:/image/BIOSNAK.png"
+                    // }
                 }
                 
-                // 肾脏页面 (index 1)
-                Grid {
-                    id: kidneyGrid
-                    width: contentContainer.width
-                    height: parent.height
-                    columns: 3
-                    columnSpacing: 12
-                    rowSpacing: 12
-                    anchors.left: parent.left
-                    anchors.leftMargin: contentContainer.width + (width - (3 * ((width - 24) / 3) + 24)) / 2  // 第二页位置 + 居中对齐
-                    anchors.verticalCenter: parent.verticalCenter
+                // // 肾脏页面 (index 1)
+                // Grid {
+                //     id: kidneyGrid
+                //     width: contentContainer.width
+                //     height: parent.height
+                //     columns: 3
+                //     columnSpacing: 12
+                //     rowSpacing: 12
+                //     anchors.left: parent.left
+                //     anchors.leftMargin: contentContainer.width + (width - (3 * ((width - 24) / 3) + 24)) / 2  // 第二页位置 + 居中对齐
+                //     anchors.verticalCenter: parent.verticalCenter
 
-                    // 第一行
-                    ScoreOptionCard {
-                        title: "RENAL"
-                        backgroundColor: "#F8FAFF"
-                        iconUrl: "qrc:/image/RENAL.png"
-                    }
+                //     // 第一行
+                //     ScoreOptionCard {
+                //         title: "RENAL"
+                //         backgroundColor: "#F8FAFF"
+                //         iconUrl: "qrc:/image/RENAL.png"
+                //     }
 
-                    ScoreOptionCard {
-                        title: "CCLS"
-                        backgroundColor: "#F7FCFB"
-                        iconUrl: "qrc:/image/CCLS.png"
-                    }
+                //     ScoreOptionCard {
+                //         title: "CCLS"
+                //         backgroundColor: "#F7FCFB"
+                //         iconUrl: "qrc:/image/CCLS.png"
+                //     }
 
-                    ScoreOptionCard {
-                        title: "TNM"
-                        backgroundColor: "#FFFAF8"
-                        iconUrl: "qrc:/image/TNM.png"
-                    }
+                //     ScoreOptionCard {
+                //         title: "TNM"
+                //         backgroundColor: "#FFFAF8"
+                //         iconUrl: "qrc:/image/TNM.png"
+                //     }
 
-                    // 第二行
-                    ScoreOptionCard {
-                        title: "UCLS MRS"
-                        backgroundColor: "#FFFBF2"
-                        iconUrl: "qrc:/image/UCLS-MRS.png"
-                    }
+                //     // 第二行
+                //     ScoreOptionCard {
+                //         title: "UCLS MRS"
+                //         backgroundColor: "#FFFBF2"
+                //         iconUrl: "qrc:/image/UCLS-MRS.png"
+                //     }
 
-                    ScoreOptionCard {
-                        title: "UCLS CTS"
-                        backgroundColor: "#F8F7FF"
-                        iconUrl: "qrc:/image/UCLS-CTS.png"
-                    }
+                //     ScoreOptionCard {
+                //         title: "UCLS CTS"
+                //         backgroundColor: "#F8F7FF"
+                //         iconUrl: "qrc:/image/UCLS-CTS.png"
+                //     }
 
-                    ScoreOptionCard {
-                        title: "BIOSNAK"
-                        backgroundColor: "#F8FAFF"
-                        iconUrl: "qrc:/image/BIOSNAK.png"
-                    }
-                }
+                //     ScoreOptionCard {
+                //         title: "BIOSNAK"
+                //         backgroundColor: "#F8FAFF"
+                //         iconUrl: "qrc:/image/BIOSNAK.png"
+                //     }
+                // }
             }
         }
         // 分隔线

@@ -19,7 +19,7 @@ Item {
     signal selectionChanged(int index)
     
     // 计算组件大小
-    width: buttonSize * 3 + spacing * 2
+    width: buttonSize * 2 + spacing * 1
     height: buttonSize
     
     Row {
@@ -27,7 +27,7 @@ Item {
         spacing: root.spacing
         
         Repeater {
-            model: 3
+            model: 2
             
             CircleButton {
                 id: button
@@ -35,7 +35,7 @@ Item {
                 iconSource: index < root.iconSources.length ? root.iconSources[index] : ""
                 iconSelectedSource: index < root.iconSources.length ? root.iconSelectedSources[index] : ""
                 isSelected: root.selectedIndex === index
-                login: index === 2 && $loginManager.isLoggedIn
+                login: index === 1 && $loginManager.isLoggedIn
                 onClicked: {
                     if (root.selectedIndex === index) {
                         return

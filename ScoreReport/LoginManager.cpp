@@ -33,7 +33,7 @@ LoginManager::LoginManager(QObject* parent)
     connect(m_mouseListener, &GlobalMouseListener::mouseEvent,
         this, &LoginManager::onMouseEvent);
     // 初始化QSettings
-    m_settings = new QSettings("AETHERMIND", "ScoreReport", this);
+    m_settings = new QSettings("AETHERMIND", "Knowledge", this);
     m_timer = new QTimer();
     m_timer->setSingleShot(true);
     connect(m_timer, &QTimer::timeout,

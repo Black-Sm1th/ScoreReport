@@ -245,7 +245,7 @@ ApplicationWindow {
                 }
             }
             function onLogoutSuccess(){
-                historyView.resetAllValue()
+                // historyView.resetAllValue()
                 scoreDialog.resetAllValue()
             }
         }
@@ -518,7 +518,7 @@ ApplicationWindow {
             anchors.centerIn: parent
             color: "white"
             radius: 20
-            property int currentIndex: 2
+            property int currentIndex: 1
             property int currentScore: -1
             layer.enabled: true
             layer.smooth: true
@@ -542,12 +542,12 @@ ApplicationWindow {
                     }
                 }
             }
-            // 监听页面切换
-            onCurrentIndexChanged: {
-                if(currentIndex == 1){
-                    $historyManager.updateList()
-                }
-            }
+            // // 监听页面切换
+            // onCurrentIndexChanged: {
+            //     if(currentIndex == 1){
+            //         $historyManager.updateList()
+            //     }
+            // }
             Column {
                 id: contentColumn
                 width: parent.width
@@ -632,12 +632,12 @@ ApplicationWindow {
                         z: 1  // 确保在拖动区域之上
                         iconSources: [       // 图标数组
                             "qrc:/image/home.png",
-                            "qrc:/image/history.png",
+                            // "qrc:/image/history.png",
                             "qrc:/image/user.png"
                         ]
                         iconSelectedSources: [       // 图标数组
                             "qrc:/image/homeSelected.png",
-                            "qrc:/image/historySelected.png",
+                            // "qrc:/image/historySelected.png",
                             "qrc:/image/userSelected.png"
                         ]
 
@@ -722,58 +722,58 @@ ApplicationWindow {
                         contentRect.currentScore = index
                     }
                 }
-                HistoryView{
-                    id:historyView
+                // HistoryView{
+                //     id:historyView
+                //     visible: contentRect.currentIndex === 1
+                //     messageManager: dialogMessageBox
+                //     onToScorer: {
+                //         contentRect.currentIndex = 0
+                //     }
+                // }
+                UserView{
                     visible: contentRect.currentIndex === 1
                     messageManager: dialogMessageBox
-                    onToScorer: {
-                        contentRect.currentIndex = 0
-                    }
                 }
-                UserView{
-                    visible: contentRect.currentIndex === 2
-                    messageManager: dialogMessageBox
-                }
-                RENAL{
-                    id:renalView
-                    visible: contentRect.currentIndex === 0 && contentRect.currentScore === 0
-                    messageManager: dialogMessageBox
-                    onExitScore: {
-                        contentRect.currentScore = -1
-                    }
-                }
-                CCLS{
-                    id:cclsView
-                    visible: contentRect.currentIndex === 0 && contentRect.currentScore === 1
-                    messageManager: dialogMessageBox
-                    onExitScore: {
-                        contentRect.currentScore = -1
-                    }
-                }
-                TNM{
-                    id:tnmView
-                    visible: contentRect.currentIndex === 0 && contentRect.currentScore === 2
-                    messageManager: dialogMessageBox
-                    onExitScore: {
-                        contentRect.currentScore = -1
-                    }
-                }
-                UCLSMRS{
-                    id:uclsmrsView
-                    visible: contentRect.currentIndex === 0 && contentRect.currentScore === 3
-                    messageManager: dialogMessageBox
-                    onExitScore: {
-                        contentRect.currentScore = -1
-                    }
-                }
-                UCLSCTS{
-                    id:uclsctsView
-                    visible: contentRect.currentIndex === 0 && contentRect.currentScore === 4
-                    messageManager: dialogMessageBox
-                    onExitScore: {
-                        contentRect.currentScore = -1
-                    }
-                }
+                // RENAL{
+                //     id:renalView
+                //     visible: contentRect.currentIndex === 0 && contentRect.currentScore === 0
+                //     messageManager: dialogMessageBox
+                //     onExitScore: {
+                //         contentRect.currentScore = -1
+                //     }
+                // }
+                // CCLS{
+                //     id:cclsView
+                //     visible: contentRect.currentIndex === 0 && contentRect.currentScore === 1
+                //     messageManager: dialogMessageBox
+                //     onExitScore: {
+                //         contentRect.currentScore = -1
+                //     }
+                // }
+                // TNM{
+                //     id:tnmView
+                //     visible: contentRect.currentIndex === 0 && contentRect.currentScore === 2
+                //     messageManager: dialogMessageBox
+                //     onExitScore: {
+                //         contentRect.currentScore = -1
+                //     }
+                // }
+                // UCLSMRS{
+                //     id:uclsmrsView
+                //     visible: contentRect.currentIndex === 0 && contentRect.currentScore === 3
+                //     messageManager: dialogMessageBox
+                //     onExitScore: {
+                //         contentRect.currentScore = -1
+                //     }
+                // }
+                // UCLSCTS{
+                //     id:uclsctsView
+                //     visible: contentRect.currentIndex === 0 && contentRect.currentScore === 4
+                //     messageManager: dialogMessageBox
+                //     onExitScore: {
+                //         contentRect.currentScore = -1
+                //     }
+                // }
                 CHAT{
                     id:chatView
                     visible: contentRect.currentIndex === 0 && contentRect.currentScore === 6
@@ -783,14 +783,14 @@ ApplicationWindow {
                         contentRect.currentScore = -1
                     }
                 }
-                REPORT{
-                    id:reportView
-                    visible: contentRect.currentIndex === 0 && contentRect.currentScore === 7
-                    messageManager: dialogMessageBox
-                    onExitScore: {
-                        contentRect.currentScore = -1
-                    }
-                }
+                // REPORT{
+                //     id:reportView
+                //     visible: contentRect.currentIndex === 0 && contentRect.currentScore === 7
+                //     messageManager: dialogMessageBox
+                //     onExitScore: {
+                //         contentRect.currentScore = -1
+                //     }
+                // }
             }
         }
     }
@@ -927,7 +927,7 @@ ApplicationWindow {
         Rectangle {
             id: scoringMethodContent
             width: 200
-            height: 150
+            height: 100
             color: "white"
             radius: 16
             scale: scoringMethodDialog.opacity
@@ -967,61 +967,61 @@ ApplicationWindow {
                     text: qsTr("看看我能帮您做哪些吧?")
                 }
 
-                // 按钮组
-                Row {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    spacing: 8
-                    CustomButton {
-                        id:tnmBtn
-                        width: 80
-                        height: 32
-                        text:"TNM"
-                        backgroundColor: "#FF490D"
-                        onClicked: {
-                            scoringMethodDialog.hideDialog()
-                            // 切换到主页面并选择TNM评分
-                            scoreDialog.resetAllValue()
-                            contentRect.currentIndex = 0
-                            contentRect.currentScore = 2  // TNM对应索引2
-                            $loginManager.copyToClipboard(scoringMethodDialog.currentText)
-                            if($tnmManager.checkClipboard()){
-                                $tnmManager.startAnalysis()
-                            }else{
-                                messageManager.warning(qsTr("剪贴板为空，请先复制内容"))
-                            }
-                            if(!scoreDialog.visible){
-                                scoreDialog.showDialog()
-                            }
-                        }
-                    }
-                    CustomButton {
-                        id:renalBtn
-                        width: 80
-                        height: 32
-                        backgroundColor: "#5792FF"
-                        text: "RENAL"
-                        onClicked: {
-                            // 点击RENAL按钮时隐藏右键菜单
-                            if (contextMenu.visible) {
-                                contextMenu.hide()
-                            }
-                            scoringMethodDialog.hideDialog()
-                            // 切换到主页面并选择RENAL评分
-                            scoreDialog.resetAllValue()
-                            contentRect.currentIndex = 0
-                            contentRect.currentScore = 0  // RENAL对应索引0
-                            $loginManager.copyToClipboard(scoringMethodDialog.currentText)
-                            if($renalManager.checkClipboard()){
-                                $renalManager.startAnalysis()
-                            }else{
-                                messageManager.warning(qsTr("剪贴板为空，请先复制内容"))
-                            }
-                            if(!scoreDialog.visible){
-                                scoreDialog.showDialog()
-                            }
-                        }
-                    }
-                }
+                // // 按钮组
+                // Row {
+                //     anchors.horizontalCenter: parent.horizontalCenter
+                //     spacing: 8
+                //     CustomButton {
+                //         id:tnmBtn
+                //         width: 80
+                //         height: 32
+                //         text:"TNM"
+                //         backgroundColor: "#FF490D"
+                //         onClicked: {
+                //             scoringMethodDialog.hideDialog()
+                //             // 切换到主页面并选择TNM评分
+                //             scoreDialog.resetAllValue()
+                //             contentRect.currentIndex = 0
+                //             contentRect.currentScore = 2  // TNM对应索引2
+                //             $loginManager.copyToClipboard(scoringMethodDialog.currentText)
+                //             if($tnmManager.checkClipboard()){
+                //                 $tnmManager.startAnalysis()
+                //             }else{
+                //                 messageManager.warning(qsTr("剪贴板为空，请先复制内容"))
+                //             }
+                //             if(!scoreDialog.visible){
+                //                 scoreDialog.showDialog()
+                //             }
+                //         }
+                //     }
+                //     CustomButton {
+                //         id:renalBtn
+                //         width: 80
+                //         height: 32
+                //         backgroundColor: "#5792FF"
+                //         text: "RENAL"
+                //         onClicked: {
+                //             // 点击RENAL按钮时隐藏右键菜单
+                //             if (contextMenu.visible) {
+                //                 contextMenu.hide()
+                //             }
+                //             scoringMethodDialog.hideDialog()
+                //             // 切换到主页面并选择RENAL评分
+                //             scoreDialog.resetAllValue()
+                //             contentRect.currentIndex = 0
+                //             contentRect.currentScore = 0  // RENAL对应索引0
+                //             $loginManager.copyToClipboard(scoringMethodDialog.currentText)
+                //             if($renalManager.checkClipboard()){
+                //                 $renalManager.startAnalysis()
+                //             }else{
+                //                 messageManager.warning(qsTr("剪贴板为空，请先复制内容"))
+                //             }
+                //             if(!scoreDialog.visible){
+                //                 scoreDialog.showDialog()
+                //             }
+                //         }
+                //     }
+                // }
 
                 SingleLineTextInput{
                     id: questionInput
@@ -1141,7 +1141,7 @@ ApplicationWindow {
 
         Rectangle {
             id: menuBackground
-            width: Math.max(Math.max(contentArea1.width, contentArea2.width), Math.max(contentArea3.width, contentArea4.width)) + 24
+            width: contentArea2.width + 24
             height: menuColumn.height
             color: "#FFFFFF"
             radius: 8
@@ -1159,69 +1159,69 @@ ApplicationWindow {
             Column {
                 id: menuColumn
                 width: parent.width
-                // 语言切换选项
-                Rectangle {
-                    width: parent.width
-                    height: 40
-                    color: languageMouseArea.containsMouse ? "#F5F5F5" : "transparent"
-                    radius: 6
+                // // 语言切换选项
+                // Rectangle {
+                //     width: parent.width
+                //     height: 40
+                //     color: languageMouseArea.containsMouse ? "#F5F5F5" : "transparent"
+                //     radius: 6
 
-                    Row {
-                        id: contentArea1
-                        anchors.left: parent.left
-                        anchors.leftMargin: 12
-                        anchors.verticalCenter: parent.verticalCenter
-                        spacing: 8
+                //     Row {
+                //         id: contentArea1
+                //         anchors.left: parent.left
+                //         anchors.leftMargin: 12
+                //         anchors.verticalCenter: parent.verticalCenter
+                //         spacing: 8
 
-                        // 语言图标
-                        Image{
-                            anchors.verticalCenter: parent.verticalCenter
-                            source: "qrc:/image/language.png"
-                        }
+                //         // 语言图标
+                //         Image{
+                //             anchors.verticalCenter: parent.verticalCenter
+                //             source: "qrc:/image/language.png"
+                //         }
 
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            font.family: "Alibaba PuHuiTi 3.0"
-                            font.pixelSize: 14
-                            color: languageMouseArea.containsMouse ? "#006BFF" : "#D9000000"
-                            text: qsTr("语言") + " (" + (languageManager ? qsTr(languageManager.getLanguageDisplayName(languageManager.currentLanguage)) : qsTr("中文")) + ")"
+                //         Text {
+                //             anchors.verticalCenter: parent.verticalCenter
+                //             font.family: "Alibaba PuHuiTi 3.0"
+                //             font.pixelSize: 14
+                //             color: languageMouseArea.containsMouse ? "#006BFF" : "#D9000000"
+                //             text: qsTr("语言") + " (" + (languageManager ? qsTr(languageManager.getLanguageDisplayName(languageManager.currentLanguage)) : qsTr("中文")) + ")"
 
-                            Behavior on color {
-                                ColorAnimation {
-                                    duration: 150
-                                    easing.type: Easing.OutQuad
-                                }
-                            }
-                        }
-                    }
+                //             Behavior on color {
+                //                 ColorAnimation {
+                //                     duration: 150
+                //                     easing.type: Easing.OutQuad
+                //                 }
+                //             }
+                //         }
+                //     }
 
-                    MouseArea {
-                        id: languageMouseArea
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
+                //     MouseArea {
+                //         id: languageMouseArea
+                //         anchors.fill: parent
+                //         hoverEnabled: true
+                //         cursorShape: Qt.PointingHandCursor
 
-                        onClicked: {
-                            if (languageManager) {
-                                // 切换语言：如果当前是中文，切换到英文；如果是英文，切换到中文
-                                if (languageManager.currentLanguage === "zh") {
-                                    languageManager.setCurrentLanguage("en")
-                                } else {
-                                    languageManager.setCurrentLanguage("zh")
-                                }
-                            }
-                            contextMenu.hide()
-                        }
-                    }
-                }
+                //         onClicked: {
+                //             if (languageManager) {
+                //                 // 切换语言：如果当前是中文，切换到英文；如果是英文，切换到中文
+                //                 if (languageManager.currentLanguage === "zh") {
+                //                     languageManager.setCurrentLanguage("en")
+                //                 } else {
+                //                     languageManager.setCurrentLanguage("zh")
+                //                 }
+                //             }
+                //             contextMenu.hide()
+                //         }
+                //     }
+                // }
 
-                // 分隔线
-                Rectangle {
-                    width: parent.width - 16
-                    height: 1
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    color: "#E0E0E0"
-                }
+                // // 分隔线
+                // Rectangle {
+                //     width: parent.width - 16
+                //     height: 1
+                //     anchors.horizontalCenter: parent.horizontalCenter
+                //     color: "#E0E0E0"
+                // }
 
                 // 弹窗控制选项
                 Rectangle {
@@ -1341,61 +1341,61 @@ ApplicationWindow {
                     color: "#E0E0E0"
                 }
 
-                // 截图识字选项
-                Rectangle {
-                    width: parent.width
-                    height: 40
-                    color: ocrMouseArea.containsMouse ? "#F5F5F5" : "transparent"
-                    radius: 6
+                // // 截图识字选项
+                // Rectangle {
+                //     width: parent.width
+                //     height: 40
+                //     color: ocrMouseArea.containsMouse ? "#F5F5F5" : "transparent"
+                //     radius: 6
 
-                    Row {
-                        id: contentArea3
-                        anchors.left: parent.left
-                        anchors.leftMargin: 12
-                        anchors.verticalCenter: parent.verticalCenter
-                        spacing: 8
+                //     Row {
+                //         id: contentArea3
+                //         anchors.left: parent.left
+                //         anchors.leftMargin: 12
+                //         anchors.verticalCenter: parent.verticalCenter
+                //         spacing: 8
 
-                        // 截图图标
-                        Image{
-                            anchors.verticalCenter: parent.verticalCenter
-                            source: "qrc:/image/screenshoot.png"
-                        }
+                //         // 截图图标
+                //         Image{
+                //             anchors.verticalCenter: parent.verticalCenter
+                //             source: "qrc:/image/screenshoot.png"
+                //         }
 
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            font.family: "Alibaba PuHuiTi 3.0"
-                            font.pixelSize: 14
-                            color: ocrMouseArea.containsMouse ? "#006BFF" : "#D9000000"
-                            text: qsTr("截图分析")
+                //         Text {
+                //             anchors.verticalCenter: parent.verticalCenter
+                //             font.family: "Alibaba PuHuiTi 3.0"
+                //             font.pixelSize: 14
+                //             color: ocrMouseArea.containsMouse ? "#006BFF" : "#D9000000"
+                //             text: qsTr("截图分析")
 
-                            Behavior on color {
-                                ColorAnimation {
-                                    duration: 150
-                                    easing.type: Easing.OutQuad
-                                }
-                            }
-                        }
-                    }
+                //             Behavior on color {
+                //                 ColorAnimation {
+                //                     duration: 150
+                //                     easing.type: Easing.OutQuad
+                //                 }
+                //             }
+                //         }
+                //     }
 
-                    MouseArea {
-                        id: ocrMouseArea
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            contextMenu.hide()
-                            screenshotSelector.startSelection()
-                        }
-                    }
-                }
+                //     MouseArea {
+                //         id: ocrMouseArea
+                //         anchors.fill: parent
+                //         hoverEnabled: true
+                //         cursorShape: Qt.PointingHandCursor
+                //         onClicked: {
+                //             contextMenu.hide()
+                //             screenshotSelector.startSelection()
+                //         }
+                //     }
+                // }
 
-                // 分隔线
-                Rectangle {
-                    width: parent.width - 16
-                    height: 1
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    color: "#E0E0E0"
-                }
+                // // 分隔线
+                // Rectangle {
+                //     width: parent.width - 16
+                //     height: 1
+                //     anchors.horizontalCenter: parent.horizontalCenter
+                //     color: "#E0E0E0"
+                // }
 
                 // 清除缓存选项
                 Rectangle {
@@ -1505,237 +1505,237 @@ ApplicationWindow {
             }
         }
     }
-    // 截图选择器
-    Window {
-        id: screenshotSelector
-        visible: false
-        flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool
-        color: "transparent"
+    // // 截图选择器
+    // Window {
+    //     id: screenshotSelector
+    //     visible: false
+    //     flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool
+    //     color: "transparent"
 
-        property bool isSelecting: false
-        property int startX: 0
-        property int startY: 0
-        property int endX: 0
-        property int endY: 0
+    //     property bool isSelecting: false
+    //     property int startX: 0
+    //     property int startY: 0
+    //     property int endX: 0
+    //     property int endY: 0
 
-        // 窗口显示时获得焦点
-        onVisibleChanged: {
-            if (visible) {
-                // 延迟一点确保窗口完全显示后再获得焦点
-                Qt.callLater(function() {
-                    screenshotSelector.requestActivate()
-                })
-            }
-        }
+    //     // 窗口显示时获得焦点
+    //     onVisibleChanged: {
+    //         if (visible) {
+    //             // 延迟一点确保窗口完全显示后再获得焦点
+    //             Qt.callLater(function() {
+    //                 screenshotSelector.requestActivate()
+    //             })
+    //         }
+    //     }
 
 
 
-        function startSelection() {
-            // 获取屏幕尺寸
-            var screen = Qt.application.screens[0]
-            width = screen.width
-            height = screen.height
-            x = screen.virtualX
-            y = screen.virtualY
+    //     function startSelection() {
+    //         // 获取屏幕尺寸
+    //         var screen = Qt.application.screens[0]
+    //         width = screen.width
+    //         height = screen.height
+    //         x = screen.virtualX
+    //         y = screen.virtualY
 
-            isSelecting = false
-            startX = 0
-            startY = 0
-            endX = 0
-            endY = 0
+    //         isSelecting = false
+    //         startX = 0
+    //         startY = 0
+    //         endX = 0
+    //         endY = 0
 
-            visible = true
-            raise()
-            requestActivate()
-        }
+    //         visible = true
+    //         raise()
+    //         requestActivate()
+    //     }
 
-        function finishSelection() {
-            // 立即隐藏窗口，避免蒙层继续阻挡鼠标事件
-            visible = false
-            isSelecting = false
+    //     function finishSelection() {
+    //         // 立即隐藏窗口，避免蒙层继续阻挡鼠标事件
+    //         visible = false
+    //         isSelecting = false
 
-            var selX = Math.min(startX, endX)
-            var selY = Math.min(startY, endY)
-            var selWidth = Math.abs(endX - startX)
-            var selHeight = Math.abs(endY - startY)
+    //         var selX = Math.min(startX, endX)
+    //         var selY = Math.min(startY, endY)
+    //         var selWidth = Math.abs(endX - startX)
+    //         var selHeight = Math.abs(endY - startY)
 
-            if (selWidth > 10 && selHeight > 10) {
-                // 使用延迟调用，确保窗口完全隐藏后再处理截图
-                Qt.callLater(function() {
-                    $loginManager.processScreenshotArea(selX, selY, selWidth, selHeight)
-                })
-            }
-        }
+    //         if (selWidth > 10 && selHeight > 10) {
+    //             // 使用延迟调用，确保窗口完全隐藏后再处理截图
+    //             Qt.callLater(function() {
+    //                 $loginManager.processScreenshotArea(selX, selY, selWidth, selHeight)
+    //             })
+    //         }
+    //     }
 
-        function cancelSelection() {
-            isSelecting = false
-            visible = false
-            // 重置选择区域
-            startX = 0
-            startY = 0
-            endX = 0
-            endY = 0
-        }
+    //     function cancelSelection() {
+    //         isSelecting = false
+    //         visible = false
+    //         // 重置选择区域
+    //         startX = 0
+    //         startY = 0
+    //         endX = 0
+    //         endY = 0
+    //     }
 
-        // 使用四个矩形来创建带透明选中区域的遮罩
-        Item {
-            anchors.fill: parent
-            focus: true  // 确保能接收键盘事件
-            Component.onCompleted: {
-                forceActiveFocus()
-            }
+    //     // 使用四个矩形来创建带透明选中区域的遮罩
+    //     Item {
+    //         anchors.fill: parent
+    //         focus: true  // 确保能接收键盘事件
+    //         Component.onCompleted: {
+    //             forceActiveFocus()
+    //         }
 
-            // 计算选中区域的坐标
-            property int selX: screenshotSelector.isSelecting ? Math.min(screenshotSelector.startX, screenshotSelector.endX) : 0
-            property int selY: screenshotSelector.isSelecting ? Math.min(screenshotSelector.startY, screenshotSelector.endY) : 0
-            property int selWidth: screenshotSelector.isSelecting ? Math.abs(screenshotSelector.endX - screenshotSelector.startX) : 0
-            property int selHeight: screenshotSelector.isSelecting ? Math.abs(screenshotSelector.endY - screenshotSelector.startY) : 0
+    //         // 计算选中区域的坐标
+    //         property int selX: screenshotSelector.isSelecting ? Math.min(screenshotSelector.startX, screenshotSelector.endX) : 0
+    //         property int selY: screenshotSelector.isSelecting ? Math.min(screenshotSelector.startY, screenshotSelector.endY) : 0
+    //         property int selWidth: screenshotSelector.isSelecting ? Math.abs(screenshotSelector.endX - screenshotSelector.startX) : 0
+    //         property int selHeight: screenshotSelector.isSelecting ? Math.abs(screenshotSelector.endY - screenshotSelector.startY) : 0
 
-            // 上方遮罩
-            Rectangle {
-                x: 0
-                y: 0
-                width: parent.width
-                height: parent.selY
-                color: "#80000000"
-                visible: screenshotSelector.isSelecting && height > 0
-            }
+    //         // 上方遮罩
+    //         Rectangle {
+    //             x: 0
+    //             y: 0
+    //             width: parent.width
+    //             height: parent.selY
+    //             color: "#80000000"
+    //             visible: screenshotSelector.isSelecting && height > 0
+    //         }
 
-            // 下方遮罩
-            Rectangle {
-                x: 0
-                y: parent.selY + parent.selHeight
-                width: parent.width
-                height: parent.height - y
-                color: "#80000000"
-                visible: screenshotSelector.isSelecting && height > 0
-            }
+    //         // 下方遮罩
+    //         Rectangle {
+    //             x: 0
+    //             y: parent.selY + parent.selHeight
+    //             width: parent.width
+    //             height: parent.height - y
+    //             color: "#80000000"
+    //             visible: screenshotSelector.isSelecting && height > 0
+    //         }
 
-            // 左侧遮罩
-            Rectangle {
-                x: 0
-                y: parent.selY
-                width: parent.selX
-                height: parent.selHeight
-                color: "#80000000"
-                visible: screenshotSelector.isSelecting && width > 0
-            }
+    //         // 左侧遮罩
+    //         Rectangle {
+    //             x: 0
+    //             y: parent.selY
+    //             width: parent.selX
+    //             height: parent.selHeight
+    //             color: "#80000000"
+    //             visible: screenshotSelector.isSelecting && width > 0
+    //         }
 
-            // 右侧遮罩
-            Rectangle {
-                x: parent.selX + parent.selWidth
-                y: parent.selY
-                width: parent.width - x
-                height: parent.selHeight
-                color: "#80000000"
-                visible: screenshotSelector.isSelecting && width > 0
-            }
+    //         // 右侧遮罩
+    //         Rectangle {
+    //             x: parent.selX + parent.selWidth
+    //             y: parent.selY
+    //             width: parent.width - x
+    //             height: parent.selHeight
+    //             color: "#80000000"
+    //             visible: screenshotSelector.isSelecting && width > 0
+    //         }
 
-            // 选中区域边框（透明区域）
-            Rectangle {
-                id: selectionRect
-                x: parent.selX
-                y: parent.selY
-                width: parent.selWidth
-                height: parent.selHeight
-                color: "transparent"
-                border.color: "#00AAFF"
-                border.width: 2
-                visible: screenshotSelector.isSelecting
+    //         // 选中区域边框（透明区域）
+    //         Rectangle {
+    //             id: selectionRect
+    //             x: parent.selX
+    //             y: parent.selY
+    //             width: parent.selWidth
+    //             height: parent.selHeight
+    //             color: "transparent"
+    //             border.color: "#00AAFF"
+    //             border.width: 2
+    //             visible: screenshotSelector.isSelecting
 
-                // 选择区域的尺寸显示
-                Text {
-                    anchors.bottom: parent.top
-                    anchors.left: parent.left
-                    anchors.bottomMargin: 5
-                    color: "#FFFFFF"
-                    font.family: "Alibaba PuHuiTi 3.0"
-                    font.pixelSize: 12
-                    text: parent.width + " × " + parent.height
-                    visible: parent.width > 50 && parent.height > 20
+    //             // 选择区域的尺寸显示
+    //             Text {
+    //                 anchors.bottom: parent.top
+    //                 anchors.left: parent.left
+    //                 anchors.bottomMargin: 5
+    //                 color: "#FFFFFF"
+    //                 font.family: "Alibaba PuHuiTi 3.0"
+    //                 font.pixelSize: 12
+    //                 text: parent.width + " × " + parent.height
+    //                 visible: parent.width > 50 && parent.height > 20
 
-                    Rectangle {
-                        anchors.fill: parent
-                        anchors.margins: -2
-                        color: "#80000000"
-                        radius: 2
-                        z: -1
-                    }
-                }
-            }
+    //                 Rectangle {
+    //                     anchors.fill: parent
+    //                     anchors.margins: -2
+    //                     color: "#80000000"
+    //                     radius: 2
+    //                     z: -1
+    //                 }
+    //             }
+    //         }
 
-            // 未开始选择时的全屏遮罩
-            Rectangle {
-                anchors.fill: parent
-                color: "#80000000"
-                visible: !screenshotSelector.isSelecting
-            }
+    //         // 未开始选择时的全屏遮罩
+    //         Rectangle {
+    //             anchors.fill: parent
+    //             color: "#80000000"
+    //             visible: !screenshotSelector.isSelecting
+    //         }
 
-            MouseArea {
-                anchors.fill: parent
-                cursorShape: Qt.CrossCursor
-                acceptedButtons: Qt.LeftButton | Qt.RightButton
-                focus: true
+    //         MouseArea {
+    //             anchors.fill: parent
+    //             cursorShape: Qt.CrossCursor
+    //             acceptedButtons: Qt.LeftButton | Qt.RightButton
+    //             focus: true
 
-                onPressed: {
-                    // 确保获得焦点
-                    forceActiveFocus()
+    //             onPressed: {
+    //                 // 确保获得焦点
+    //                 forceActiveFocus()
 
-                    if (mouse.button === Qt.RightButton) {
-                        // 右键直接取消
-                        screenshotSelector.cancelSelection()
-                        return
-                    }
+    //                 if (mouse.button === Qt.RightButton) {
+    //                     // 右键直接取消
+    //                     screenshotSelector.cancelSelection()
+    //                     return
+    //                 }
 
-                    if (mouse.button === Qt.LeftButton) {
-                        screenshotSelector.isSelecting = true
-                        screenshotSelector.startX = mouse.x
-                        screenshotSelector.startY = mouse.y
-                        screenshotSelector.endX = mouse.x
-                        screenshotSelector.endY = mouse.y
-                    }
-                }
+    //                 if (mouse.button === Qt.LeftButton) {
+    //                     screenshotSelector.isSelecting = true
+    //                     screenshotSelector.startX = mouse.x
+    //                     screenshotSelector.startY = mouse.y
+    //                     screenshotSelector.endX = mouse.x
+    //                     screenshotSelector.endY = mouse.y
+    //                 }
+    //             }
 
-                onPositionChanged: {
-                    if (screenshotSelector.isSelecting && pressedButtons & Qt.LeftButton) {
-                        screenshotSelector.endX = mouse.x
-                        screenshotSelector.endY = mouse.y
-                    }
-                }
+    //             onPositionChanged: {
+    //                 if (screenshotSelector.isSelecting && pressedButtons & Qt.LeftButton) {
+    //                     screenshotSelector.endX = mouse.x
+    //                     screenshotSelector.endY = mouse.y
+    //                 }
+    //             }
 
-                onReleased: {
-                    if (mouse.button === Qt.LeftButton && screenshotSelector.isSelecting) {
-                        screenshotSelector.finishSelection()
-                    }
-                }
+    //             onReleased: {
+    //                 if (mouse.button === Qt.LeftButton && screenshotSelector.isSelecting) {
+    //                     screenshotSelector.finishSelection()
+    //                 }
+    //             }
 
-                // MouseArea级别的键盘事件处理
-                Keys.onEscapePressed: {
-                    screenshotSelector.cancelSelection()
-                }
-            }
+    //             // MouseArea级别的键盘事件处理
+    //             Keys.onEscapePressed: {
+    //                 screenshotSelector.cancelSelection()
+    //             }
+    //         }
 
-            // 使用Shortcut组件确保ESC键能被捕获
-            Shortcut {
-                sequence: "Escape"
-                enabled: screenshotSelector.visible
-                onActivated: {
-                    screenshotSelector.cancelSelection()
-                }
-            }
+    //         // 使用Shortcut组件确保ESC键能被捕获
+    //         Shortcut {
+    //             sequence: "Escape"
+    //             enabled: screenshotSelector.visible
+    //             onActivated: {
+    //                 screenshotSelector.cancelSelection()
+    //             }
+    //         }
 
-            // 提示文字
-            Text {
-                anchors.top: parent.top
-                anchors.left: parent.left
-                anchors.margins: 20
-                color: "#FFFFFF"
-                font.family: "Alibaba PuHuiTi 3.0"
-                font.pixelSize: 16
-                text: qsTr("拖拽选择截图区域，右键或ESC键取消")
-            }
-        }
-    }
+    //         // 提示文字
+    //         Text {
+    //             anchors.top: parent.top
+    //             anchors.left: parent.left
+    //             anchors.margins: 20
+    //             color: "#FFFFFF"
+    //             font.family: "Alibaba PuHuiTi 3.0"
+    //             font.pixelSize: 16
+    //             text: qsTr("拖拽选择截图区域，右键或ESC键取消")
+    //         }
+    //     }
+    // }
 
     // 独立的Chat窗口
     Window {
