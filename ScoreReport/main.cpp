@@ -3,6 +3,7 @@
 #include <QQmlContext>
 #include <QFontDatabase>
 #include <QDebug>
+#include <QIcon>
 #include "LoginManager.h"
 #include "CCLSScorer.h"
 #include "TNMManager.h"
@@ -15,6 +16,7 @@
 #include "ChatManager.h"
 #include "LanguageManager.h"
 #include "ReportManager.h"
+#include "KnowledgeManager.h"
 int main(int argc, char *argv[])
 {
 #if defined(Q_OS_WIN)
@@ -25,7 +27,6 @@ int main(int argc, char *argv[])
     QCoreApplication::setAttribute(Qt::AA_UseOpenGLES);
 
     QGuiApplication app(argc, argv);
-
     // 设置应用程序信息，解决FileDialog的QSettings错误
     QCoreApplication::setOrganizationName("AETHERMIND");
     QCoreApplication::setOrganizationDomain("aethermind.com");
@@ -72,6 +73,9 @@ int main(int argc, char *argv[])
     // 初始化语言管理器
     auto* languageManager = GET_SINGLETON(LanguageManager);
     languageManager->initializeTranslator(&engine);
+
+    auto* knowledgeManager = GET_SINGLETON(KnowledgeManager);
+    engine.rootContext()->setContextProperty("$knowledgeManager", knowledgeManager);
 
     // 加载字体并检查是否成功
     int fontId1 = QFontDatabase::addApplicationFont(":/fonts/AlibabaPuHuiTi-3-55-Regular.ttf");

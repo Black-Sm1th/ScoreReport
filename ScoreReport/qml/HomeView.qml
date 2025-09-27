@@ -220,6 +220,7 @@ Rectangle {
                     currentPageChanged(7)
                 }
                 else if(title === "知识库管理"){
+                    $knowledgeManager.updateKnowledgeList()
                     currentPageChanged(8)
                 }
                 else{

@@ -1,6 +1,9 @@
 #include "Version.h"
 #include <windows.h>
 
+// 图标资源定义
+#define IDI_ICON1 1
+
 //
 // Version Information resources
 //
@@ -51,4 +54,4 @@ END
 //
 // Icon (需要.ico格式的图标文件)
 //
-// IDI_ICON1 ICON "image\\titleIcon.ico"
+IDI_ICON1 ICON "icon\\icon.ico"

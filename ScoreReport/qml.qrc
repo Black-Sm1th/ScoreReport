@@ -80,5 +80,6 @@
         <file>image/clearCache.png</file>
         <file>image/chatBubble.png</file>
         <file>qml/Knowledge.qml</file>
+        <file>icon/icon.ico</file>
     </qresource>
 </RCC>
