@@ -783,6 +783,14 @@ ApplicationWindow {
                         contentRect.currentScore = -1
                     }
                 }
+                Knowledge{
+                    id:knowledgeView
+                    visible: contentRect.currentIndex === 0 && contentRect.currentScore === 8
+                    messageManager: dialogMessageBox
+                    onExitScore: {
+                        contentRect.currentScore = -1
+                    }
+                }
                 // REPORT{
                 //     id:reportView
                 //     visible: contentRect.currentIndex === 0 && contentRect.currentScore === 7
@@ -869,7 +877,7 @@ ApplicationWindow {
                 }
             }
             function onMouseEvent(){
-                if(tnmBtn.containsMouse || renalBtn.containsMouse || inputArea.containsMouse){
+                if(inputArea.containsMouse){
                     return
                 }
                 scoringMethodDialog.hideDialog()

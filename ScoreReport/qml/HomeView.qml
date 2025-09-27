@@ -219,6 +219,9 @@ Rectangle {
                     $reportManager.refreshTemplate()
                     currentPageChanged(7)
                 }
+                else if(title === "知识库管理"){
+                    currentPageChanged(8)
+                }
                 else{
                     messageManager.warning(qsTr("该功能暂未开放"))
                 }

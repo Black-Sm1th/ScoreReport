@@ -79,5 +79,6 @@
         <file>image/finger.png</file>
         <file>image/clearCache.png</file>
         <file>image/chatBubble.png</file>
+        <file>qml/Knowledge.qml</file>
     </qresource>
 </RCC>

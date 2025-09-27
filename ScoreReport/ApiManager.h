@@ -11,6 +11,13 @@
 #include <QJsonArray>
 #include <QDebug>
 #include <QSet>
+#include <QList>
+#include <QHttpMultiPart>
+#include <QHttpPart>
+#include <QFile>
+#include <QFileInfo>
+#include <QMimeDatabase>
+#include <QMimeType>
 #include "CommonFunc.h"
 
 /**
@@ -164,6 +171,74 @@ public:
     void getReportTemplateList();
     
     /**
+     * @brief 上传文件到知识库
+     * @param filePath 要上传的文件路径
+     * @param knowledgeBaseId 知识库ID
+     * 
+     * 发送文件上传请求到服务器，结果通过 uploadFileResponse 信号返回
+     */
+    void uploadFileToKnowledgeBase(const QString& filePath, int knowledgeBaseId);
+    
+    /**
+     * @brief 创建知识库
+     * @param name 知识库名称（可选）
+     * @param description 知识库描述（可选）
+     * 
+     * 发送创建知识库请求到服务器，结果通过 createKnowledgeBaseResponse 信号返回
+     */
+    void createKnowledgeBase(const QString& name = "", const QString& description = "");
+    
+    /**
+     * @brief 删除知识库
+     * @param id 知识库ID
+     * 
+     * 发送删除知识库请求到服务器，结果通过 deleteKnowledgeBaseResponse 信号返回
+     */
+    void deleteKnowledgeBase(int id);
+    
+    /**
+     * @brief 更新知识库
+     * @param id 知识库ID（可选）
+     * @param name 知识库名称（可选）
+     * @param description 知识库描述（可选）
+     * 
+     * 发送更新知识库请求到服务器，结果通过 updateKnowledgeBaseResponse 信号返回
+     */
+    void updateKnowledgeBase(int id = -1, const QString& name = "", const QString& description = "");
+    
+    /**
+     * @brief 根据ID获取知识库详情（包含文件信息）
+     * @param id 知识库ID
+     * 
+     * 发送获取知识库详情请求到服务器，结果通过 getKnowledgeBaseResponse 信号返回
+     */
+    void getKnowledgeBase(int id);
+    
+    /**
+     * @brief 分页获取知识库列表
+     * @param current 当前页码，默认1
+     * @param pageSize 页面大小，默认10
+     * @param sortField 排序字段（可选）
+     * @param sortOrder 排序顺序，默认"descend"
+     * @param id 知识库ID筛选（可选）
+     * @param name 知识库名称筛选（可选）
+     * @param userId 用户ID筛选（可选）
+     * 
+     * 发送获取知识库列表请求到服务器，结果通过 getKnowledgeBaseListResponse 信号返回
+     */
+    void getKnowledgeBaseList(int current = 1, int pageSize = 10000, const QString& sortField = "",
+                             const QString& sortOrder = "descend", int id = -1, 
+                             const QString& name = "", int userId = -1);
+    
+    /**
+     * @brief 批量删除知识库文件
+     * @param ids 要删除的文件ID列表
+     * 
+     * 发送批量删除知识库文件请求到服务器，结果通过 deleteKnowledgeBaseFilesResponse 信号返回
+     */
+    void deleteKnowledgeBaseFiles(const QList<int>& ids);
+    
+    /**
      * @brief 终止所有正在进行的网络请求
      * 
      * 立即终止所有活跃的POST/GET请求，已发送的请求会被中断。
@@ -302,6 +377,62 @@ signals:
      * @param data 模板列表数据
      */
     void getReportTemplateListResponse(bool success, const QString& message, const QJsonObject& data);
+    
+    /**
+     * @brief 文件上传响应信号
+     * @param success 是否上传成功
+     * @param message 服务器返回的消息
+     * @param data 上传结果数据
+     */
+    void uploadFileResponse(bool success, const QString& message, const QJsonObject& data);
+    
+    /**
+     * @brief 创建知识库响应信号
+     * @param success 是否创建成功
+     * @param message 服务器返回的消息
+     * @param data 创建结果数据
+     */
+    void createKnowledgeBaseResponse(bool success, const QString& message, const QJsonObject& data);
+    
+    /**
+     * @brief 删除知识库响应信号
+     * @param success 是否删除成功
+     * @param message 服务器返回的消息
+     * @param data 删除结果数据
+     */
+    void deleteKnowledgeBaseResponse(bool success, const QString& message, const QJsonObject& data);
+    
+    /**
+     * @brief 更新知识库响应信号
+     * @param success 是否更新成功
+     * @param message 服务器返回的消息
+     * @param data 更新结果数据
+     */
+    void updateKnowledgeBaseResponse(bool success, const QString& message, const QJsonObject& data);
+    
+    /**
+     * @brief 获取知识库详情响应信号
+     * @param success 是否获取成功
+     * @param message 服务器返回的消息
+     * @param data 知识库详情数据
+     */
+    void getKnowledgeBaseResponse(bool success, const QString& message, const QJsonObject& data);
+    
+    /**
+     * @brief 获取知识库列表响应信号
+     * @param success 是否获取成功
+     * @param message 服务器返回的消息
+     * @param data 知识库列表数据
+     */
+    void getKnowledgeBaseListResponse(bool success, const QString& message, const QJsonObject& data);
+    
+    /**
+     * @brief 批量删除知识库文件响应信号
+     * @param success 是否删除成功
+     * @param message 服务器返回的消息
+     * @param data 删除结果数据
+     */
+    void deleteKnowledgeBaseFilesResponse(bool success, const QString& message, const QJsonObject& data);
     
     /**
      * @brief 网络错误信号
