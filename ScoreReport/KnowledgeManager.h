@@ -62,6 +62,40 @@ public:
      * 从当前展开的知识库中删除指定文件
      */
     Q_INVOKABLE void deleteKnowledgeFile(const QString& fileId);
+    
+    /**
+     * @brief 创建新的知识库
+     * @param name 知识库名称
+     * @param description 知识库描述
+     * 
+     * 创建一个新的知识库
+     */
+    Q_INVOKABLE void createKnowledgeBase(const QString& name, const QString& description);
+    
+    /**
+     * @brief 删除指定的知识库
+     * @param knowledgeId 要删除的知识库ID
+     * 
+     * 删除指定的知识库
+     */
+    Q_INVOKABLE void deleteKnowledgeBase(const QString& knowledgeId);
+    
+    /**
+     * @brief 重置所有状态
+     * 
+     * 清空展开的知识库ID和详情数据，用于页面重置或退出
+     */
+    Q_INVOKABLE void resetAllStates();
+    
+    /**
+     * @brief 编辑知识库
+     * @param knowledgeId 知识库ID
+     * @param name 新的知识库名称
+     * @param description 新的知识库描述
+     * 
+     * 更新指定知识库的名称和描述
+     */
+    Q_INVOKABLE void editKnowledgeBase(const QString& knowledgeId, const QString& name, const QString& description);
 
 signals:
     /**
@@ -92,6 +126,27 @@ signals:
      * @param message 结果消息
      */
     void fileDeleteCompleted(bool success, const QString& message);
+    
+    /**
+     * @brief 知识库创建完成信号
+     * @param success 是否创建成功
+     * @param message 结果消息
+     */
+    void knowledgeBaseCreateCompleted(bool success, const QString& message);
+    
+    /**
+     * @brief 知识库删除完成信号
+     * @param success 是否删除成功
+     * @param message 结果消息
+     */
+    void knowledgeBaseDeleteCompleted(bool success, const QString& message);
+    
+    /**
+     * @brief 知识库编辑完成信号
+     * @param success 是否编辑成功
+     * @param message 结果消息
+     */
+    void knowledgeBaseEditCompleted(bool success, const QString& message);
 
 private slots:
     /**
@@ -125,5 +180,29 @@ private slots:
      * @param data 响应数据
      */
     void onFileDeleteResponse(bool success, const QString& message, const QJsonObject& data);
+    
+    /**
+     * @brief 处理知识库创建响应
+     * @param success 请求是否成功
+     * @param message 响应消息
+     * @param data 响应数据
+     */
+    void onCreateKnowledgeBaseResponse(bool success, const QString& message, const QJsonObject& data);
+    
+    /**
+     * @brief 处理知识库删除响应
+     * @param success 请求是否成功
+     * @param message 响应消息
+     * @param data 响应数据
+     */
+    void onDeleteKnowledgeBaseResponse(bool success, const QString& message, const QJsonObject& data);
+    
+    /**
+     * @brief 处理知识库更新响应
+     * @param success 请求是否成功
+     * @param message 响应消息
+     * @param data 响应数据
+     */
+    void onUpdateKnowledgeBaseResponse(bool success, const QString& message, const QJsonObject& data);
 };
 

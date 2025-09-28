@@ -39,11 +39,16 @@ QString ApiManager::getBaseUrl() const
  * - User-Agent: ScoreReport/1.0
  * - 完整的请求URL = baseUrl + endpoint
  */
-QNetworkRequest ApiManager::createRequest(const QString& endpoint) const
+QNetworkRequest ApiManager::createRequest(const QString& endpoint, bool setJsonContentType) const
 {
     QUrl url(getBaseUrl() + endpoint);
     QNetworkRequest request(url);
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    
+    // 只有在需要时才设置JSON Content-Type（文件上传不需要）
+    if (setJsonContentType) {
+        request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    }
+    
     request.setRawHeader("User-Agent", "ScoreReport/1.0");
     
     qDebug() << "[ApiManager] Creating request to:" << url.toString();
@@ -388,7 +393,7 @@ void ApiManager::getReportTemplateList()
  * 使用multipart/form-data格式上传文件。
  * 请求类型标记为 "upload-file"，结果会通过 uploadFileResponse 信号返回。
  */
-void ApiManager::uploadFileToKnowledgeBase(const QString& filePath, const QString& knowledgeBaseId)
+void ApiManager::uploadFileToKnowledgeBase(const QString& filePath, const QString& knowledgeBaseId, const QString& userId)
 {
     // 检查文件是否存在
     QFileInfo fileInfo(filePath);
@@ -416,7 +421,7 @@ void ApiManager::uploadFileToKnowledgeBase(const QString& filePath, const QStrin
     filePart.setHeader(QNetworkRequest::ContentDispositionHeader, 
                        QVariant(QString("form-data; name=\"files\"; filename=\"%1\"").arg(fileInfo.fileName())));
     filePart.setBodyDevice(file);
-    file->setParent(multiPart); // 确保文件对象在multipart对象销毁前不会被删除
+    file->setParent(multiPart);
     
     // 添加知识库ID字段
     QHttpPart knowledgeBaseIdPart;
@@ -424,19 +429,26 @@ void ApiManager::uploadFileToKnowledgeBase(const QString& filePath, const QStrin
                                   QVariant("form-data; name=\"knowledgeBaseId\""));
     knowledgeBaseIdPart.setBody(knowledgeBaseId.toUtf8());
     
+    // 添加用户ID字段
+    QHttpPart userIdPart;
+    userIdPart.setHeader(QNetworkRequest::ContentDispositionHeader, 
+                        QVariant("form-data; name=\"userId\""));
+    userIdPart.setBody(userId.toUtf8());
+    
     multiPart->append(filePart);
     multiPart->append(knowledgeBaseIdPart);
+    multiPart->append(userIdPart);
     
-    // 创建请求
-    QNetworkRequest request = createRequest("/ai/knowledge/file/upload");
+    // 创建请求 - 不设置JSON Content-Type，让Qt自动设置multipart/form-data
+    QNetworkRequest request = createRequest("/ai/knowledge/file/upload", false);
     request.setRawHeader("X-Request-Type", "upload-file");
     
     // 发送请求
     QNetworkReply* reply = m_networkManager->post(request, multiPart);
-    multiPart->setParent(reply); // 确保multipart对象在reply销毁前不会被删除
-    m_activeReplies.insert(reply);  // 跟踪活跃的请求
+    multiPart->setParent(reply);
+    m_activeReplies.insert(reply);
     
-    qDebug() << "[ApiManager] Uploading file:" << filePath
+    qDebug() << "[ApiManager] Uploading file:" << filePath 
              << "to knowledge base:" << knowledgeBaseId;
 }
 

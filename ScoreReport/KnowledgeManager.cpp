@@ -1,5 +1,6 @@
 ﻿#include "KnowledgeManager.h"
 #include "ApiManager.h"
+#include "LoginManager.h"
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QVariantMap>
@@ -29,6 +30,12 @@ KnowledgeManager::KnowledgeManager(QObject* parent)
             this, &KnowledgeManager::onFileUploadResponse);
     connect(GET_SINGLETON(ApiManager), &ApiManager::deleteKnowledgeBaseFilesResponse,
             this, &KnowledgeManager::onFileDeleteResponse);
+    connect(GET_SINGLETON(ApiManager), &ApiManager::createKnowledgeBaseResponse,
+            this, &KnowledgeManager::onCreateKnowledgeBaseResponse);
+    connect(GET_SINGLETON(ApiManager), &ApiManager::deleteKnowledgeBaseResponse,
+            this, &KnowledgeManager::onDeleteKnowledgeBaseResponse);
+    connect(GET_SINGLETON(ApiManager), &ApiManager::updateKnowledgeBaseResponse,
+            this, &KnowledgeManager::onUpdateKnowledgeBaseResponse);
 }
 
 /**
@@ -75,7 +82,6 @@ void KnowledgeManager::onKnowledgeBaseListResponse(bool success, const QString& 
                 
                 // 创建知识库项目映射，包含QML需要的字段
                 QVariantMap knowledgeItem;
-                qDebug() << record["id"];
                 knowledgeItem["id"] = record["id"].toString();  // 改为字符串格式
                 knowledgeItem["name"] = record["name"].toString();
                 knowledgeItem["description"] = record["description"].toString();
@@ -175,7 +181,7 @@ void KnowledgeManager::onKnowledgeBaseDetailResponse(bool success, const QString
                 fileItem["id"] = file["id"].toString();  // 改为字符串格式
                 fileItem["knowledgeBaseId"] = file["knowledgeBaseId"].toString();  // 改为字符串格式
                 fileItem["fileName"] = file["fileName"].toString();
-                fileItem["fileSize"] = file["fileSize"].toInt();
+                fileItem["fileSize"] = file["fileSize"].toString().toLong();
                 fileItem["fileType"] = file["fileType"].toString();
                 fileItem["status"] = file["status"].toString();
                 fileItem["fileUrl"] = file["fileUrl"].toString();
@@ -215,8 +221,21 @@ void KnowledgeManager::uploadFileToCurrentKnowledge(const QString& filePath)
         return;
     }
     
+    // 获取当前用户ID
+    auto* loginManager = GET_SINGLETON(LoginManager);
+    QString userId = loginManager->getcurrentUserId();
+    
+    if (userId.isEmpty() || userId == "-1") {
+        qWarning() << "[KnowledgeManager] User not logged in or invalid user ID";
+        emit fileUploadCompleted(false, "请先登录");
+        return;
+    }
+    
     // 调用ApiManager上传文件
-    GET_SINGLETON(ApiManager)->uploadFileToKnowledgeBase(filePath, currentKnowledgeId);
+    GET_SINGLETON(ApiManager)->uploadFileToKnowledgeBase(filePath, currentKnowledgeId, userId);
+    
+    qDebug() << "[KnowledgeManager] Uploading file:" << filePath 
+             << "to knowledge base:" << currentKnowledgeId;
 }
 
 /**
@@ -257,6 +276,7 @@ void KnowledgeManager::onFileUploadResponse(bool success, const QString& message
         }
         
         emit fileUploadCompleted(true, "文件上传成功");
+        qDebug() << "[KnowledgeManager] File upload successful";
     } else {
         qWarning() << "[KnowledgeManager] File upload failed:" << message;
         emit fileUploadCompleted(false, message);
@@ -284,5 +304,162 @@ void KnowledgeManager::onFileDeleteResponse(bool success, const QString& message
     } else {
         qWarning() << "[KnowledgeManager] File delete failed:" << message;
         emit fileDeleteCompleted(false, message);
+    }
+}
+
+/**
+ * @brief 创建新的知识库
+ * @param name 知识库名称
+ * @param description 知识库描述
+ * 
+ * 调用ApiManager的createKnowledgeBase接口创建新的知识库。
+ * 创建完成后自动刷新知识库列表。
+ */
+void KnowledgeManager::createKnowledgeBase(const QString& name, const QString& description)
+{
+    if (name.isEmpty()) {
+        qWarning() << "[KnowledgeManager] Knowledge base name cannot be empty";
+        emit knowledgeBaseCreateCompleted(false, "知识库名称不能为空");
+        return;
+    }
+    
+    // 调用ApiManager创建知识库
+    GET_SINGLETON(ApiManager)->createKnowledgeBase(name, description);
+    
+    qDebug() << "[KnowledgeManager] Creating knowledge base:" << name;
+}
+
+/**
+ * @brief 删除指定的知识库
+ * @param knowledgeId 要删除的知识库ID
+ * 
+ * 调用ApiManager的deleteKnowledgeBase接口删除指定的知识库。
+ * 删除完成后自动刷新知识库列表。
+ */
+void KnowledgeManager::deleteKnowledgeBase(const QString& knowledgeId)
+{
+    if (knowledgeId.isEmpty()) {
+        qWarning() << "[KnowledgeManager] Knowledge base ID cannot be empty";
+        emit knowledgeBaseDeleteCompleted(false, "知识库ID不能为空");
+        return;
+    }
+    
+    // 调用ApiManager删除知识库
+    GET_SINGLETON(ApiManager)->deleteKnowledgeBase(knowledgeId);
+    
+    qDebug() << "[KnowledgeManager] Deleting knowledge base:" << knowledgeId;
+}
+
+/**
+ * @brief 处理知识库创建响应
+ * @param success 请求是否成功
+ * @param message 响应消息
+ * @param data 响应数据
+ * 
+ * 处理知识库创建完成后的响应，成功时自动刷新知识库列表。
+ */
+void KnowledgeManager::onCreateKnowledgeBaseResponse(bool success, const QString& message, const QJsonObject& data)
+{
+    if (success) {
+        // 创建成功后，自动刷新知识库列表
+        updateKnowledgeList();
+        
+        emit knowledgeBaseCreateCompleted(true, "知识库创建成功");
+        qDebug() << "[KnowledgeManager] Knowledge base created successfully";
+    } else {
+        qWarning() << "[KnowledgeManager] Knowledge base creation failed:" << message;
+        emit knowledgeBaseCreateCompleted(false, message);
+    }
+}
+
+/**
+ * @brief 处理知识库删除响应
+ * @param success 请求是否成功
+ * @param message 响应消息
+ * @param data 响应数据
+ * 
+ * 处理知识库删除完成后的响应，成功时自动刷新知识库列表。
+ */
+void KnowledgeManager::onDeleteKnowledgeBaseResponse(bool success, const QString& message, const QJsonObject& data)
+{
+    if (success) {
+        // 删除成功后，清空展开状态并刷新知识库列表
+        setexpandedKnowledgeId(QString());
+        setcurrentKnowledgeDetail(QVariantMap());
+        updateKnowledgeList();
+        
+        emit knowledgeBaseDeleteCompleted(true, "知识库删除成功");
+        qDebug() << "[KnowledgeManager] Knowledge base deleted successfully";
+    } else {
+        qWarning() << "[KnowledgeManager] Knowledge base deletion failed:" << message;
+        emit knowledgeBaseDeleteCompleted(false, message);
+    }
+}
+
+/**
+ * @brief 重置所有状态
+ * 
+ * 清空展开的知识库ID和详情数据，用于页面重置或退出。
+ * 这个函数会清空所有的展开状态和详情数据。
+ */
+void KnowledgeManager::resetAllStates()
+{
+    // 清空展开的知识库ID
+    setexpandedKnowledgeId(QString());
+    
+    // 清空当前知识库详情
+    setcurrentKnowledgeDetail(QVariantMap());
+    
+    qDebug() << "[KnowledgeManager] All states have been reset";
+}
+
+/**
+ * @brief 编辑知识库
+ * @param knowledgeId 知识库ID
+ * @param name 新的知识库名称
+ * @param description 新的知识库描述
+ * 
+ * 调用ApiManager的updateKnowledgeBase接口更新指定的知识库。
+ * 更新完成后自动刷新知识库列表。
+ */
+void KnowledgeManager::editKnowledgeBase(const QString& knowledgeId, const QString& name, const QString& description)
+{
+    if (knowledgeId.isEmpty()) {
+        qWarning() << "[KnowledgeManager] Knowledge base ID cannot be empty for editing";
+        emit knowledgeBaseEditCompleted(false, "知识库ID不能为空");
+        return;
+    }
+    
+    if (name.isEmpty()) {
+        qWarning() << "[KnowledgeManager] Knowledge base name cannot be empty";
+        emit knowledgeBaseEditCompleted(false, "知识库名称不能为空");
+        return;
+    }
+    
+    // 调用ApiManager更新知识库
+    GET_SINGLETON(ApiManager)->updateKnowledgeBase(knowledgeId, name, description);
+    
+    qDebug() << "[KnowledgeManager] Editing knowledge base:" << knowledgeId << "with name:" << name;
+}
+
+/**
+ * @brief 处理知识库更新响应
+ * @param success 请求是否成功
+ * @param message 响应消息
+ * @param data 响应数据
+ * 
+ * 处理知识库编辑完成后的响应，成功时自动刷新知识库列表。
+ */
+void KnowledgeManager::onUpdateKnowledgeBaseResponse(bool success, const QString& message, const QJsonObject& data)
+{
+    if (success) {
+        // 更新成功后，自动刷新知识库列表
+        updateKnowledgeList();
+        
+        emit knowledgeBaseEditCompleted(true, "知识库编辑成功");
+        qDebug() << "[KnowledgeManager] Knowledge base updated successfully";
+    } else {
+        qWarning() << "[KnowledgeManager] Knowledge base update failed:" << message;
+        emit knowledgeBaseEditCompleted(false, message);
     }
 }

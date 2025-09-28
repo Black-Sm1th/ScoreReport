@@ -17,7 +17,6 @@ class FileReaderThread : public QThread
 
 public:
     explicit FileReaderThread(const QString& filePath, const QString& fileName, QObject* parent = nullptr);
-
 protected:
     void run() override;
 
@@ -91,6 +90,7 @@ public:
     Q_INVOKABLE bool removeFile(int index);
     Q_INVOKABLE void clearFiles();
 
+    //Q_INVOKABLE void updateKnowledgeList();
     // 内部使用的公有方法（不需要QML调用）
     qint64 getFileSize(const QString& filePath);
     QVariantMap getFileInfo(const QString& filePath);
@@ -130,7 +130,13 @@ private slots:
      * @param errorMessage 错误信息
      */
     void onFileReadCompleted(const QString& filePath, const QString& content, bool success, const QString& errorMessage);
-
+    /**
+     * @brief 处理知识库列表响应
+     * @param success 请求是否成功
+     * @param message 响应消息
+     * @param data 响应数据
+     */
+    //void onKnowledgeBaseListResponse(bool success, const QString& message, const QJsonObject& data);
 signals:
     /**
      * @brief 文件操作结果信号
@@ -153,7 +159,7 @@ signals:
      * @param success 是否成功
      */
     void fileReadCompleted(const QString& filePath, bool success);
-
+    //void knowledgeListUpdated(bool success, const QString& message);
 private:
     // 消息管理私有方法
     void addUserMessage(const QString& message);

@@ -47,7 +47,7 @@ Rectangle {
         font.family: "Alibaba PuHuiTi 3.0"
         color: textColor
         selectByMouse: !readOnly
-        padding: 4
+        padding: 8
         placeholderText: !readOnly ? singleLineTextInput.placeholderText : ""
         placeholderTextColor: placeholderColor
         

@@ -174,10 +174,11 @@ public:
      * @brief 上传文件到知识库
      * @param filePath 要上传的文件路径
      * @param knowledgeBaseId 知识库ID
+     * @param userId 用户ID
      * 
      * 发送文件上传请求到服务器，结果通过 uploadFileResponse 信号返回
      */
-    void uploadFileToKnowledgeBase(const QString& filePath, const QString& knowledgeBaseId);
+    void uploadFileToKnowledgeBase(const QString& filePath, const QString& knowledgeBaseId, const QString& userId);
     
     /**
      * @brief 创建知识库
@@ -226,8 +227,8 @@ public:
      * 
      * 发送获取知识库列表请求到服务器，结果通过 getKnowledgeBaseListResponse 信号返回
      */
-    void getKnowledgeBaseList(int current = 1, int pageSize = 10000, const QString& sortField = "",
-                             const QString& sortOrder = "descend", const QString& id = "", 
+    void getKnowledgeBaseList(int current = 1, int pageSize = 10000, const QString& sortField = "createTime",
+                             const QString& sortOrder = "ascend", const QString& id = "", 
                              const QString& name = "", const QString& userId = "");
     
     /**
@@ -473,9 +474,10 @@ private:
     /**
      * @brief 创建网络请求对象
      * @param endpoint API端点路径
+     * @param setJsonContentType 是否设置JSON Content-Type，默认true
      * @return 配置好的QNetworkRequest对象
      */
-    QNetworkRequest createRequest(const QString& endpoint) const;
+    QNetworkRequest createRequest(const QString& endpoint, bool setJsonContentType = true) const;
     
     /**
      * @brief 发送POST请求
