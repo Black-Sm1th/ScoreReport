@@ -90,6 +90,12 @@ Rectangle {
                     //     backgroundColor: "#F8FAFF"
                     //     iconUrl: "qrc:/image/BIOSNAK.png"
                     // }
+
+                    ScoreOptionCard {
+                        title: "智能问答"
+                        backgroundColor: "#F8FAFF"
+                        iconUrl: "qrc:/image/BIOSNAK.png"
+                    }
                 }
                 
                 // // 肾脏页面 (index 1)
@@ -206,7 +212,7 @@ Rectangle {
                         messageManager.warning(qsTr("剪贴板为空，请先复制内容"))
                     }
                 }
-                else if(title === "设备管理知识库问答"){
+                else if(title === "智能问答"){
                     currentPageChanged(6)
                 }
                 else if(title === "UCLS MRS"){
@@ -222,6 +228,9 @@ Rectangle {
                 else if(title === "设备管理知识库"){
                     $knowledgeManager.updateKnowledgeList()
                     currentPageChanged(8)
+                }
+                else if(title === "设备管理知识库问答"){
+                    currentPageChanged(9)
                 }
                 else{
                     messageManager.warning(qsTr("该功能暂未开放"))

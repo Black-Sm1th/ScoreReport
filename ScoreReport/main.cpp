@@ -17,6 +17,7 @@
 #include "LanguageManager.h"
 #include "ReportManager.h"
 #include "KnowledgeManager.h"
+#include "KnowledgeChatManager.h"
 int main(int argc, char *argv[])
 {
 #if defined(Q_OS_WIN)
@@ -76,6 +77,9 @@ int main(int argc, char *argv[])
 
     auto* knowledgeManager = GET_SINGLETON(KnowledgeManager);
     engine.rootContext()->setContextProperty("$knowledgeManager", knowledgeManager);
+
+    auto* knowledgeChatManager = new KnowledgeChatManager();
+    engine.rootContext()->setContextProperty("$knowledgeChatManager", knowledgeChatManager);
 
     // 加载字体并检查是否成功
     int fontId1 = QFontDatabase::addApplicationFont(":/fonts/AlibabaPuHuiTi-3-55-Regular.ttf");

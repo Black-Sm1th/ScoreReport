@@ -774,6 +774,15 @@ ApplicationWindow {
                 //         contentRect.currentScore = -1
                 //     }
                 // }
+                KnowledgeChat{
+                    id:knowledgeChatView
+                    visible: contentRect.currentIndex === 0 && contentRect.currentScore === 9
+                    messageManager: dialogMessageBox
+                    chatManager: $knowledgeChatManager
+                    onExitScore: {
+                        contentRect.currentScore = -1
+                    }
+                }
                 CHAT{
                     id:chatView
                     visible: contentRect.currentIndex === 0 && contentRect.currentScore === 6
