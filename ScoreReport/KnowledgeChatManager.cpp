@@ -7,6 +7,7 @@
 #include <QFileInfo>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QJsonArray>
 #include <QMutexLocker>
 #include <QProcess>
 #include <QString>
@@ -49,6 +50,14 @@ KnowledgeChatManager::KnowledgeChatManager(QObject* parent)
             this, &KnowledgeChatManager::onStreamChatResponse);
     connect(apiManager, &ApiManager::streamChatFinished,
             this, &KnowledgeChatManager::onStreamChatFinished);
+    connect(apiManager, &ApiManager::getKnowledgeBaseListResponse,
+            this, &KnowledgeChatManager::onKnowledgeBaseListResponse);
+    connect(apiManager, &ApiManager::streamKnowledgeChatResponse,
+            this, &KnowledgeChatManager::onStreamKnowledgeChatResponse);
+    connect(apiManager, &ApiManager::streamKnowledgeChatFinished,
+            this, &KnowledgeChatManager::onStreamKnowledgeChatFinished);
+    connect(apiManager, &ApiManager::knowledgeChatMetadataReceived,
+            this, &KnowledgeChatManager::onKnowledgeChatMetadataReceived);
 
     // 初始化聊天会话ID
     m_currentChatId = CommonFunc::generateNumericUUID();
@@ -59,6 +68,9 @@ KnowledgeChatManager::KnowledgeChatManager(QObject* parent)
     // 初始化属性
     setfiles(QVariantList());
     setfileReadProgress(QVariantMap());
+    setknowledgeBaseList(QVariantList());
+    setselectedKnowledgeBases(QStringList());
+    setretrievedMetadata(QVariantList());
 }
 
 void KnowledgeChatManager::sendMessage(const QString& message)
@@ -88,6 +100,9 @@ void KnowledgeChatManager::sendMessage(const QString& message)
     setisThinking(true);
     m_currentAiMessage.clear();
     
+    // 清空之前的元数据
+    setretrievedMetadata(QVariantList());
+    
     // 显示思考状态
     addThinkingMessage();
     
@@ -96,14 +111,21 @@ void KnowledgeChatManager::sendMessage(const QString& message)
     QString userId = loginManager->getcurrentUserId();
     
     auto* apiManager = GET_SINGLETON(ApiManager);
-    apiManager->streamChat(fullMessage, userId, m_currentChatId);
+    
+    // 使用知识库流式聊天接口
+    QStringList selectedBuckets = getSelectedBuckets();
+    QString language = "zh"; // 默认中文，可以根据需要调整
+    
+    apiManager->streamKnowledgeChat(fullMessage, userId, language, selectedBuckets, m_currentChatId);
 }
 
 void KnowledgeChatManager::resetWithWelcomeMessage()
 {
     // 清空消息列表
     setmessages(QVariantList());
-    
+    setknowledgeBaseList(QVariantList());
+    setselectedKnowledgeBases(QStringList());
+    setretrievedMetadata(QVariantList());
     // 重新生成会话ID
     m_currentChatId = CommonFunc::generateNumericUUID();
     setcurrentChatId(m_currentChatId);
@@ -149,7 +171,12 @@ void KnowledgeChatManager::regenerateLastResponse()
     QString userId = loginManager->getcurrentUserId();
     
     auto* apiManager = GET_SINGLETON(ApiManager);
-    apiManager->streamChat(lastMessage, userId, m_currentChatId);
+    
+    // 使用知识库流式聊天接口
+    QStringList selectedBuckets = getSelectedBuckets();
+    QString language = "zh"; // 默认中文，可以根据需要调整
+    
+    apiManager->streamKnowledgeChat(lastMessage, userId, language, selectedBuckets, m_currentChatId);
 }
 
 void KnowledgeChatManager::endAnalysis(bool clearfile)
@@ -1112,4 +1139,133 @@ int KnowledgeChatManager::cleanupHangingWordProcesses()
     }
     
     return cleanedProcessCount;
+}
+
+void KnowledgeChatManager::loadKnowledgeBaseList()
+{
+    auto* apiManager = GET_SINGLETON(ApiManager);
+    apiManager->getKnowledgeBaseList();
+    qDebug() << "[KnowledgeChatManager] Loading knowledge base list";
+}
+
+void KnowledgeChatManager::onKnowledgeBaseListResponse(bool success, const QString& message, const QJsonObject& data)
+{
+    qDebug() << "[KnowledgeChatManager] Knowledge base list response - success:" << success << "message:" << message;
+    
+    if (success && data.contains("records")) {
+        QJsonArray records = data["records"].toArray();
+        QVariantList knowledgeList;
+        
+        for (const QJsonValue& value : records) {
+            QJsonObject kb = value.toObject();
+            QVariantMap kbInfo;
+            kbInfo["id"] = kb["id"].toString();
+            kbInfo["name"] = kb["name"].toString();
+            kbInfo["bucket"] = kb["bucket"].toString(); // 添加bucket字段
+            kbInfo["description"] = kb["description"].toString();
+            kbInfo["createTime"] = kb["createTime"].toString();
+            kbInfo["updateTime"] = kb["updateTime"].toString();
+            kbInfo["userId"] = kb["userId"].toString();
+            kbInfo["selected"] = false; // 初始状态为未选中
+            knowledgeList.append(kbInfo);
+        }
+        
+        setknowledgeBaseList(knowledgeList);
+        qDebug() << "[KnowledgeChatManager] Successfully loaded" << knowledgeList.size() << "knowledge bases";
+    } else {
+        qDebug() << "[KnowledgeChatManager] Failed to load knowledge base list:" << message;
+        setknowledgeBaseList(QVariantList()); // 清空列表
+    }
+}
+
+void KnowledgeChatManager::onStreamKnowledgeChatResponse(const QString& data, const QString& chatId)
+{
+    // 验证是否为当前会话
+    if (chatId != m_currentChatId) {
+        return;
+    }
+    
+    if (m_currentAiMessage.isEmpty()) {
+        // 第一次接收响应：移除思考状态
+        setisThinking(false);
+        removeThinkingMessage();
+        addAiMessage(data);
+        m_currentAiMessage = data;
+    } else {
+        // 追加响应内容
+        m_currentAiMessage += data;
+        updateLastAiMessage(data);
+    }
+}
+
+void KnowledgeChatManager::onStreamKnowledgeChatFinished(bool success, const QString& message, const QString& chatId)
+{
+    // 验证是否为当前会话
+    if (chatId != m_currentChatId) {
+        return;
+    }
+    
+    qDebug() << "[KnowledgeChatManager] Knowledge chat finished, success:" << success;
+    
+    // 重置状态
+    setisSending(false);
+    setisThinking(false);
+    
+    if (!success) {
+        // 处理错误情况
+        removeThinkingMessage();
+        addAiMessage(QString("抱歉，发生了错误：%1").arg(message));
+    }
+    
+    // 处理空响应
+    if (m_currentAiMessage.isEmpty()) {
+        removeThinkingMessage();
+        addAiMessage("抱歉，我无法回复您的消息。");
+    }
+    
+    m_currentAiMessage.clear();
+}
+
+QStringList KnowledgeChatManager::getSelectedBuckets() const
+{
+    QStringList selectedIds = getselectedKnowledgeBases();
+    QStringList buckets;
+    QVariantList knowledgeList = getknowledgeBaseList();
+    
+    // 根据选中的ID找到对应的bucket值
+    for (const QString& selectedId : selectedIds) {
+        for (const QVariant& item : knowledgeList) {
+            QVariantMap kbMap = item.toMap();
+            if (kbMap["id"].toString() == selectedId) {
+                QString bucket = kbMap["bucket"].toString();
+                if (!bucket.isEmpty()) {
+                    buckets.append(bucket);
+                }
+                break;
+            }
+        }
+    }
+    return buckets;
+}
+
+void KnowledgeChatManager::onKnowledgeChatMetadataReceived(const QString& chatId, const QVariantList& retrievedMetadata)
+{
+    // 验证是否为当前会话
+    if (chatId != m_currentChatId) {
+        return;
+    }
+    
+    // 存储检索到的元数据
+    setretrievedMetadata(retrievedMetadata);
+    
+    qDebug() << "[KnowledgeChatManager] Retrieved metadata received for chat:" << chatId 
+             << "Items count:" << retrievedMetadata.size();
+    
+    // 打印详细元数据信息（调试用）
+    for (int i = 0; i < retrievedMetadata.size(); ++i) {
+        QVariantMap metaMap = retrievedMetadata[i].toMap();
+        qDebug() << "  [" << i << "] File:" << metaMap["file_name"].toString() 
+                 << "Pages:" << metaMap["page_numbers"].toList()
+                 << "Retriever:" << metaMap["retriever_name"].toString();
+    }
 }

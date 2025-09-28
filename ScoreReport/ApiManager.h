@@ -90,6 +90,18 @@ public:
     void streamChat(const QString& query, const QString& userId, const QString& chatId = "");
     
     /**
+     * @brief 知识库流式问答接口
+     * @param query 问题内容
+     * @param userId 用户ID
+     * @param language 语言
+     * @param buckets 知识库ID列表
+     * @param chatId 会话ID（可选，首次不传）
+     * 
+     * 发送知识库流式问答请求到AI服务，结果通过 streamKnowledgeChatResponse 和 streamKnowledgeChatFinished 信号返回
+     */
+    void streamKnowledgeChat(const QString& query, const QString& userId, const QString& language, const QStringList& buckets, const QString& chatId = "");
+    
+    /**
      * @brief 删除指定的聊天记录
      * @param chatId 要删除的聊天ID
      * 
@@ -316,6 +328,34 @@ signals:
     void streamChatFinished(bool success, const QString& message, const QString& chatId);
     
     /**
+     * @brief 知识库流式聊天响应信号
+     * @param data 接收到的流式数据块
+     * @param chatId 会话ID
+     * 
+     * 当接收到知识库流式聊天数据时发出此信号，data为每次接收到的数据块
+     */
+    void streamKnowledgeChatResponse(const QString& data, const QString& chatId);
+    
+    /**
+     * @brief 知识库流式聊天完成信号
+     * @param success 是否成功完成
+     * @param message 完成消息
+     * @param chatId 会话ID
+     * 
+     * 当知识库流式聊天结束时发出此信号
+     */
+    void streamKnowledgeChatFinished(bool success, const QString& message, const QString& chatId);
+    
+    /**
+     * @brief 知识库聊天完成时的元数据信号
+     * @param chatId 会话ID
+     * @param retrievedMetadata 检索到的元数据列表
+     * 
+     * 当知识库聊天完成时，发送检索到的元数据信息
+     */
+    void knowledgeChatMetadataReceived(const QString& chatId, const QVariantList& retrievedMetadata);
+    
+    /**
      * @brief 删除聊天响应信号
      * @param success 是否删除成功
      * @param message 服务器返回的消息
@@ -463,6 +503,13 @@ private slots:
      * 当流式聊天接口有新数据可读时调用，处理分块接收的数据
      */
     void onStreamDataReady();
+    
+    /**
+     * @brief 知识库流式数据就绪槽函数
+     * 
+     * 当知识库流式聊天接口有新数据可读时调用，处理分块接收的数据
+     */
+    void onStreamKnowledgeDataReady();
 
 private:
     /**
@@ -503,8 +550,14 @@ private:
     /// @brief 跟踪流式聊天请求的chatId映射，用于在接收数据时识别会话
     QMap<QNetworkReply*, QString> m_streamChatIds;
     
+    /// @brief 跟踪知识库流式聊天请求的chatId映射，用于在接收数据时识别会话
+    QMap<QNetworkReply*, QString> m_streamKnowledgeChatIds;
+    
     /// @brief 跟踪每个流式聊天请求的不完整SSE数据缓冲区
     QMap<QNetworkReply*, QString> m_streamDataBuffers;
+    
+    /// @brief 跟踪每个知识库流式聊天请求的不完整SSE数据缓冲区
+    QMap<QNetworkReply*, QString> m_streamKnowledgeDataBuffers;
 
     // API地址常量
     const QString INTERNAL_BASE_URL = "http://192.168.1.2:9898/api";  ///< 内网API基础地址

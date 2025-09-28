@@ -82,5 +82,6 @@
         <file>qml/Knowledge.qml</file>
         <file>icon/icon.ico</file>
         <file>qml/KnowledgeChat.qml</file>
+        <file>qml/components/KnowledgeSelector.qml</file>
     </qresource>
 </RCC>

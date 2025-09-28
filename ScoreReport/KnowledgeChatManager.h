@@ -75,6 +75,15 @@ class KnowledgeChatManager : public QObject
     
     /// @brief 文件读取进度信息
     QUICK_PROPERTY(QVariantMap, fileReadProgress)
+    
+    /// @brief 知识库列表
+    QUICK_PROPERTY(QVariantList, knowledgeBaseList)
+    
+    /// @brief 选中的知识库ID列表
+    QUICK_PROPERTY(QStringList, selectedKnowledgeBases)
+    
+    /// @brief 检索到的元数据列表
+    QUICK_PROPERTY(QVariantList, retrievedMetadata)
 
 public:
     explicit KnowledgeChatManager(QObject* parent = nullptr);
@@ -90,6 +99,10 @@ public:
     Q_INVOKABLE int addFiles(const QStringList& filePaths);
     Q_INVOKABLE bool removeFile(int index);
     Q_INVOKABLE void clearFiles();
+    Q_INVOKABLE void loadKnowledgeBaseList();
+
+    // 内部使用的私有方法
+    QStringList getSelectedBuckets() const;
 
     // 内部使用的公有方法（不需要QML调用）
     qint64 getFileSize(const QString& filePath);
@@ -130,6 +143,36 @@ private slots:
      * @param errorMessage 错误信息
      */
     void onFileReadCompleted(const QString& filePath, const QString& content, bool success, const QString& errorMessage);
+    
+    /**
+     * @brief 处理获取知识库列表响应
+     * @param success 是否成功
+     * @param message 响应消息
+     * @param data 知识库列表数据
+     */
+    void onKnowledgeBaseListResponse(bool success, const QString& message, const QJsonObject& data);
+    
+    /**
+     * @brief 处理知识库流式聊天响应
+     * @param data 接收到的数据块
+     * @param chatId 会话ID
+     */
+    void onStreamKnowledgeChatResponse(const QString& data, const QString& chatId);
+    
+    /**
+     * @brief 处理知识库流式聊天完成
+     * @param success 是否成功
+     * @param message 完成消息
+     * @param chatId 会话ID
+     */
+    void onStreamKnowledgeChatFinished(bool success, const QString& message, const QString& chatId);
+    
+    /**
+     * @brief 处理知识库聊天元数据接收
+     * @param chatId 会话ID
+     * @param retrievedMetadata 检索到的元数据列表
+     */
+    void onKnowledgeChatMetadataReceived(const QString& chatId, const QVariantList& retrievedMetadata);
 
 signals:
     /**

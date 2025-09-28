@@ -230,7 +230,12 @@ ApplicationWindow {
                     $chatManager.endAnalysis(true)
                 }else if(contentRect.currentScore == 7){
                     reportView.resetValues()
+                }else if(contentRect.currentScore == 8){
+                    knowledgeView.resetValues()
+                }else if(contentRect.currentScore == 9){
+                    knowledgeChatView.resetValues()
                 }
+
                 contentRect.currentScore = -1
             }
         }
@@ -718,6 +723,8 @@ ApplicationWindow {
                     onCurrentPageChanged: {
                         if(index === 6){
                             chatView.resetValue()
+                        }else if(index === 9){
+                            knowledgeChatView.resetValue()
                         }
                         contentRect.currentScore = index
                     }
@@ -1988,7 +1995,7 @@ ApplicationWindow {
             // 选择要显示的消息
             if (helpBubbleContent.isFirstShow) {
                 // 第一次显示，使用默认消息
-                helpBubbleContent.currentMessage = "我是汇小曦，您的报告小助理~看看能帮您干些啥？"
+                helpBubbleContent.currentMessage = "我是汇小曦，您的知识库小助理~看看能帮您干些啥？"
                 helpBubbleContent.isFirstShow = false
             } else {
                 // 非第一次显示，从helpContent中随机选择
@@ -2088,7 +2095,7 @@ ApplicationWindow {
             scale: helpBubble.bubbleScale
             anchors.centerIn: parent
             property bool isFirstShow: true
-            property string currentMessage: "我是汇小曦，您的报告小助理~看看能帮您干些啥？"
+            property string currentMessage: "我是汇小曦，您的知识库小助理~看看能帮您干些啥？"
             property var helpContent: [
                 "听说您今天给躁动患儿做CT？建议直接申报『三维立体版捉迷藏大赛』冠军🏆",
                 "伪影就是影像里的“鬼影”，有时候是病，有时候只是你打了个滚（动得太厉害）。——汇小曦，自认为的影像艺术家",

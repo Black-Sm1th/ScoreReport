@@ -230,6 +230,7 @@ Rectangle {
                     currentPageChanged(8)
                 }
                 else if(title === "设备管理知识库问答"){
+                    $knowledgeChatManager.loadKnowledgeBaseList()
                     currentPageChanged(9)
                 }
                 else{

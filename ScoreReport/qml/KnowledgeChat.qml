@@ -10,15 +10,15 @@ Rectangle {
     width: parent.width
     height: calculateHeight()
     color: "transparent"
-    
+
     // 属性
     property var messageManager: null
     property bool specialPage: false
     property var chatManager: $chatManager  // 默认使用全局的ChatManager，可以被覆盖
-    
+
     // 信号
     signal exitScore()
-    
+
     // 高度计算函数
     function calculateHeight() {
         if (messagesArea.visible) {
@@ -63,13 +63,18 @@ Rectangle {
                 text: "选择知识库："
                 anchors.verticalCenter: parent.verticalCenter
             }
-            ScoreTypeDropdown{
+            KnowledgeSelector{
                 id: chooseKnowledge
                 anchors.verticalCenter: parent.verticalCenter
-                scoreTypes: []
+                knowledgeList: chatManager.knowledgeBaseList
                 dropdownWidth: 200
                 onSelectionChanged: {
-
+                    // 更新选中的知识库ID列表
+                    var selectedIds = []
+                    for (var i = 0; i < selectedItems.length; i++) {
+                        selectedIds.push(selectedItems[i].id)
+                    }
+                    chatManager.selectedKnowledgeBases = selectedIds
                 }
             }
         }
@@ -103,7 +108,7 @@ Rectangle {
                             anchors.left: (modelData.type === "ai" || modelData.type === "thinking" || modelData.type === "interrupt") ? parent.left : undefined
                             anchors.leftMargin: (modelData.type === "ai" || modelData.type === "thinking" || modelData.type === "interrupt") ? 24 : 0
                             spacing: 8
-                            
+
                             // 消息气泡
                             Rectangle {
                                 id: messageBubble
@@ -111,7 +116,7 @@ Rectangle {
                                 height: (modelData.type !== "thinking" && modelData.type !== "interrupt") ? messageContent.height : thinkingRow.height
                                 color: modelData.type === "user" ? "#F5F5F5" : "transparent"
                                 radius: 12
-                                
+
                                 // 普通消息内容
                                 Text {
                                     id: messageContent
@@ -126,14 +131,14 @@ Rectangle {
                                     textFormat: Text.MarkdownText
                                     visible: (modelData.type !== "thinking" && modelData.type !== "interrupt")
                                 }
-                                
+
                                 // 思考中动画
                                 Row {
                                     id: thinkingRow
                                     anchors.centerIn: parent
                                     spacing: 2
                                     visible: modelData.type === "thinking" || modelData.type === "interrupt"
-                                    
+
                                     Text {
                                         text: qsTr(modelData.content)
                                          font.weight: Font.Bold
@@ -141,7 +146,7 @@ Rectangle {
                                         font.pixelSize: 16
                                         color: "#D9000000"
                                     }
-                                    
+
                                     Text {
                                         id: dots
                                         text: "."
@@ -150,14 +155,14 @@ Rectangle {
                                         font.family: "Alibaba PuHuiTi 3.0"
                                         font.pixelSize: 16
                                         color: "#D9000000"
-                                        
+
                                         Timer {
                                             id: dotsTimer
                                             interval: 500
                                             running: modelData.type === "thinking"
                                             repeat: true
                                             property int dotCount: 1
-                                            
+
                                             onTriggered: {
                                                 dotCount = (dotCount % 3) + 1
                                                 dots.text = ".".repeat(dotCount)
@@ -166,13 +171,135 @@ Rectangle {
                                     }
                                 }
                             }
-                            
+
+                            // 参考文件列表（只在AI消息且有元数据时显示）
+                            Column {
+                                id: referenceFiles
+                                width: Math.min(messageContent.width, messagesColumn.width - 48)
+                                spacing: 6
+                                visible: modelData.type === "ai" && index === (chatManager.messages.length - 1) && chatManager.retrievedMetadata.length > 0
+                                
+                                // 标题
+                                Text {
+                                    text: "参考文件："
+                                    font.family: "Alibaba PuHuiTi 3.0"
+                                    font.pixelSize: 12
+                                    color: "#73000000"
+                                    font.weight: Font.Medium
+                                }
+                                
+                                // 文件列表
+                                Repeater {
+                                    model: chatManager.retrievedMetadata
+                                    delegate: Rectangle {
+                                        width: parent.width
+                                        height: fileText.height + 12
+                                        color: fileArea.containsMouse ? "#F0F7FF" : "#F8F9FA"
+                                        radius: 6
+                                        border.color: "#E6EAF2"
+                                        border.width: 1
+                                        
+                                        Row {
+                                            anchors.left: parent.left
+                                            anchors.leftMargin: 8
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            spacing: 6
+                                            
+                                            // 文档图标
+                                            Rectangle {
+                                                width: 16
+                                                height: 16
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                color: "#006BFF"
+                                                radius: 2
+                                                
+                                                Rectangle {
+                                                    width: 8
+                                                    height: 10
+                                                    anchors.centerIn: parent
+                                                    color: "white"
+                                                    radius: 1
+                                                    
+                                                    Rectangle {
+                                                        width: parent.width - 2
+                                                        height: 1
+                                                        anchors.centerIn: parent
+                                                        y: parent.height * 0.3
+                                                        color: "#006BFF"
+                                                    }
+                                                    
+                                                    Rectangle {
+                                                        width: parent.width - 2
+                                                        height: 1
+                                                        anchors.centerIn: parent
+                                                        y: parent.height * 0.5
+                                                        color: "#006BFF"
+                                                    }
+                                                    
+                                                    Rectangle {
+                                                        width: parent.width - 2
+                                                        height: 1
+                                                        anchors.centerIn: parent
+                                                        y: parent.height * 0.7
+                                                        color: "#006BFF"
+                                                    }
+                                                }
+                                            }
+                                            
+                                            Column {
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                spacing: 2
+                                                
+                                                Text {
+                                                    id: fileText
+                                                    text: modelData.file_name || ""
+                                                    font.family: "Alibaba PuHuiTi 3.0"
+                                                    font.pixelSize: 12
+                                                    color: fileArea.containsMouse ? "#006BFF" : "#333333"
+                                                    elide: Text.ElideRight
+                                                    width: Math.min(implicitWidth, referenceFiles.width - 40)
+                                                }
+                                                
+                                                Text {
+                                                    text: {
+                                                        var pages = modelData.page_numbers || []
+                                                        if (pages.length > 0) {
+                                                            return "第" + pages.join(", ") + "页"
+                                                        }
+                                                        return ""
+                                                    }
+                                                    font.family: "Alibaba PuHuiTi 3.0"
+                                                    font.pixelSize: 10
+                                                    color: "#999999"
+                                                    visible: text !== ""
+                                                }
+                                            }
+                                        }
+                                        
+                                        MouseArea {
+                                            id: fileArea
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: {
+                                                var url = modelData.url || ""
+                                                if (url !== "") {
+                                                    Qt.openUrlExternally(url)
+                                                } else {
+                                                    messageManager.warning("暂无可访问的网页链接")
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
                             // AI消息的操作按钮（只在最后一条AI消息显示）
                             Row {
                                 id: actionButtons
                                 spacing: 4
                                 visible: modelData.type === "ai" && index === (chatManager.messages.length - 1) && !chatManager.isSending && index !== 0
-                                
+
                                 Rectangle {
                                     id: regenerateBtn
                                     width: 88
@@ -180,16 +307,16 @@ Rectangle {
                                     color: "#F5F5F5"
                                     radius: 8
                                     opacity: regenerateBtnArea.containsMouse ? 0.8 : 1
-                                    
+
                                     Row {
                                         anchors.centerIn: parent
                                         spacing: 4
-                                        
+
                                         Image {
                                             source: "qrc:/image/repeat.png"
                                             anchors.verticalCenter: parent.verticalCenter
                                         }
-                                        
+
                                         Text {
                                             text: qsTr("再次生成")
                                             font.family: "Alibaba PuHuiTi 3.0"
@@ -198,7 +325,7 @@ Rectangle {
                                             anchors.verticalCenter: parent.verticalCenter
                                         }
                                     }
-                                    
+
                                     MouseArea {
                                         id: regenerateBtnArea
                                         anchors.fill: parent
@@ -209,7 +336,7 @@ Rectangle {
                                         onReleased: parent.scale = 1
                                     }
                                 }
-                                
+
                                 Rectangle {
                                     id: copyBtn
                                     width: 64
@@ -217,16 +344,16 @@ Rectangle {
                                     color: "#F5F5F5"
                                     radius: 8
                                     opacity: copyBtnArea.containsMouse ? 0.8 : 1
-                                    
+
                                     Row {
                                         anchors.centerIn: parent
                                         spacing: 4
-                                        
+
                                         Image {
                                             source: "qrc:/image/chatCopy.png"
                                             anchors.verticalCenter: parent.verticalCenter
                                         }
-                                        
+
                                         Text {
                                             text: qsTr("复制")
                                             font.family: "Alibaba PuHuiTi 3.0"
@@ -235,7 +362,7 @@ Rectangle {
                                             anchors.verticalCenter: parent.verticalCenter
                                         }
                                     }
-                                    
+
                                     MouseArea {
                                         id: copyBtnArea
                                         anchors.fill: parent
@@ -264,7 +391,7 @@ Rectangle {
             height: chatManager.files.length > 0 ? 112 : 0  // 增加高度以适应新的文件项高度
             color: "transparent"
             visible: chatManager.files.length > 0
-            
+
             Rectangle {
                 width: 496
                 height: parent.height
@@ -273,12 +400,12 @@ Rectangle {
                 radius: 12
                 border.color: "#E6EAF2"
                 border.width: 1
-                
+
                 Flow {
                     anchors.fill: parent
                     anchors.margins: 12
                     spacing: 8
-                    
+
                     Repeater {
                         model: chatManager.files
                         delegate: Rectangle {
@@ -288,7 +415,7 @@ Rectangle {
                             radius: 8
                             border.color: "#E6EAF2"
                             border.width: 1
-                            
+
                             Column {
                                 anchors.left: parent.left
                                 anchors.leftMargin: 12
@@ -296,7 +423,7 @@ Rectangle {
                                 anchors.right: closeBtn.left
                                 anchors.rightMargin: 8
                                 spacing: 8
-                                
+
                                 Text {
                                     id: fileName
                                     width: parent.width
@@ -307,7 +434,7 @@ Rectangle {
                                     color: "#D9000000"
                                     elide: Text.ElideMiddle
                                 }
-                                
+
                                 Text {
                                     property var progressInfo: chatManager.fileReadProgress[modelData.path] || {}
                                     property bool isReading: progressInfo.isReading || false
@@ -346,7 +473,7 @@ Rectangle {
                                     }
                                     visible: isReading || !success
                                 }
-                                
+
                                 // 进度条
                                 Rectangle {
                                     id: progressBar
@@ -354,19 +481,19 @@ Rectangle {
                                     height: 3
                                     color: "#E6EAF2"
                                     radius: 1.5
-                                    
+
                                     property var progressInfo: chatManager.fileReadProgress[modelData.path] || {}
                                     property bool isReading: progressInfo.isReading || false
                                     property int percentage: progressInfo.percentage || 0
-                                    
+
                                     visible: isReading
-                                    
+
                                     Rectangle {
                                         width: parent.width * (parent.percentage / 100.0)
                                         height: parent.height
                                         color: "#006BFF"
                                         radius: parent.radius
-                                        
+
                                         Behavior on width {
                                             NumberAnimation {
                                                 duration: 200
@@ -376,7 +503,7 @@ Rectangle {
                                     }
                                 }
                             }
-                            
+
                             Image {
                                 id: closeBtn
                                 width: 16
@@ -422,7 +549,7 @@ Rectangle {
                 color: dropArea.containsDrag ? "#E3F2FD" : "#ECF3FF"
                 border.color: dropArea.containsDrag ? "#006BFF" : "#E6EAF2"
                 border.width: 1
-                
+
                 // 拖拽区域
                 DropArea {
                     id: dropArea
@@ -618,21 +745,24 @@ Rectangle {
         // 重置聊天管理器并添加欢迎消息
         chatManager.resetWithWelcomeMessage()
 
+        // 清空知识库多选选项
+        chooseKnowledge.setSelectedIds([])
+
         // 滚动到顶部
         if (scrollView.contentItem) {
             scrollView.contentItem.contentY = 0
         }
     }
-    
+
     // 处理粘贴功能
     function handlePaste() {
         // 从剪贴板获取内容
         var clipboardText = chatManager.getClipboardText()
-        
+
         if (clipboardText && clipboardText.length > 0) {
             // 解析可能的多个文件路径
             var filePaths = parseFilePaths(clipboardText)
-            
+
             if (filePaths.length > 0) {
                 // 有文件路径，处理文件添加
                 handleFileAddition(filePaths)
@@ -643,11 +773,11 @@ Rectangle {
             }
         }
     }
-    
+
     // 提取文件路径的通用函数
     function extractFilePathsFromUrls(urls) {
         var filePaths = []
-        
+
         for (var i = 0; i < urls.length; i++) {
             var filePath = urls[i].toString()
             // 移除file://前缀
@@ -658,10 +788,10 @@ Rectangle {
             }
             filePaths.push(filePath)
         }
-        
+
         return filePaths
     }
-    
+
     // 处理文件添加的通用函数
     function handleFileAddition(filePaths) {
         if (filePaths.length === 1) {
@@ -672,14 +802,14 @@ Rectangle {
             chatManager.addFiles(filePaths)
         }
     }
-    
+
     // 解析剪贴板中的文件路径，支持多个文件
     function parseFilePaths(text) {
         var filePaths = []
-        
+
         // 按行分割文本，处理可能的多行文件路径
         var lines = text.split(/\r?\n/)
-        
+
         for (var i = 0; i < lines.length; i++) {
             var line = lines[i].trim()
             if (line.length > 0 && isFilePath(line)) {
@@ -693,7 +823,7 @@ Rectangle {
                 filePaths.push(cleanPath)
             }
         }
-        
+
         // 如果没有找到按行分割的文件路径，检查整个文本是否是单个文件路径
         if (filePaths.length === 0) {
             var trimmedText = text.trim()
@@ -708,14 +838,14 @@ Rectangle {
                 filePaths.push(cleanPath)
             }
         }
-        
+
         return filePaths
     }
-    
+
     // 判断是否是文件路径（简单检查，详细验证在C++中进行）
     function isFilePath(text) {
         text = text.trim()
-        
+
         // 移除file://前缀进行检查
         var checkPath = text
         if (checkPath.startsWith("file:///")) {
@@ -723,7 +853,7 @@ Rectangle {
         } else if (checkPath.startsWith("file://")) {
             checkPath = checkPath.substring(7)
         }
-        
+
         // 检查是否包含文件扩展名
         var hasExtension = /\.\w+$/.test(checkPath)
         // 检查是否是Windows或Linux路径格式
@@ -737,7 +867,7 @@ Rectangle {
         function onMessagesChanged() {
             scrollToBottom.start()
         }
-        
+
         function onFileOperationResult(message, type) {
             if (messageManager) {
                 switch(type) {

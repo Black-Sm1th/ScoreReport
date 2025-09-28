@@ -836,13 +836,6 @@ Rectangle {
                                                             font.pixelSize: 12
                                                             color: "#40000000"
                                                         }
-                                                        
-                                                        Text {
-                                                            text: qsTr("类型: ") + (modelData.fileType || qsTr("未知"))
-                                                            font.family: "Alibaba PuHuiTi 3.0"
-                                                            font.pixelSize: 12
-                                                            color: "#40000000"
-                                                        }
                                                     }
                                                 }
                                             }
