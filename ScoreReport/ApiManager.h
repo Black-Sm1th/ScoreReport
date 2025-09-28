@@ -177,7 +177,7 @@ public:
      * 
      * 发送文件上传请求到服务器，结果通过 uploadFileResponse 信号返回
      */
-    void uploadFileToKnowledgeBase(const QString& filePath, int knowledgeBaseId);
+    void uploadFileToKnowledgeBase(const QString& filePath, const QString& knowledgeBaseId);
     
     /**
      * @brief 创建知识库
@@ -194,7 +194,7 @@ public:
      * 
      * 发送删除知识库请求到服务器，结果通过 deleteKnowledgeBaseResponse 信号返回
      */
-    void deleteKnowledgeBase(int id);
+    void deleteKnowledgeBase(const QString& id);
     
     /**
      * @brief 更新知识库
@@ -204,7 +204,7 @@ public:
      * 
      * 发送更新知识库请求到服务器，结果通过 updateKnowledgeBaseResponse 信号返回
      */
-    void updateKnowledgeBase(int id = -1, const QString& name = "", const QString& description = "");
+    void updateKnowledgeBase(const QString& id = "", const QString& name = "", const QString& description = "");
     
     /**
      * @brief 根据ID获取知识库详情（包含文件信息）
@@ -212,7 +212,7 @@ public:
      * 
      * 发送获取知识库详情请求到服务器，结果通过 getKnowledgeBaseResponse 信号返回
      */
-    void getKnowledgeBase(int id);
+    void getKnowledgeBase(const QString& id);
     
     /**
      * @brief 分页获取知识库列表
@@ -227,8 +227,8 @@ public:
      * 发送获取知识库列表请求到服务器，结果通过 getKnowledgeBaseListResponse 信号返回
      */
     void getKnowledgeBaseList(int current = 1, int pageSize = 10000, const QString& sortField = "",
-                             const QString& sortOrder = "descend", int id = -1, 
-                             const QString& name = "", int userId = -1);
+                             const QString& sortOrder = "descend", const QString& id = "", 
+                             const QString& name = "", const QString& userId = "");
     
     /**
      * @brief 批量删除知识库文件
@@ -236,7 +236,7 @@ public:
      * 
      * 发送批量删除知识库文件请求到服务器，结果通过 deleteKnowledgeBaseFilesResponse 信号返回
      */
-    void deleteKnowledgeBaseFiles(const QList<int>& ids);
+    void deleteKnowledgeBaseFiles(const QList<QString>& ids);
     
     /**
      * @brief 终止所有正在进行的网络请求

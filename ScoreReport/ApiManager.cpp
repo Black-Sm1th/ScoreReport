@@ -388,7 +388,7 @@ void ApiManager::getReportTemplateList()
  * 使用multipart/form-data格式上传文件。
  * 请求类型标记为 "upload-file"，结果会通过 uploadFileResponse 信号返回。
  */
-void ApiManager::uploadFileToKnowledgeBase(const QString& filePath, int knowledgeBaseId)
+void ApiManager::uploadFileToKnowledgeBase(const QString& filePath, const QString& knowledgeBaseId)
 {
     // 检查文件是否存在
     QFileInfo fileInfo(filePath);
@@ -422,7 +422,7 @@ void ApiManager::uploadFileToKnowledgeBase(const QString& filePath, int knowledg
     QHttpPart knowledgeBaseIdPart;
     knowledgeBaseIdPart.setHeader(QNetworkRequest::ContentDispositionHeader, 
                                   QVariant("form-data; name=\"knowledgeBaseId\""));
-    knowledgeBaseIdPart.setBody(QString::number(knowledgeBaseId).toUtf8());
+    knowledgeBaseIdPart.setBody(knowledgeBaseId.toUtf8());
     
     multiPart->append(filePart);
     multiPart->append(knowledgeBaseIdPart);
@@ -471,7 +471,7 @@ void ApiManager::createKnowledgeBase(const QString& name, const QString& descrip
  * 发送删除知识库请求到服务器的 /ai/knowledge/delete 端点。
  * 请求类型标记为 "delete-knowledge-base"，结果会通过 deleteKnowledgeBaseResponse 信号返回。
  */
-void ApiManager::deleteKnowledgeBase(int id)
+void ApiManager::deleteKnowledgeBase(const QString& id)
 {
     QString endpoint = QString("/ai/knowledge/delete?id=%1").arg(id);
     makePostRequest(endpoint, QJsonObject(), "delete-knowledge-base");
@@ -487,12 +487,12 @@ void ApiManager::deleteKnowledgeBase(int id)
  * 发送更新知识库请求到服务器的 /ai/knowledge/update 端点。
  * 请求类型标记为 "update-knowledge-base"，结果会通过 updateKnowledgeBaseResponse 信号返回。
  */
-void ApiManager::updateKnowledgeBase(int id, const QString& name, const QString& description)
+void ApiManager::updateKnowledgeBase(const QString& id, const QString& name, const QString& description)
 {
     QJsonObject requestData;
     
     // 只有有效的可选参数才添加到请求中
-    if (id >= 0) {
+    if (!id.isEmpty()) {
         requestData["id"] = id;
     }
     if (!name.isEmpty()) {
@@ -513,7 +513,7 @@ void ApiManager::updateKnowledgeBase(int id, const QString& name, const QString&
  * 发送获取知识库详情请求到服务器的 /ai/knowledge/get 端点。
  * 请求类型标记为 "get-knowledge-base"，结果会通过 getKnowledgeBaseResponse 信号返回。
  */
-void ApiManager::getKnowledgeBase(int id)
+void ApiManager::getKnowledgeBase(const QString& id)
 {
     QString endpoint = QString("/ai/knowledge/get?id=%1").arg(id);
     makeGetRequest(endpoint, "get-knowledge-base");
@@ -534,8 +534,8 @@ void ApiManager::getKnowledgeBase(int id)
  * 请求类型标记为 "get-knowledge-base-list"，结果会通过 getKnowledgeBaseListResponse 信号返回。
  */
 void ApiManager::getKnowledgeBaseList(int current, int pageSize, const QString& sortField,
-                                     const QString& sortOrder, int id, 
-                                     const QString& name, int userId)
+                                     const QString& sortOrder, const QString& id, 
+                                     const QString& name, const QString& userId)
 {
     QJsonObject requestData;
     
@@ -549,13 +549,13 @@ void ApiManager::getKnowledgeBaseList(int current, int pageSize, const QString& 
     requestData["sortOrder"] = sortOrder.isEmpty() ? "descend" : sortOrder;
     
     // 只有有效的可选参数才添加到请求中
-    if (id >= 0) {
+    if (!id.isEmpty()) {
         requestData["id"] = id;
     }
     if (!name.isEmpty()) {
         requestData["name"] = name;
     }
-    if (userId >= 0) {
+    if (!userId.isEmpty()) {
         requestData["userId"] = userId;
     }
     
@@ -570,7 +570,7 @@ void ApiManager::getKnowledgeBaseList(int current, int pageSize, const QString& 
  * 发送批量删除知识库文件请求到服务器的 /ai/knowledge/file/delete 端点。
  * 请求类型标记为 "delete-knowledge-base-files"，结果会通过 deleteKnowledgeBaseFilesResponse 信号返回。
  */
-void ApiManager::deleteKnowledgeBaseFiles(const QList<int>& ids)
+void ApiManager::deleteKnowledgeBaseFiles(const QList<QString>& ids)
 {
     if (ids.isEmpty()) {
         qWarning() << "[ApiManager] Cannot delete files: empty id list";
@@ -578,15 +578,10 @@ void ApiManager::deleteKnowledgeBaseFiles(const QList<int>& ids)
         return;
     }
     
-    // 构建查询字符串
-    QStringList idStrings;
-    for (int id : ids) {
-        idStrings.append(QString::number(id));
-    }
-    
-    QString endpoint = QString("/ai/knowledge/file/delete?ids=%1").arg(idStrings.join(","));
+    // 构建查询字符串 - 直接使用字符串ID列表
+    QString endpoint = QString("/ai/knowledge/file/delete?ids=%1").arg(ids.join(","));
     makePostRequest(endpoint, QJsonObject(), "delete-knowledge-base-files");
-    qDebug() << "[ApiManager] Deleting knowledge base files with ids:" << idStrings.join(",");
+    qDebug() << "[ApiManager] Deleting knowledge base files with ids:" << ids.join(",");
 }
 
 /**

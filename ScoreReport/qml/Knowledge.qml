@@ -28,7 +28,6 @@ Rectangle {
             qsTr("图片文件 (*.png *.jpg *.jpeg *.gif)"),
         ]
         onAccepted: {
-            console.log("选择文件:", fileDialog.fileUrl)
             var filePath = fileDialog.fileUrl.toString()
             // 移除 file:// 前缀 (Windows)
             if (Qt.platform.os === "windows" && filePath.startsWith("file:///")) {
@@ -37,9 +36,6 @@ Rectangle {
                 filePath = filePath.substring(7)
             }
             $knowledgeManager.uploadFileToCurrentKnowledge(filePath)
-        }
-        onRejected: {
-            console.log("取消选择文件")
         }
     }
     
@@ -134,7 +130,6 @@ Rectangle {
                                     anchors.fill: parent
                                     hoverEnabled: true
                                     onClicked: {
-                                        console.log("点击了知识库:", modelData.name, "ID:", modelData.id)
                                         // 切换知识库的展开/收起状态
                                         $knowledgeManager.toggleKnowledgeExpansion(modelData.id)
                                     }
@@ -325,7 +320,6 @@ Rectangle {
                                                 onClicked: {
                                                     if (modelData.fileUrl) {
                                                         Qt.openUrlExternally(modelData.fileUrl)
-                                                        console.log("打开文件:", modelData.fileName, "URL:", modelData.fileUrl)
                                                     }
                                                 }
                                             }
@@ -415,7 +409,6 @@ Rectangle {
                                                 backgroundColor: "#1AFF4444"
                                                 textColor: "#FF4444"
                                                 onClicked: {
-                                                    console.log("删除文件:", modelData.fileName, "ID:", modelData.id)
                                                     $knowledgeManager.deleteKnowledgeFile(modelData.id)
                                                 }
                                             }

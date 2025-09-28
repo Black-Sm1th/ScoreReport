@@ -18,7 +18,7 @@ KnowledgeManager::KnowledgeManager(QObject* parent)
     setknowledgeList(QVariantList());
     setisLoadingDetail(false);
     setcurrentKnowledgeDetail(QVariantMap());
-    setexpandedKnowledgeId(-1);
+    setexpandedKnowledgeId(QString());
     
     // 连接ApiManager的响应信号
     connect(GET_SINGLETON(ApiManager), &ApiManager::getKnowledgeBaseListResponse,
@@ -62,10 +62,7 @@ void KnowledgeManager::onKnowledgeBaseListResponse(bool success, const QString& 
         qWarning() << "[KnowledgeManager] Failed to get knowledge list:" << message;
         emit knowledgeListUpdated(false, message);
         return;
-    }
-    
-    qDebug() << "[KnowledgeManager] Received knowledge list response";
-    
+    } 
     QVariantList knowledgeItems;
     
     // 解析响应数据结构: data -> records (数组)
@@ -78,7 +75,8 @@ void KnowledgeManager::onKnowledgeBaseListResponse(bool success, const QString& 
                 
                 // 创建知识库项目映射，包含QML需要的字段
                 QVariantMap knowledgeItem;
-                knowledgeItem["id"] = record["id"].toInt();
+                qDebug() << record["id"];
+                knowledgeItem["id"] = record["id"].toString();  // 改为字符串格式
                 knowledgeItem["name"] = record["name"].toString();
                 knowledgeItem["description"] = record["description"].toString();
                 knowledgeItem["userId"] = record["userId"].toInt();
@@ -95,8 +93,6 @@ void KnowledgeManager::onKnowledgeBaseListResponse(bool success, const QString& 
     // 更新知识库列表属性
     setknowledgeList(knowledgeItems);
     
-    qDebug() << "[KnowledgeManager] Updated knowledge list with" << knowledgeItems.size() << "items";
-    
     // 发送更新完成信号
     emit knowledgeListUpdated(true, QString("成功获取 %1 个知识库").arg(knowledgeItems.size()));
 }
@@ -107,10 +103,8 @@ void KnowledgeManager::onKnowledgeBaseListResponse(bool success, const QString& 
  * 
  * 调用ApiManager的getKnowledgeBase接口获取指定知识库的详细信息和文件列表。
  */
-void KnowledgeManager::getKnowledgeDetail(int knowledgeId)
+void KnowledgeManager::getKnowledgeDetail(const QString& knowledgeId)
 {
-    qDebug() << "[KnowledgeManager] Getting knowledge detail for id:" << knowledgeId;
-    
     setisLoadingDetail(true);
     
     // 调用ApiManager获取知识库详情
@@ -123,18 +117,16 @@ void KnowledgeManager::getKnowledgeDetail(int knowledgeId)
  * 
  * 如果当前已展开该知识库则收起，否则展开并获取详情。
  */
-void KnowledgeManager::toggleKnowledgeExpansion(int knowledgeId)
+void KnowledgeManager::toggleKnowledgeExpansion(const QString& knowledgeId)
 {
     if (getexpandedKnowledgeId() == knowledgeId) {
         // 如果当前已展开该知识库，则收起
-        setexpandedKnowledgeId(-1);
+        setexpandedKnowledgeId(QString());
         setcurrentKnowledgeDetail(QVariantMap());
-        qDebug() << "[KnowledgeManager] Collapsed knowledge:" << knowledgeId;
     } else {
         // 如果没有展开或展开的是其他知识库，则展开当前知识库
         setexpandedKnowledgeId(knowledgeId);
         getKnowledgeDetail(knowledgeId);
-        qDebug() << "[KnowledgeManager] Expanding knowledge:" << knowledgeId;
     }
 }
 
@@ -153,7 +145,7 @@ void KnowledgeManager::onKnowledgeBaseDetailResponse(bool success, const QString
     
     if (!success) {
         qWarning() << "[KnowledgeManager] Failed to get knowledge detail:" << message;
-        emit knowledgeDetailUpdated(false, message, -1);
+        emit knowledgeDetailUpdated(false, message, "-1");
         return;
     }
     
@@ -161,7 +153,7 @@ void KnowledgeManager::onKnowledgeBaseDetailResponse(bool success, const QString
     
     // 解析知识库详情数据
     QVariantMap knowledgeDetail;
-    knowledgeDetail["id"] = data["id"].toInt();
+    knowledgeDetail["id"] = data["id"].toString();  // 改为字符串格式
     knowledgeDetail["name"] = data["name"].toString();
     knowledgeDetail["description"] = data["description"].toString();
     knowledgeDetail["userId"] = data["userId"].toInt();
@@ -180,8 +172,8 @@ void KnowledgeManager::onKnowledgeBaseDetailResponse(bool success, const QString
                 QJsonObject file = fileValue.toObject();
                 
                 QVariantMap fileItem;
-                fileItem["id"] = file["id"].toInt();
-                fileItem["knowledgeBaseId"] = file["knowledgeBaseId"].toInt();
+                fileItem["id"] = file["id"].toString();  // 改为字符串格式
+                fileItem["knowledgeBaseId"] = file["knowledgeBaseId"].toString();  // 改为字符串格式
                 fileItem["fileName"] = file["fileName"].toString();
                 fileItem["fileSize"] = file["fileSize"].toInt();
                 fileItem["fileType"] = file["fileType"].toString();
@@ -201,10 +193,7 @@ void KnowledgeManager::onKnowledgeBaseDetailResponse(bool success, const QString
     // 更新当前知识库详情
     setcurrentKnowledgeDetail(knowledgeDetail);
     
-    int knowledgeId = data["id"].toInt();
-    qDebug() << "[KnowledgeManager] Updated knowledge detail for id:" << knowledgeId 
-             << "with" << fileList.size() << "files";
-    
+    QString knowledgeId = data["id"].toString();  // 改为字符串格式
     // 发送更新完成信号
     emit knowledgeDetailUpdated(true, 
                                QString("成功获取知识库详情，包含 %1 个文件").arg(fileList.size()), 
@@ -219,15 +208,12 @@ void KnowledgeManager::onKnowledgeBaseDetailResponse(bool success, const QString
  */
 void KnowledgeManager::uploadFileToCurrentKnowledge(const QString& filePath)
 {
-    int currentKnowledgeId = getexpandedKnowledgeId();
-    if (currentKnowledgeId <= 0) {
+    QString currentKnowledgeId = getexpandedKnowledgeId();
+    if (currentKnowledgeId.isEmpty()) {
         qWarning() << "[KnowledgeManager] No knowledge base is currently expanded for file upload";
         emit fileUploadCompleted(false, "请先选择一个知识库");
         return;
     }
-    
-    qDebug() << "[KnowledgeManager] Uploading file:" << filePath 
-             << "to knowledge base:" << currentKnowledgeId;
     
     // 调用ApiManager上传文件
     GET_SINGLETON(ApiManager)->uploadFileToKnowledgeBase(filePath, currentKnowledgeId);
@@ -239,20 +225,16 @@ void KnowledgeManager::uploadFileToCurrentKnowledge(const QString& filePath)
  * 
  * 从当前展开的知识库中删除指定文件，删除完成后自动刷新知识库详情。
  */
-void KnowledgeManager::deleteKnowledgeFile(int fileId)
+void KnowledgeManager::deleteKnowledgeFile(const QString& fileId)
 {
-    int currentKnowledgeId = getexpandedKnowledgeId();
-    if (currentKnowledgeId <= 0) {
+    QString currentKnowledgeId = getexpandedKnowledgeId();
+    if (currentKnowledgeId.isEmpty()) {
         qWarning() << "[KnowledgeManager] No knowledge base is currently expanded for file deletion";
         emit fileDeleteCompleted(false, "请先选择一个知识库");
         return;
     }
-    
-    qDebug() << "[KnowledgeManager] Deleting file:" << fileId 
-             << "from knowledge base:" << currentKnowledgeId;
-    
     // 调用ApiManager删除文件（批量删除接口，传入单个文件ID）
-    QList<int> fileIds;
+    QList<QString> fileIds;
     fileIds.append(fileId);
     GET_SINGLETON(ApiManager)->deleteKnowledgeBaseFiles(fileIds);
 }
@@ -268,11 +250,9 @@ void KnowledgeManager::deleteKnowledgeFile(int fileId)
 void KnowledgeManager::onFileUploadResponse(bool success, const QString& message, const QJsonObject& data)
 {
     if (success) {
-        qDebug() << "[KnowledgeManager] File upload successful:" << message;
-        
         // 上传成功后，自动刷新当前知识库详情
-        int currentKnowledgeId = getexpandedKnowledgeId();
-        if (currentKnowledgeId > 0) {
+        QString currentKnowledgeId = getexpandedKnowledgeId();
+        if (!currentKnowledgeId.isEmpty()) {
             getKnowledgeDetail(currentKnowledgeId);
         }
         
@@ -294,11 +274,9 @@ void KnowledgeManager::onFileUploadResponse(bool success, const QString& message
 void KnowledgeManager::onFileDeleteResponse(bool success, const QString& message, const QJsonObject& data)
 {
     if (success) {
-        qDebug() << "[KnowledgeManager] File delete successful:" << message;
-        
         // 删除成功后，自动刷新当前知识库详情
-        int currentKnowledgeId = getexpandedKnowledgeId();
-        if (currentKnowledgeId > 0) {
+        QString currentKnowledgeId = getexpandedKnowledgeId();
+        if (!currentKnowledgeId.isEmpty()) {
             getKnowledgeDetail(currentKnowledgeId);
         }
         

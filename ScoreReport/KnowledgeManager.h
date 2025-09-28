@@ -20,8 +20,8 @@ class KnowledgeManager : public QObject
     /// @brief 是否正在加载详情数据
     QUICK_PROPERTY(bool, isLoadingDetail)
     
-    /// @brief 当前展开显示详情的知识库ID，-1表示没有展开的
-    QUICK_PROPERTY(int, expandedKnowledgeId)
+    /// @brief 当前展开显示详情的知识库ID，空字符串表示没有展开的
+    QUICK_PROPERTY(QString, expandedKnowledgeId)
 
 public:
     /**
@@ -37,7 +37,7 @@ public:
      * 
      * 调用API接口获取指定知识库的详细信息和文件列表
      */
-    Q_INVOKABLE void getKnowledgeDetail(int knowledgeId);
+    Q_INVOKABLE void getKnowledgeDetail(const QString& knowledgeId);
     
     /**
      * @brief 切换知识库的展开/收起状态
@@ -45,7 +45,7 @@ public:
      * 
      * 如果当前已展开该知识库则收起，否则展开并获取详情
      */
-    Q_INVOKABLE void toggleKnowledgeExpansion(int knowledgeId);
+    Q_INVOKABLE void toggleKnowledgeExpansion(const QString& knowledgeId);
     
     /**
      * @brief 上传文件到当前展开的知识库
@@ -61,7 +61,7 @@ public:
      * 
      * 从当前展开的知识库中删除指定文件
      */
-    Q_INVOKABLE void deleteKnowledgeFile(int fileId);
+    Q_INVOKABLE void deleteKnowledgeFile(const QString& fileId);
 
 signals:
     /**
@@ -77,7 +77,7 @@ signals:
      * @param message 结果消息
      * @param knowledgeId 知识库ID
      */
-    void knowledgeDetailUpdated(bool success, const QString& message, int knowledgeId);
+    void knowledgeDetailUpdated(bool success, const QString& message, const QString& knowledgeId);
     
     /**
      * @brief 文件上传完成信号

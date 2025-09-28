@@ -76,12 +76,12 @@ Rectangle {
                     anchors.verticalCenter: parent.verticalCenter
                     
                     ScoreOptionCard {
-                        title: "知识库管理"
+                        title: "设备管理知识库"
                         backgroundColor: "#F7FCFB"
                         iconUrl: "qrc:/image/CCLS.png"
                     }
                     ScoreOptionCard {
-                        title: "影像知识库问答"
+                        title: "设备管理知识库问答"
                         backgroundColor: "#F8FAFF"
                         iconUrl: "qrc:/image/CHAT.png"
                     }
@@ -206,7 +206,7 @@ Rectangle {
                         messageManager.warning(qsTr("剪贴板为空，请先复制内容"))
                     }
                 }
-                else if(title === "影像知识库问答"){
+                else if(title === "设备管理知识库问答"){
                     currentPageChanged(6)
                 }
                 else if(title === "UCLS MRS"){
@@ -219,7 +219,7 @@ Rectangle {
                     $reportManager.refreshTemplate()
                     currentPageChanged(7)
                 }
-                else if(title === "知识库管理"){
+                else if(title === "设备管理知识库"){
                     $knowledgeManager.updateKnowledgeList()
                     currentPageChanged(8)
                 }
