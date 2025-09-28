@@ -24,7 +24,7 @@ Rectangle {
         if (messagesArea.visible) {
             return 754
         }
-        return chatManager.files.length > 0 ? 248 + 41 : 124 + 41
+        return chatManager.files.length > 0 ? 248 : 124
     }
 
     // 文件选择对话框
@@ -51,33 +51,11 @@ Rectangle {
         width: parent.width
         spacing: 12
 
-        Row{
-            height: 29
-            anchors.left: parent.left
-            anchors.leftMargin: 24
-            Text {
-                font.family: "Alibaba PuHuiTi 3.0"
-                font.weight: Font.Normal
-                font.pixelSize: 16
-                color: "#D9000000"
-                text: "选择知识库："
-                anchors.verticalCenter: parent.verticalCenter
-            }
-            ScoreTypeDropdown{
-                id:chooseKnowledgr
-                anchors.verticalCenter: parent.verticalCenter
-                scoreTypes: []
-                onCurrentIndexChanged: {
-
-                }
-            }
-        }
-
         // 对话记录区域
         Rectangle {
             id: messagesArea
             width: parent.width
-            height: chatManager.files.length > 0 ? 518 - 36 - 29 : 630 - 24 - 29  // 调整以适应新的文件列表高度
+            height: chatManager.files.length > 0 ? 518 - 24 : 630 - 12  // 调整以适应新的文件列表高度
             color: "transparent"
             visible: !specialPage || chatManager.messages.length > 0
             ScrollView {
