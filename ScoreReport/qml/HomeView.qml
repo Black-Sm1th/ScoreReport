@@ -91,11 +91,11 @@ Rectangle {
                     //     iconUrl: "qrc:/image/BIOSNAK.png"
                     // }
 
-                    ScoreOptionCard {
-                        title: "智能问答"
-                        backgroundColor: "#F8FAFF"
-                        iconUrl: "qrc:/image/BIOSNAK.png"
-                    }
+                    // ScoreOptionCard {
+                    //     title: "智能问答"
+                    //     backgroundColor: "#F8FAFF"
+                    //     iconUrl: "qrc:/image/BIOSNAK.png"
+                    // }
                 }
                 
                 // // 肾脏页面 (index 1)

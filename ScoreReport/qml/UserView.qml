@@ -315,21 +315,21 @@ Rectangle {
                     }
                 }
 
-                CustomButton{
-                    anchors.verticalCenter: parent.verticalCenter
-                    anchors.right: parent.right
-                    width: 63
-                    height: 29
-                    border.width: 0
-                    backgroundColor: "transparent"
-                    textColor: "#006BFF"
-                    hoverTextColor: "#D9006BFF"
-                    text: qsTr("注册账号")
-                    fontSize: 16
-                    onClicked: {
-                        $loginManager.isRegistering = true
-                    }
-                }
+                // CustomButton{
+                //     anchors.verticalCenter: parent.verticalCenter
+                //     anchors.right: parent.right
+                //     width: 63
+                //     height: 29
+                //     border.width: 0
+                //     backgroundColor: "transparent"
+                //     textColor: "#006BFF"
+                //     hoverTextColor: "#D9006BFF"
+                //     text: qsTr("注册账号")
+                //     fontSize: 16
+                //     onClicked: {
+                //         $loginManager.isRegistering = true
+                //     }
+                // }
             }
         }
         //登录后用户界面

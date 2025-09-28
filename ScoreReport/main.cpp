@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("$chatManager", chatManager);
 
     // 为独立chat窗口创建单独的ChatManager实例
-    auto* independentChatManager = new ChatManager();
+    auto* independentChatManager = new KnowledgeChatManager();
     engine.rootContext()->setContextProperty("$independentChatManager", independentChatManager);
 
     auto* reportManager = GET_SINGLETON(ReportManager);

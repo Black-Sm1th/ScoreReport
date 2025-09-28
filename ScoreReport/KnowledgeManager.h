@@ -56,6 +56,14 @@ public:
     Q_INVOKABLE void uploadFileToCurrentKnowledge(const QString& filePath);
     
     /**
+     * @brief 批量上传文件到当前展开的知识库
+     * @param filePaths 要上传的文件路径列表
+     * 
+     * 将多个文件批量上传到当前展开的知识库中
+     */
+    Q_INVOKABLE void uploadMultipleFilesToCurrentKnowledge(const QStringList& filePaths);
+    
+    /**
      * @brief 删除指定的知识库文件
      * @param fileId 要删除的文件ID
      * 
@@ -121,6 +129,14 @@ signals:
     void fileUploadCompleted(bool success, const QString& message);
     
     /**
+     * @brief 批量上传完成信号
+     * @param successCount 成功上传的文件数量
+     * @param totalCount 总文件数量
+     * @param message 结果消息
+     */
+    void batchUploadCompleted(int successCount, int totalCount, const QString& message);
+    
+    /**
      * @brief 文件删除完成信号
      * @param success 是否删除成功
      * @param message 结果消息
@@ -147,6 +163,12 @@ signals:
      * @param message 结果消息
      */
     void knowledgeBaseEditCompleted(bool success, const QString& message);
+
+private:
+    // 批量上传状态跟踪
+    int m_totalUploadCount = 0;      // 总上传文件数量
+    int m_successUploadCount = 0;    // 成功上传文件数量
+    int m_completedUploadCount = 0;  // 完成上传文件数量（成功+失败）
 
 private slots:
     /**

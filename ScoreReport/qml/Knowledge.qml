@@ -56,20 +56,27 @@ Rectangle {
         id: fileDialog
         title: qsTr("选择要上传的文件")
         folder: shortcuts.documents
+        selectMultiple: true  // 启用多文件选择
         nameFilters: [
             qsTr("所有文件 (*.*)"),
             qsTr("文档文件 (*.pdf *.doc *.docx *.txt)"),
             qsTr("图片文件 (*.png *.jpg *.jpeg *.gif)"),
         ]
         onAccepted: {
-            var filePath = fileDialog.fileUrl.toString()
-            // 移除 file:// 前缀 (Windows)
-            if (Qt.platform.os === "windows" && filePath.startsWith("file:///")) {
-                filePath = filePath.substring(8)
-            } else if (filePath.startsWith("file://")) {
-                filePath = filePath.substring(7)
+            // 处理多个文件
+            var filePaths = []
+            for (var i = 0; i < fileDialog.fileUrls.length; i++) {
+                var filePath = fileDialog.fileUrls[i].toString()
+                // 移除 file:// 前缀 (Windows)
+                if (Qt.platform.os === "windows" && filePath.startsWith("file:///")) {
+                    filePath = filePath.substring(8)
+                } else if (filePath.startsWith("file://")) {
+                    filePath = filePath.substring(7)
+                }
+                filePaths.push(filePath)
             }
-            $knowledgeManager.uploadFileToCurrentKnowledge(filePath)
+            // 批量上传文件
+            $knowledgeManager.uploadMultipleFilesToCurrentKnowledge(filePaths)
         }
     }
     
@@ -80,6 +87,16 @@ Rectangle {
                 messageManager.success("上传成功！")
             }else{
                 messageManager.error(message)
+            }
+        }
+        
+        function onBatchUploadCompleted(successCount, totalCount, message) {
+            if(successCount === totalCount){
+                messageManager.success("批量上传完成！成功上传 " + successCount + " 个文件")
+            }else if(successCount > 0){
+                messageManager.warning("部分文件上传成功！成功上传 " + successCount + "/" + totalCount + " 个文件")
+            }else{
+                messageManager.error("批量上传失败：" + message)
             }
         }
         
@@ -736,22 +753,22 @@ Rectangle {
                                             color: "#D9000000"
                                         }
                                         
-                                        CustomButton {
-                                            anchors.right: parent.right
-                                            anchors.verticalCenter: parent.verticalCenter
-                                            text: qsTr("上传文件")
-                                            width: 80
-                                            height: 28
-                                            radius: 4
-                                            fontSize: 12
-                                            borderWidth: 1
-                                            borderColor: "#33006BFF"
-                                            backgroundColor: "#1A006BFF"
-                                            textColor: "#006BFF"
-                                            onClicked: {
-                                                fileDialog.open()
-                                            }
-                                        }
+                        CustomButton {
+                            anchors.right: parent.right
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: qsTr("批量上传")
+                            width: 80
+                            height: 28
+                            radius: 4
+                            fontSize: 12
+                            borderWidth: 1
+                            borderColor: "#33006BFF"
+                            backgroundColor: "#1A006BFF"
+                            textColor: "#006BFF"
+                            onClicked: {
+                                fileDialog.open()
+                            }
+                        }
                                     }
                                     
                                     // 文件列表

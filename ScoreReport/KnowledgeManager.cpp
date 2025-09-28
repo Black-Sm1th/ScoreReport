@@ -239,6 +239,50 @@ void KnowledgeManager::uploadFileToCurrentKnowledge(const QString& filePath)
 }
 
 /**
+ * @brief 批量上传文件到当前展开的知识库
+ * @param filePaths 要上传的文件路径列表
+ * 
+ * 将多个文件逐个上传到当前展开的知识库中，通过计数器跟踪上传进度。
+ */
+void KnowledgeManager::uploadMultipleFilesToCurrentKnowledge(const QStringList& filePaths)
+{
+    if (filePaths.isEmpty()) {
+        qWarning() << "[KnowledgeManager] No files to upload";
+        emit batchUploadCompleted(0, 0, "没有选择文件");
+        return;
+    }
+    
+    QString currentKnowledgeId = getexpandedKnowledgeId();
+    if (currentKnowledgeId.isEmpty()) {
+        qWarning() << "[KnowledgeManager] No knowledge base is currently expanded for file upload";
+        emit batchUploadCompleted(0, filePaths.size(), "请先选择一个知识库");
+        return;
+    }
+    
+    // 获取当前用户ID
+    auto* loginManager = GET_SINGLETON(LoginManager);
+    QString userId = loginManager->getcurrentUserId();
+    
+    if (userId.isEmpty() || userId == "-1") {
+        qWarning() << "[KnowledgeManager] User not logged in or invalid user ID";
+        emit batchUploadCompleted(0, filePaths.size(), "请先登录");
+        return;
+    }
+    
+    // 初始化批量上传状态
+    m_totalUploadCount = filePaths.size();
+    m_successUploadCount = 0;
+    m_completedUploadCount = 0;
+    
+    qDebug() << "[KnowledgeManager] Starting batch upload of" << m_totalUploadCount << "files to knowledge base:" << currentKnowledgeId;
+    
+    // 逐个上传文件
+    for (const QString& filePath : filePaths) {
+        GET_SINGLETON(ApiManager)->uploadFileToKnowledgeBase(filePath, currentKnowledgeId, userId);
+    }
+}
+
+/**
  * @brief 删除指定的知识库文件
  * @param fileId 要删除的文件ID
  * 
@@ -265,21 +309,56 @@ void KnowledgeManager::deleteKnowledgeFile(const QString& fileId)
  * @param data 响应数据
  * 
  * 处理文件上传完成后的响应，成功时自动刷新当前知识库的详情。
+ * 如果在批量上传模式下，会更新计数器并在所有文件完成时发送批量上传信号。
  */
 void KnowledgeManager::onFileUploadResponse(bool success, const QString& message, const QJsonObject& data)
 {
-    if (success) {
-        // 上传成功后，自动刷新当前知识库详情
-        QString currentKnowledgeId = getexpandedKnowledgeId();
-        if (!currentKnowledgeId.isEmpty()) {
-            getKnowledgeDetail(currentKnowledgeId);
+    // 检查是否处于批量上传模式
+    if (m_totalUploadCount > 0) {
+        // 批量上传模式
+        m_completedUploadCount++;
+        if (success) {
+            m_successUploadCount++;
         }
         
-        emit fileUploadCompleted(true, "文件上传成功");
-        qDebug() << "[KnowledgeManager] File upload successful";
+        qDebug() << "[KnowledgeManager] Batch upload progress:" << m_completedUploadCount << "/" << m_totalUploadCount 
+                 << "Success count:" << m_successUploadCount;
+        
+        // 检查是否所有文件都已上传完成
+        if (m_completedUploadCount >= m_totalUploadCount) {
+            // 批量上传完成，刷新知识库详情
+            QString currentKnowledgeId = getexpandedKnowledgeId();
+            if (!currentKnowledgeId.isEmpty()) {
+                getKnowledgeDetail(currentKnowledgeId);
+            }
+            
+            // 发送批量上传完成信号
+            QString batchMessage = QString("完成批量上传：成功 %1/%2 个文件")
+                                  .arg(m_successUploadCount).arg(m_totalUploadCount);
+            emit batchUploadCompleted(m_successUploadCount, m_totalUploadCount, batchMessage);
+            
+            // 重置批量上传状态
+            m_totalUploadCount = 0;
+            m_successUploadCount = 0;
+            m_completedUploadCount = 0;
+            
+            qDebug() << "[KnowledgeManager] Batch upload completed:" << batchMessage;
+        }
     } else {
-        qWarning() << "[KnowledgeManager] File upload failed:" << message;
-        emit fileUploadCompleted(false, message);
+        // 单文件上传模式
+        if (success) {
+            // 上传成功后，自动刷新当前知识库详情
+            QString currentKnowledgeId = getexpandedKnowledgeId();
+            if (!currentKnowledgeId.isEmpty()) {
+                getKnowledgeDetail(currentKnowledgeId);
+            }
+            
+            emit fileUploadCompleted(true, "文件上传成功");
+            qDebug() << "[KnowledgeManager] File upload successful";
+        } else {
+            qWarning() << "[KnowledgeManager] File upload failed:" << message;
+            emit fileUploadCompleted(false, message);
+        }
     }
 }
 

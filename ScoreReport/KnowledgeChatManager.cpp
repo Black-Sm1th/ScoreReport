@@ -237,7 +237,7 @@ void KnowledgeChatManager::addThinkingMessage()
 {
     QVariantMap thinkingMessage;
     thinkingMessage["type"] = "thinking";
-    thinkingMessage["content"] = "思考中";
+    thinkingMessage["content"] = "查询中";
     thinkingMessage["timestamp"] = QDateTime::currentDateTime().toString("hh:mm");
     
     QVariantList currentMessages = getmessages();
