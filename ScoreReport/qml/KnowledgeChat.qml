@@ -122,7 +122,14 @@ Rectangle {
                                     id: messageContent
                                     anchors.centerIn: parent
                                     width: Math.min(implicitWidth, messagesColumn.width - 48)
-                                    text: (modelData.type === "thinking" || modelData.type === "interrupt") ? "" : modelData.content
+                                    text: {
+                                        if (modelData.type === "thinking" || modelData.type === "interrupt") {
+                                            return ""
+                                        }
+                                        // 将字面量的\n转换为实际的换行符
+                                        var content = modelData.content || ""
+                                        return content.replace(/\\n/g, "\n")
+                                    }
                                     padding: modelData.type === "user" ? 12 : 0
                                     font.family: "Alibaba PuHuiTi 3.0"
                                     font.pixelSize: 16
@@ -193,7 +200,7 @@ Rectangle {
                                     model: chatManager.retrievedMetadata
                                     delegate: Rectangle {
                                         width: parent.width
-                                        height: fileText.height + 12
+                                        height: fileText.height + filePage.height + 12
                                         color: fileArea.containsMouse ? "#F0F7FF" : "#F8F9FA"
                                         radius: 6
                                         border.color: "#E6EAF2"
@@ -261,6 +268,8 @@ Rectangle {
                                                 }
                                                 
                                                 Text {
+                                                    leftPadding: 8
+                                                    id: filePage
                                                     text: {
                                                         var pages = modelData.page_numbers || []
                                                         if (pages.length > 0) {
