@@ -928,7 +928,7 @@ Rectangle {
         color: "#73000000"
         anchors.bottom: parent.bottom
         anchors.right: parent.right
-        anchors.rightMargin: 20
+        anchors.rightMargin: 16
         anchors.bottomMargin: 8
     }
 }

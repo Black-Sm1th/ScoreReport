@@ -3,6 +3,12 @@
 #include <QQmlContext>
 #include <QFontDatabase>
 #include <QDebug>
+#include <QDateTime>
+#include <QDir>
+#include <QFile>
+#include <QTextStream>
+#include <QStandardPaths>
+#include <QMutex>
 #include "LoginManager.h"
 #include "CCLSScorer.h"
 #include "TNMManager.h"
@@ -15,6 +21,112 @@
 #include "ChatManager.h"
 #include "LanguageManager.h"
 #include "ReportManager.h"
+
+// 全局日志文件指针和互斥锁
+static QFile* g_logFile = nullptr;
+static QTextStream* g_logStream = nullptr;
+static QMutex g_logMutex;
+
+/**
+ * @brief 自定义消息处理器 - 将日志同时输出到文件和控制台
+ * @param type 消息类型
+ * @param context 消息上下文
+ * @param msg 消息内容
+ */
+void customMessageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg)
+{
+    QMutexLocker locker(&g_logMutex);
+    
+    // 格式化时间戳
+    QString timestamp = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss.zzz");
+    
+    // 确定消息类型字符串
+    QString typeStr;
+    switch (type) {
+    case QtDebugMsg:    typeStr = "DEBUG"; break;
+    case QtWarningMsg:  typeStr = "WARN "; break;
+    case QtCriticalMsg: typeStr = "CRIT "; break;
+    case QtFatalMsg:    typeStr = "FATAL"; break;
+    case QtInfoMsg:     typeStr = "INFO "; break;
+    }
+    
+    // 格式化日志消息
+    QString formattedMsg = QString("[%1] [%2] %3").arg(timestamp, typeStr, msg);
+    
+    // 输出到控制台（保持原有行为）
+    fprintf(stderr, "%s\n", formattedMsg.toLocal8Bit().constData());
+    
+    // 输出到文件
+    if (g_logStream) {
+        *g_logStream << formattedMsg << Qt::endl;
+        g_logStream->flush(); // 确保立即写入文件
+    }
+}
+
+/**
+ * @brief 初始化日志系统
+ * @return 是否初始化成功
+ */
+bool initializeLogging()
+{
+    // 创建日志目录 - 在当前运行路径下的AppData/logs文件夹
+    QString logDir = "AppData/logs";
+    QDir dir;
+    if (!dir.mkpath(logDir)) {
+        qWarning() << "Failed to create log directory:" << logDir;
+        return false;
+    }
+    
+    // 生成日志文件名（包含时间戳）
+    QString timestamp = QDateTime::currentDateTime().toString("yyyy-MM-dd_hh-mm-ss");
+    QString logFileName = QString("ScoreReport_%1.log").arg(timestamp);
+    QString logFilePath = QDir(logDir).filePath(logFileName);
+    
+    // 创建日志文件
+    g_logFile = new QFile(logFilePath);
+    if (!g_logFile->open(QIODevice::WriteOnly | QIODevice::Append)) {
+        qWarning() << "Failed to open log file:" << logFilePath;
+        delete g_logFile;
+        g_logFile = nullptr;
+        return false;
+    }
+    
+    // 创建文本流
+    g_logStream = new QTextStream(g_logFile);
+    g_logStream->setCodec("UTF-8");
+    
+    // 写入日志启动信息
+    QString startMsg = QString("========== ScoreReport Log Started at %1 ==========")
+                       .arg(QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss"));
+    *g_logStream << startMsg << Qt::endl;
+    g_logStream->flush();
+    
+    qInfo() << "Log system initialized successfully. Log file:" << logFilePath;
+    return true;
+}
+
+/**
+ * @brief 清理日志系统
+ */
+void cleanupLogging()
+{
+    if (g_logStream) {
+        QString endMsg = QString("========== ScoreReport Log Ended at %1 ==========")
+                         .arg(QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss"));
+        *g_logStream << endMsg << Qt::endl;
+        g_logStream->flush();
+        
+        delete g_logStream;
+        g_logStream = nullptr;
+    }
+    
+    if (g_logFile) {
+        g_logFile->close();
+        delete g_logFile;
+        g_logFile = nullptr;
+    }
+}
+
 int main(int argc, char *argv[])
 {
 #if defined(Q_OS_WIN)
@@ -25,6 +137,15 @@ int main(int argc, char *argv[])
     QCoreApplication::setAttribute(Qt::AA_UseOpenGLES);
 
     QGuiApplication app(argc, argv);
+    
+    // 初始化日志系统
+    if (!initializeLogging()) {
+        qCritical() << "Failed to initialize logging system";
+    }
+    
+    // 安装自定义消息处理器
+    qInstallMessageHandler(customMessageOutput);
+    
     // 设置应用程序信息，解决FileDialog的QSettings错误
     QCoreApplication::setOrganizationName("AETHERMIND");
     QCoreApplication::setOrganizationDomain("aethermind.com");
@@ -78,8 +199,19 @@ int main(int argc, char *argv[])
     int fontId3 = QFontDatabase::addApplicationFont(":/fonts/AlibabaPuHuiTi-3-85-Bold.ttf");
 
     engine.load(QUrl(QStringLiteral("qrc:/qml/main.qml")));
-    if (engine.rootObjects().isEmpty())
+    if (engine.rootObjects().isEmpty()) {
+        cleanupLogging();
         return -1;
+    }
+    
+    qInfo() << "ScoreReport application started successfully";
 
-    return app.exec();
+    int result = app.exec();
+    
+    qInfo() << "ScoreReport application exiting with code:" << result;
+    
+    // 清理日志系统
+    cleanupLogging();
+    
+    return result;
 }
