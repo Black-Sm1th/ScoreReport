@@ -75,5 +75,6 @@
         <file>gif/default.gif</file>
         <file>gif/hoverStyle1.gif</file>
         <file>gif/hoverStyle2.gif</file>
+        <file>image/loginHead.png</file>
     </qresource>
 </RCC>
