@@ -21,7 +21,7 @@
 #include "ChatManager.h"
 #include "LanguageManager.h"
 #include "ReportManager.h"
-
+#include "Version.h"
 // 全局日志文件指针和互斥锁
 static QFile* g_logFile = nullptr;
 static QTextStream* g_logStream = nullptr;
@@ -150,7 +150,7 @@ int main(int argc, char *argv[])
     QCoreApplication::setOrganizationName("AETHERMIND");
     QCoreApplication::setOrganizationDomain("aethermind.com");
     QCoreApplication::setApplicationName("ScoreReport");
-    QCoreApplication::setApplicationVersion("0.9.4");
+    QCoreApplication::setApplicationVersion(VER_VERSION_STR);
 
     QQmlApplicationEngine engine;
     // 使用单例模式获取实例
