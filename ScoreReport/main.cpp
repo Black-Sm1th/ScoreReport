@@ -207,19 +207,8 @@ int main(int argc, char *argv[])
     int fontId3 = QFontDatabase::addApplicationFont(":/fonts/AlibabaPuHuiTi-3-85-Bold.ttf");
 
     engine.load(QUrl(QStringLiteral("qrc:/qml/main.qml")));
-    if (engine.rootObjects().isEmpty()) {
-        cleanupLogging();
+    if (engine.rootObjects().isEmpty())
         return -1;
-    }
     
-    qInfo() << "ScoreReport application started successfully";
-
-    int result = app.exec();
-    
-    qInfo() << "ScoreReport application exiting with code:" << result;
-    
-    // 清理日志系统
-    cleanupLogging();
-    
-    return result;
+    return app.exec();
 }
