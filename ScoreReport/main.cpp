@@ -21,6 +21,8 @@
 #include "ChatManager.h"
 #include "LanguageManager.h"
 #include "ReportManager.h"
+#include "KnowledgeManager.h"
+#include "KnowledgeChatManager.h"
 #include "Version.h"
 // 全局日志文件指针和互斥锁
 static QFile* g_logFile = nullptr;
