@@ -8,11 +8,15 @@
 #include <QDir>
 #include <QDateTime>
 #include <QTimer>
+#include "Version.h"
 LoginManager::LoginManager(QObject* parent)
     : QObject(parent)
     , m_apiManager(nullptr)
     , m_settings(nullptr)
 {
+    QString str = VER_VERSION_STR;
+    QString ver = "V" + str;
+    setcurrentVersion(ver);
     setcurrentUserId("");
     setisLoggedIn(false);
     setcurrentUserName("");

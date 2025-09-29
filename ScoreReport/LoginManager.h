@@ -31,6 +31,7 @@ class LoginManager : public QObject
     QUICK_PROPERTY(bool, isRegistering)
     QUICK_PROPERTY(bool, showDialogOnTextSelection)
     QUICK_PROPERTY(bool, showHelpBubble)
+    QUICK_PROPERTY(QString, currentVersion)
     SINGLETON_CLASS(LoginManager)
 
 public:
