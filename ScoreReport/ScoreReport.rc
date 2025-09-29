@@ -48,7 +48,7 @@ BEGIN
     END
 END
 
-//
-// Icon (需要.ico格式的图标文件)
-//
-// IDI_ICON1 ICON "image\\titleIcon.ico"
+
+ //Icon (需要.ico格式的图标文件)
+
+ IDI_ICON1 ICON "icon\\icon.ico"

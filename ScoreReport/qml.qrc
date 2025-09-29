@@ -23,7 +23,6 @@
         <file>qml/components/MessageBox.qml</file>
         <file>qml/components/ConfirmDialog.qml</file>
         <file>qml/components/TabSwitcher.qml</file>
-        <file>image/loginHead.png</file>
         <file>image/BIOSNAK.png</file>
         <file>image/CCLS.png</file>
         <file>image/RENAL.png</file>
@@ -66,18 +65,13 @@
         <file>image/upload.png</file>
         <file>image/info.png</file>
         <file>qml/REPORT.qml</file>
-        <file>image/floatIcon/icon1.png</file>
-        <file>image/floatIcon/icon2.png</file>
-        <file>image/floatIcon/icon3.png</file>
-        <file>image/floatIcon/icon4.png</file>
-        <file>image/floatIcon/icon5.png</file>
-        <file>image/floatIcon/icon6.png</file>
-        <file>image/floatIcon/icon7.png</file>
-        <file>image/floatIcon/icon8.png</file>
-        <file>image/floatIcon/icon9.png</file>
-        <file>image/floatIcon/icon10.png</file>
         <file>image/finger.png</file>
         <file>image/clearCache.png</file>
         <file>image/chatBubble.png</file>
+        <file>gif/default.gif</file>
+        <file>gif/hoverStyle1.gif</file>
+        <file>gif/hoverStyle2.gif</file>
+        <file>image/loginHead.png</file>
+        <file>icon/icon.ico</file>
     </qresource>
 </RCC>

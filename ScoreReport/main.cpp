@@ -25,7 +25,6 @@ int main(int argc, char *argv[])
     QCoreApplication::setAttribute(Qt::AA_UseOpenGLES);
 
     QGuiApplication app(argc, argv);
-
     // 设置应用程序信息，解决FileDialog的QSettings错误
     QCoreApplication::setOrganizationName("AETHERMIND");
     QCoreApplication::setOrganizationDomain("aethermind.com");

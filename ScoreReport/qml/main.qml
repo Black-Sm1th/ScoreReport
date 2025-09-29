@@ -75,23 +75,33 @@ ApplicationWindow {
         scale: 1.1
         anchors.centerIn: parent
         property int currentIndex: 0
-        property var images: ["qrc:/image/floatIcon/icon1.png", "qrc:/image/floatIcon/icon2.png", "qrc:/image/floatIcon/icon3.png", "qrc:/image/floatIcon/icon4.png", "qrc:/image/floatIcon/icon5.png", "qrc:/image/floatIcon/icon6.png", "qrc:/image/floatIcon/icon7.png", "qrc:/image/floatIcon/icon8.png", "qrc:/image/floatIcon/icon9.png", "qrc:/image/floatIcon/icon10.png"]
+        property var images: ["qrc:/gif/hoverStyle1.gif", "qrc:/gif/hoverStyle2.gif"]
         // 悬浮窗图标/图片
-        Image {
+
+        AnimatedImage {
             id: floatingImage
             anchors.fill: parent
             anchors.centerIn: parent
-            fillMode: Image.PreserveAspectFit
-            source: floatingWindow.images[floatingWindow.currentIndex]
+            source: "qrc:/gif/default.gif"   // 可以是资源文件或本地路径
+            playing: true                    // 播放
             scale: 1.1
         }
-        Timer {
-            interval: 250; running: true; repeat: true
-            onTriggered: {
-                floatingWindow.currentIndex = (floatingWindow.currentIndex + 1) % floatingWindow.images.length
-                floatingImage.source = floatingWindow.images[floatingWindow.currentIndex]
-            }
-        }
+
+        // Image {
+        //     id: floatingImage
+        //     anchors.fill: parent
+        //     anchors.centerIn: parent
+        //     fillMode: Image.PreserveAspectFit
+        //     source: floatingWindow.images[floatingWindow.currentIndex]
+        //     scale: 1.1
+        // }
+        // Timer {
+        //     interval: 250; running: true; repeat: true
+        //     onTriggered: {
+        //         floatingWindow.currentIndex = (floatingWindow.currentIndex + 1) % floatingWindow.images.length
+        //         floatingImage.source = floatingWindow.images[floatingWindow.currentIndex]
+        //     }
+        // }
         // 鼠标悬停效果
         states: [
             State {
@@ -159,6 +169,8 @@ ApplicationWindow {
                 if(!scoreDialog.visible){
                     scoreDialog.showDialog()
                 }
+                floatingWindow.currentIndex = (floatingWindow.currentIndex + 1) % floatingWindow.images.length
+                floatingImage.source = floatingWindow.images[floatingWindow.currentIndex]
             }
             onExited: {
                 if(scoreDialog.isEntered == false){
@@ -168,6 +180,7 @@ ApplicationWindow {
                         helpBubbleTimer.restart()
                     }
                 }
+                floatingImage.source = "qrc:/gif/default.gif"
             }
             onPositionChanged: {
                 if (pressed && pressedButtons & Qt.LeftButton) {
@@ -2046,6 +2059,9 @@ ApplicationWindow {
             slideYAnimation.to = targetY
             slideAnimation.start()
             autoHideBubbleTimer.restart()
+
+            floatingWindow.currentIndex = (floatingWindow.currentIndex + 1) % floatingWindow.images.length
+            floatingImage.source = floatingWindow.images[floatingWindow.currentIndex]
         }
 
         function hideBubble() {
@@ -2058,6 +2074,7 @@ ApplicationWindow {
                 if ($loginManager.showHelpBubble) {
                     helpBubbleTimer.restart()
                 }
+                floatingImage.source = "qrc:/gif/default.gif"
             })
         }
 
