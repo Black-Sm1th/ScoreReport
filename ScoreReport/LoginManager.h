@@ -10,6 +10,8 @@
 #include <QVariantMap>
 #include <QCursor>
 #include <QPoint>
+#include <QDir>
+#include <QFileInfo>
 #include "CommonFunc.h"
 #include "GlobalTextMonitor.h"
 #include "GlobalMouseListener.h"
@@ -65,6 +67,7 @@ private:
     void loadUserList();
     void saveUserList();
     QVariantMap findUserInList(const QString& userId);
+    void clearLogFiles();
     GlobalTextMonitor* m_selector;
     ApiManager* m_apiManager;
     QSettings* m_settings;

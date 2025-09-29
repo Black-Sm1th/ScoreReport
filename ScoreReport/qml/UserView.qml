@@ -931,4 +931,15 @@ Rectangle {
         anchors.rightMargin: 20
         anchors.bottomMargin: 8
     }
+
+    Text {
+        text: qsTr("版本号：" + $loginManager.currentVersion)
+        font.family: "Alibaba PuHuiTi 3.0"
+        font.pixelSize: 14
+        color: "#73000000"
+        anchors.bottom: parent.bottom
+        anchors.right: parent.right
+        anchors.rightMargin: 16
+        anchors.bottomMargin: 8
+    }
 }

@@ -386,12 +386,64 @@ void LoginManager::clearAllCache()
         qWarning() << "[LoginManager] QSettings is null, cannot clear cache";
         return;
     }
+    
+    // 清除日志文件
+    clearLogFiles();
+    
     // 清除LoginManager的所有设置
     m_settings->clear();
     m_settings->sync();
     setshowHelpBubble(true);
     
     qDebug() << "[LoginManager] Successfully cleared all application cache and reset properties";
+}
+
+void LoginManager::clearLogFiles()
+{
+    // 日志文件目录路径（与main.cpp中的路径保持一致）
+    QString logDir = "AppData/logs";
+    
+    QDir dir(logDir);
+    if (!dir.exists()) {
+        qDebug() << "[LoginManager] Log directory does not exist:" << logDir;
+        return;
+    }
+    
+    // 获取所有.log文件
+    QStringList logFiles = dir.entryList(QStringList() << "*.log", QDir::Files);
+    if (logFiles.isEmpty()) {
+        qDebug() << "[LoginManager] No log files found in:" << logDir;
+        return;
+    }
+    
+    int deletedCount = 0;
+    int totalCount = logFiles.size();
+    
+    // 删除所有日志文件
+    foreach (const QString& fileName, logFiles) {
+        QString filePath = dir.filePath(fileName);
+        QFile file(filePath);
+        
+        if (file.remove()) {
+            qDebug() << "[LoginManager] Deleted log file:" << fileName;
+            deletedCount++;
+        } else {
+            qWarning() << "[LoginManager] Failed to delete log file:" << fileName;
+        }
+    }
+    
+    qDebug() << QString("[LoginManager] Log cleanup completed: %1/%2 files deleted from %3")
+                .arg(deletedCount).arg(totalCount).arg(logDir);
+    
+    // 如果所有文件都被删除，尝试删除空的logs目录
+    if (deletedCount == totalCount) {
+        QStringList remainingFiles = dir.entryList(QDir::NoDotAndDotDot | QDir::AllEntries);
+        if (remainingFiles.isEmpty()) {
+            if (dir.rmdir(".")) {
+                qDebug() << "[LoginManager] Removed empty log directory:" << logDir;
+            }
+        }
+    }
 }
 
 void LoginManager::saveHelpBubbleSetting(bool showHelpBubble)
