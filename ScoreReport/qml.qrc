@@ -73,5 +73,7 @@
         <file>gif/hoverStyle2.gif</file>
         <file>image/loginHead.png</file>
         <file>icon/icon.ico</file>
+        <file>gif/appear1.gif</file>
+        <file>gif/appear2.gif</file>
     </qresource>
 </RCC>
