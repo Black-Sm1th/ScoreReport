@@ -181,6 +181,7 @@ ApplicationWindow {
 
             property point lastMousePos
             property bool isDragging: false
+            property bool ignoreExitEvents: false  // 添加标志位防止动画期间的异常事件
             cursorShape: Qt.PointingHandCursor
             onPressed: {
                 // 任何点击都先隐藏右键菜单（除了右键点击自己）
@@ -209,11 +210,18 @@ ApplicationWindow {
                     helpBubble.hideBubble()
                 }
                 if(!scoreDialog.visible){
+                    // 设置忽略退出事件标志，防止动画期间的异常触发
+                    ignoreExitEvents = true
                     scoreDialog.showDialog()
                 }
                 floatingWindow.showHoverImages()
             }
             onExited: {
+                // 如果在动画期间，忽略退出事件
+                if (ignoreExitEvents) {
+                    return
+                }
+                
                 if(scoreDialog.isEntered == false){
                     disabledTimer.start()
                     // 鼠标离开时重启帮助定时器（仅在开启设置时）
@@ -380,6 +388,8 @@ ApplicationWindow {
             onFinished: {
                 // 动画完成后，恢复正常的跟随行为
                 scoreDialog.animating = false
+                // 重置鼠标事件忽略标志
+                mouseArea.ignoreExitEvents = false
             }
         }
 
@@ -422,6 +432,8 @@ ApplicationWindow {
                 // 恢复正常缩放和透明度
                 contentRect.scale = 1.0
                 contentRect.opacity = 1.0
+                // 重置鼠标事件忽略标志
+                mouseArea.ignoreExitEvents = false
                 // 对话框隐藏后重启帮助定时器（仅在开启设置时）
                 if (!mouseArea.containsMouse && $loginManager.showHelpBubble) {
                     helpBubbleTimer.restart()
@@ -451,6 +463,8 @@ ApplicationWindow {
                 // 恢复正常状态
                 contentRect.scale = 1.0
                 contentRect.opacity = 1.0
+                // 重置鼠标事件忽略标志
+                mouseArea.ignoreExitEvents = false
             }
 
             var fr = _floatingRect()
