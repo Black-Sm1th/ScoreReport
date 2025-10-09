@@ -23,7 +23,6 @@ Item {
     property color confirmTextColor: "#FFFFFF"
     property color cancelTextColor: "#73000000"
     property int dialogWidth: 400
-    property int dialogHeight: 180
     property int dialogRadius: 12
     
     // 信号
@@ -59,7 +58,7 @@ Item {
     Rectangle {
         id: dialogContainer
         width: dialogWidth
-        height: dialogHeight
+        height: 40 + messageText.height + titleText.height + 40 + 48
         radius: dialogRadius
         color: dialogBackgroundColor
         anchors.centerIn: parent
