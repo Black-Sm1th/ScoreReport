@@ -65,7 +65,6 @@ ApplicationWindow {
         samples: 32
         scale: 1.1
     }
-
     // 悬浮窗
     Rectangle {
         id: floatingWindow
@@ -74,18 +73,61 @@ ApplicationWindow {
         color: "transparent"
         scale: 1.1
         anchors.centerIn: parent
-        property int currentIndex: 0
-        property var images: ["qrc:/gif/hoverStyle1.gif", "qrc:/gif/hoverStyle2.gif"]
-        // 悬浮窗图标/图片
+        property int currentHoverIndex: 0
+        property int currentAppearIndex: 0
+        property var hoverImages: ["qrc:/gif/hoverStyle1.gif", "qrc:/gif/hoverStyle2.gif"]
+        property var apperImages: ["qrc:/gif/appear1.gif", "qrc:/gif/appear2.gif"]
 
+        function showHoverImages(){
+            if(floatingImage.source == "qrc:/gif/default.gif"){
+                floatingWindow.currentHoverIndex = (floatingWindow.currentHoverIndex + 1) % floatingWindow.hoverImages.length
+                floatingImage.source = floatingWindow.hoverImages[floatingWindow.currentHoverIndex]
+            }
+        }
+        function showAppearImages(){
+            if(floatingImage.source == "qrc:/gif/default.gif"){
+                floatingWindow.currentAppearIndex = (floatingWindow.currentAppearIndex + 1) % floatingWindow.apperImages.length
+                floatingImage.source = floatingWindow.apperImages[floatingWindow.currentAppearIndex]
+            }
+        }
+        function showDefaultImages(){
+            if(floatingImage.source != "qrc:/gif/default.gif"){
+                floatingImage.source = "qrc:/gif/default.gif"
+            }
+        }
+        // 悬浮窗图标/图片
         AnimatedImage {
             id: floatingImage
             anchors.fill: parent
             anchors.centerIn: parent
-            source: "qrc:/gif/default.gif"   // 可以是资源文件或本地路径
+            source: "qrc:/gif/appear1.gif"
             playing: true                    // 播放
             scale: 1.1
+            onCurrentFrameChanged: {
+                if (currentFrame === frameCount - 1 && floatingWindow.apperImages.indexOf(source.toString()) > -1 ) {
+                    floatingWindow.showDefaultImages()
+                }
+            }
         }
+        Timer{
+            id: appearTimer
+            interval: 5 * 60 * 1000
+            repeat: true
+            onTriggered: {
+                floatingWindow.showAppearImages()
+            }
+        }
+        Component.onCompleted: {
+            appearTimer.restart()
+        }
+        // AnimatedImage {
+        //     id: floatingImage
+        //     anchors.fill: parent
+        //     anchors.centerIn: parent
+        //     source: "qrc:/gif/default.gif"   // 可以是资源文件或本地路径
+        //     playing: true                    // 播放
+        //     scale: 1.1
+        // }
 
         // Image {
         //     id: floatingImage
@@ -139,6 +181,7 @@ ApplicationWindow {
 
             property point lastMousePos
             property bool isDragging: false
+            property bool ignoreExitEvents: false  // 添加标志位防止动画期间的异常事件
             cursorShape: Qt.PointingHandCursor
             onPressed: {
                 // 任何点击都先隐藏右键菜单（除了右键点击自己）
@@ -167,12 +210,18 @@ ApplicationWindow {
                     helpBubble.hideBubble()
                 }
                 if(!scoreDialog.visible){
+                    // 设置忽略退出事件标志，防止动画期间的异常触发
+                    ignoreExitEvents = true
                     scoreDialog.showDialog()
                 }
-                floatingWindow.currentIndex = (floatingWindow.currentIndex + 1) % floatingWindow.images.length
-                floatingImage.source = floatingWindow.images[floatingWindow.currentIndex]
+                floatingWindow.showHoverImages()
             }
             onExited: {
+                // 如果在动画期间，忽略退出事件
+                if (ignoreExitEvents) {
+                    return
+                }
+                
                 if(scoreDialog.isEntered == false){
                     disabledTimer.start()
                     // 鼠标离开时重启帮助定时器（仅在开启设置时）
@@ -180,7 +229,7 @@ ApplicationWindow {
                         helpBubbleTimer.restart()
                     }
                 }
-                floatingImage.source = "qrc:/gif/default.gif"
+                floatingWindow.showDefaultImages()
             }
             onPositionChanged: {
                 if (pressed && pressedButtons & Qt.LeftButton) {
@@ -344,6 +393,8 @@ ApplicationWindow {
             onFinished: {
                 // 动画完成后，恢复正常的跟随行为
                 scoreDialog.animating = false
+                // 重置鼠标事件忽略标志
+                mouseArea.ignoreExitEvents = false
             }
         }
 
@@ -386,6 +437,8 @@ ApplicationWindow {
                 // 恢复正常缩放和透明度
                 contentRect.scale = 1.0
                 contentRect.opacity = 1.0
+                // 重置鼠标事件忽略标志
+                mouseArea.ignoreExitEvents = false
                 // 对话框隐藏后重启帮助定时器（仅在开启设置时）
                 if (!mouseArea.containsMouse && $loginManager.showHelpBubble) {
                     helpBubbleTimer.restart()
@@ -415,6 +468,8 @@ ApplicationWindow {
                 // 恢复正常状态
                 contentRect.scale = 1.0
                 contentRect.opacity = 1.0
+                // 重置鼠标事件忽略标志
+                mouseArea.ignoreExitEvents = false
             }
 
             var fr = _floatingRect()
@@ -2083,9 +2138,7 @@ ApplicationWindow {
             slideYAnimation.to = targetY
             slideAnimation.start()
             autoHideBubbleTimer.restart()
-
-            floatingWindow.currentIndex = (floatingWindow.currentIndex + 1) % floatingWindow.images.length
-            floatingImage.source = floatingWindow.images[floatingWindow.currentIndex]
+            floatingWindow.showHoverImages()
         }
 
         function hideBubble() {
@@ -2098,7 +2151,9 @@ ApplicationWindow {
                 if ($loginManager.showHelpBubble) {
                     helpBubbleTimer.restart()
                 }
-                floatingImage.source = "qrc:/gif/default.gif"
+                if(!helpBubble.isFirst){
+                    floatingWindow.showDefaultImages()
+                }
             })
         }
 

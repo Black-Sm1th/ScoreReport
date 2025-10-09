@@ -929,6 +929,6 @@ Rectangle {
         anchors.bottom: parent.bottom
         anchors.right: parent.right
         anchors.rightMargin: 16
-        anchors.bottomMargin: 8
+        anchors.bottomMargin: 6
     }
 }
