@@ -201,7 +201,9 @@ ApplicationWindow {
                 }
             }
             onEntered: {
-                console.log("11111")
+                if(isDragging){
+                    return
+                }
                 disabledTimer.stop()
                 // 鼠标悬停时暂停帮助定时器
                 helpBubbleTimer.stop()
@@ -215,7 +217,9 @@ ApplicationWindow {
                 floatingWindow.showHoverImages()
             }
             onExited: {
-                console.log("222222")
+                if(isDragging){
+                    return
+                }
                 if(scoreDialog.isEntered == false){
                     disabledTimer.start()
                     // 鼠标离开时重启帮助定时器（仅在开启设置时）
@@ -255,6 +259,7 @@ ApplicationWindow {
                     // 打开独立的chat窗口
                     chatWindow.show()
                 }
+                isDragging = false
             }
         }
     }
@@ -492,7 +497,6 @@ ApplicationWindow {
         function showDialog() {
             if (animating) return  // 防止动画期间重复调用
             // 显示对话框时暂停帮助定时器并隐藏气泡
-            console.log("33333")
             helpBubbleTimer.stop()
             if (helpBubble.visible) {
                 helpBubble.hideBubble()
