@@ -181,7 +181,6 @@ ApplicationWindow {
 
             property point lastMousePos
             property bool isDragging: false
-            property bool ignoreExitEvents: false  // 添加标志位防止动画期间的异常事件
             cursorShape: Qt.PointingHandCursor
             onPressed: {
                 // 任何点击都先隐藏右键菜单（除了右键点击自己）
@@ -202,6 +201,9 @@ ApplicationWindow {
                 }
             }
             onEntered: {
+                if(isDragging){
+                    return
+                }
                 disabledTimer.stop()
                 // 鼠标悬停时暂停帮助定时器
                 helpBubbleTimer.stop()
@@ -210,18 +212,14 @@ ApplicationWindow {
                     helpBubble.hideBubble()
                 }
                 if(!scoreDialog.visible){
-                    // 设置忽略退出事件标志，防止动画期间的异常触发
-                    ignoreExitEvents = true
                     scoreDialog.showDialog()
                 }
                 floatingWindow.showHoverImages()
             }
             onExited: {
-                // 如果在动画期间，忽略退出事件
-                if (ignoreExitEvents) {
+                if(isDragging){
                     return
                 }
-                
                 if(scoreDialog.isEntered == false){
                     disabledTimer.start()
                     // 鼠标离开时重启帮助定时器（仅在开启设置时）
@@ -261,6 +259,7 @@ ApplicationWindow {
                     // 打开独立的chat窗口
                     chatWindow.show()
                 }
+                isDragging = false
             }
         }
     }
@@ -393,8 +392,6 @@ ApplicationWindow {
             onFinished: {
                 // 动画完成后，恢复正常的跟随行为
                 scoreDialog.animating = false
-                // 重置鼠标事件忽略标志
-                mouseArea.ignoreExitEvents = false
             }
         }
 
@@ -437,8 +434,6 @@ ApplicationWindow {
                 // 恢复正常缩放和透明度
                 contentRect.scale = 1.0
                 contentRect.opacity = 1.0
-                // 重置鼠标事件忽略标志
-                mouseArea.ignoreExitEvents = false
                 // 对话框隐藏后重启帮助定时器（仅在开启设置时）
                 if (!mouseArea.containsMouse && $loginManager.showHelpBubble) {
                     helpBubbleTimer.restart()
@@ -468,8 +463,6 @@ ApplicationWindow {
                 // 恢复正常状态
                 contentRect.scale = 1.0
                 contentRect.opacity = 1.0
-                // 重置鼠标事件忽略标志
-                mouseArea.ignoreExitEvents = false
             }
 
             var fr = _floatingRect()
@@ -525,19 +518,18 @@ ApplicationWindow {
                     visible = true
                     scoreDialog.isFirst = false
                 }
-                // 计算悬浮窗中心位置作为动画起始点
+                // 计算悬浮窗位置作为动画起始点
                 var fr = _floatingRect()
                 var floatingCenterX = fr.x + fr.width / 2
-                var floatingCenterY = fr.y + fr.height / 2
 
                 // 设置正确的高度，现在内容组件应该已经更新了
                 height = contentRect.height + 20
 
-                // 设置初始状态（在悬浮窗位置，小尺寸）
+                // 设置初始状态（在悬浮窗正上方，小尺寸）
                 contentRect.scale = 0.1
                 contentRect.opacity = 0.0
                 x = floatingCenterX - width / 2
-                y = floatingCenterY - height / 2
+                y = fr.y - height - 10  // 在悬浮窗正上方，留10像素间距
 
                 // 计算目标位置
                 var targetX = fr.x + fr.width - (width - 10)
@@ -560,14 +552,13 @@ ApplicationWindow {
 
             animating = true
 
-            // 计算悬浮窗中心位置作为动画终点
+            // 计算悬浮窗正上方位置作为动画终点
             var fr = _floatingRect()
             var floatingCenterX = fr.x + fr.width / 2
-            var floatingCenterY = fr.y + fr.height / 2
 
             // 设置动画目标并启动
             hideXAnim.to = floatingCenterX - width / 2  // x动画
-            hideYAnim.to = floatingCenterY - height / 2  // y动画
+            hideYAnim.to = fr.y - height - 10  // y动画，回到悬浮窗正上方
             hideAnim.start()
         }
 
