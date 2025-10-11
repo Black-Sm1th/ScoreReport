@@ -485,7 +485,7 @@ void LoginManager::checkForUpdates()
     
     qDebug() << "[LoginManager] Checking for updates, current version:" << getcurrentVersion();
     m_isManual = false;
-    m_apiManager->getSystemUpdateList(1); // appType = 1
+    m_apiManager->getSystemUpdateList(2); // appType = 2
 }
 
 void LoginManager::manualCheckForUpdates()
@@ -497,7 +497,7 @@ void LoginManager::manualCheckForUpdates()
 
     qDebug() << "[LoginManager] Checking for updates, current version:" << getcurrentVersion();
     m_isManual = true;
-    m_apiManager->getSystemUpdateList(1); // appType = 1
+    m_apiManager->getSystemUpdateList(2); // appType = 2
 }
 
 /**
