@@ -379,6 +379,34 @@ void ApiManager::getReportTemplateList()
 }
 
 /**
+ * @brief 获取系统更新列表接口实现
+ * @param appType 应用类型参数（默认为1）
+ * 
+ * 发送获取系统更新列表请求到服务器的 /system-updates/list 端点。
+ * 请求类型标记为 "get-system-update-list"，结果会通过 getSystemUpdateListResponse 信号返回。
+ */
+void ApiManager::getSystemUpdateList(int appType)
+{
+    // 创建带参数的GET请求
+    QString endpoint = QString("/system-updates/list?appType=%1").arg(appType);
+    makeGetRequest(endpoint, "get-system-update-list");
+}
+
+/**
+ * @brief 下载App文件接口实现
+ * @param fileName 要下载的文件名
+ * 
+ * 发送下载App文件请求到服务器的 /system-updates/download/app 端点。
+ * 请求类型标记为 "download-app-file"，结果会通过 downloadAppFileResponse 信号返回。
+ */
+void ApiManager::downloadAppFile(const QString& fileName)
+{
+    // 创建带参数的GET请求
+    QString endpoint = QString("/system-updates/download/app?fileName=%1").arg(fileName);
+    makeGetRequest(endpoint, "download-app-file");
+}
+
+/**
  * @brief 流式数据就绪槽函数实现
  * 
  * 当流式聊天接口有新数据可读时调用此函数。
@@ -534,6 +562,49 @@ void ApiManager::onNetworkReply(QNetworkReply* reply)
             // 清理chatId映射和缓冲区
             m_streamChatIds.remove(reply);
             m_streamDataBuffers.remove(reply);
+        } else if (requestType == "download-app-file") {
+            // 下载文件请求返回的是文件流，直接处理二进制数据
+            qDebug() << "[ApiManager] Processing file download, data size:" << responseData.size();
+            
+            // 创建包含文件数据的响应对象
+            QJsonObject fileData;
+            fileData["fileSize"] = responseData.size();
+            fileData["success"] = true;
+            
+            // 保存文件数据到临时位置
+            QString tempDir = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
+            qDebug() << "[ApiManager] Temp directory:" << tempDir;
+            QDir().mkpath(tempDir);
+            
+            // 从请求URL中提取文件名，或使用默认名称
+            QString fileName = "update_file.exe";  // 默认文件名
+            QUrl requestUrl = reply->request().url();
+            QString urlQuery = requestUrl.query();
+            QUrlQuery query(urlQuery);
+            if (query.hasQueryItem("fileName")) {
+                fileName = query.queryItemValue("fileName");
+            }
+            
+            QString tempFilePath = tempDir + "/" + fileName;
+            QFile tempFile(tempFilePath);
+            
+            if (tempFile.open(QIODevice::WriteOnly)) {
+                qint64 written = tempFile.write(responseData);
+                tempFile.close();
+                
+                if (written == responseData.size()) {
+                    fileData["filePath"] = tempFilePath;
+                    fileData["fileName"] = fileName;
+                    qDebug() << "[ApiManager] File saved successfully to:" << tempFilePath;
+                    emit downloadAppFileResponse(true, "文件下载成功", fileData);
+                } else {
+                    qWarning() << "[ApiManager] File write incomplete:" << written << "of" << responseData.size();
+                    emit downloadAppFileResponse(false, "文件保存失败", QJsonObject());
+                }
+            } else {
+                qWarning() << "[ApiManager] Failed to create temp file:" << tempFilePath;
+                emit downloadAppFileResponse(false, "无法创建临时文件", QJsonObject());
+            }
         } else {
             // 其他请求需要解析JSON响应
             QJsonDocument doc = QJsonDocument::fromJson(responseData);
@@ -577,6 +648,11 @@ void ApiManager::onNetworkReply(QNetworkReply* reply)
                     QJsonObject specialData;
                     specialData["data"] = responseObj.value("data").toArray();
                     emit getReportTemplateListResponse(success, message, specialData);
+                } else if (requestType == "get-system-update-list") {
+                    // 系统更新列表接口的data字段是数组，需要特殊处理
+                    QJsonObject specialData;
+                    specialData["data"] = responseObj.value("data").toArray();
+                    emit getSystemUpdateListResponse(success, message, specialData);
                 }
             }
         }
@@ -617,6 +693,10 @@ void ApiManager::onNetworkReply(QNetworkReply* reply)
                 emit generateQualityReportResponse(false, errorString, QJsonObject());
             } else if (requestType == "get-report-template-list") {
                 emit getReportTemplateListResponse(false, errorString, QJsonObject());
+            } else if (requestType == "get-system-update-list") {
+                emit getSystemUpdateListResponse(false, errorString, QJsonObject());
+            } else if (requestType == "download-app-file") {
+                emit downloadAppFileResponse(false, errorString, QJsonObject());
             } else if (requestType == "stream-chat") {
                 // 流式聊天错误，发送错误完成信号
                 QString chatId = m_streamChatIds.value(reply, "");

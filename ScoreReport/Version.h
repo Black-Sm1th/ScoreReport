@@ -3,13 +3,13 @@
 
 // 版本信息定义
 #define VER_MAJOR 0
-#define VER_MINOR 9
-#define VER_PATCH 5
+#define VER_MINOR 10
+#define VER_PATCH 0
 #define VER_BUILD 0
 
 // 版本字符串(统一使用一个版本号)
-#define VER_VERSION_STR "0.9.5"
-#define VER_PRODUCTVERSION_STR "0.9.5"
+#define VER_VERSION_STR "0.10.0"
+#define VER_PRODUCTVERSION_STR "0.10.0"
 
 // 产品信息
 #define VER_COMPANYNAME_STR "AETHERMIND"

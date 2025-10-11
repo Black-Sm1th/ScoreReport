@@ -8,7 +8,6 @@ Item {
     anchors.fill: parent
     z: 10000
     visible: false
-    
     // 可配置属性
     property string title: qsTr("提示")
     property string message: qsTr("确定要执行此操作吗？")
@@ -24,7 +23,7 @@ Item {
     property color cancelTextColor: "#73000000"
     property int dialogWidth: 400
     property int dialogRadius: 12
-    
+    property int recRadius: 0
     // 信号
     signal confirmed()
     signal cancelled()
@@ -36,7 +35,7 @@ Item {
         anchors.fill: parent
         color: maskColor
         opacity: 0
-        
+        radius: recRadius
         // 点击遮罩关闭对话框
         MouseArea {
             anchors.fill: parent

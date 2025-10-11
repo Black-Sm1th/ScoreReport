@@ -11,6 +11,10 @@
 #include <QJsonArray>
 #include <QDebug>
 #include <QSet>
+#include <QStandardPaths>
+#include <QDir>
+#include <QFile>
+#include <QUrlQuery>
 #include "CommonFunc.h"
 
 /**
@@ -164,6 +168,22 @@ public:
     void getReportTemplateList();
     
     /**
+     * @brief 获取系统更新列表
+     * @param appType 应用类型参数（可选，默认为1）
+     * 
+     * 发送获取系统更新列表请求到服务器，结果通过 getSystemUpdateListResponse 信号返回
+     */
+    void getSystemUpdateList(int appType = 1);
+    
+    /**
+     * @brief 下载App文件
+     * @param fileName 要下载的文件名
+     * 
+     * 发送下载App文件请求到服务器，结果通过 downloadAppFileResponse 信号返回
+     */
+    void downloadAppFile(const QString& fileName);
+    
+    /**
      * @brief 终止所有正在进行的网络请求
      * 
      * 立即终止所有活跃的POST/GET请求，已发送的请求会被中断。
@@ -302,6 +322,22 @@ signals:
      * @param data 模板列表数据
      */
     void getReportTemplateListResponse(bool success, const QString& message, const QJsonObject& data);
+    
+    /**
+     * @brief 获取系统更新列表响应信号
+     * @param success 是否请求成功
+     * @param message 服务器返回的消息
+     * @param data 系统更新列表数据
+     */
+    void getSystemUpdateListResponse(bool success, const QString& message, const QJsonObject& data);
+    
+    /**
+     * @brief 下载App文件响应信号
+     * @param success 是否下载成功
+     * @param message 服务器返回的消息
+     * @param data 下载结果数据
+     */
+    void downloadAppFileResponse(bool success, const QString& message, const QJsonObject& data);
     
     /**
      * @brief 网络错误信号
