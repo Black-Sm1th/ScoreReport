@@ -78,5 +78,8 @@
         <file>image/loginHead.png</file>
         <file>gif/appear1.gif</file>
         <file>gif/appear2.gif</file>
+        <file>image/update.png</file>
+        <file>qml/components/LoadingDialog.qml</file>
+        <file>gif/loading.gif</file>
     </qresource>
 </RCC>

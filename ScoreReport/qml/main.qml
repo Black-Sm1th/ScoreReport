@@ -595,6 +595,26 @@ ApplicationWindow {
                 transparentBorder: true
             }
 
+            // 更新确认对话框
+            ConfirmDialog {
+                id: updateConfirmDialog
+                title: qsTr("软件更新")
+                message: qsTr("发现新版本 %1，是否立即下载并更新？").arg($loginManager.latestVersion)
+                confirmText: qsTr("立即更新")
+                cancelText: qsTr("稍后提醒")
+                visible: false
+                recRadius: parent.radius
+                onConfirmed: {
+                    loadingDialog.show(qsTr("正在下载更新..."))
+                    $loginManager.downloadAndInstallUpdate()
+                }
+            }
+
+            // 加载对话框
+            LoadingDialog {
+                id: loadingDialog
+            }
+
             // 鼠标区域，处理点击对话框内容时隐藏右键菜单
             MouseArea {
                 id:scoreDialogMouseArea
@@ -1479,6 +1499,61 @@ ApplicationWindow {
                 //     anchors.horizontalCenter: parent.horizontalCenter
                 //     color: "#E0E0E0"
                 // }
+                // 检查更新选项
+                Rectangle {
+                    width: parent.width
+                    height: 40
+                    color: updateMouseArea.containsMouse ? "#F5F5F5" : "transparent"
+                    radius: 6
+
+                    Row {
+                        id: contentArea5
+                        anchors.left: parent.left
+                        anchors.leftMargin: 12
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 8
+
+                        // 清除缓存图标
+                        Image{
+                            anchors.verticalCenter: parent.verticalCenter
+                            source: "qrc:/image/update.png"  // 使用repeat图标表示重置/清除
+                        }
+
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            font.family: "Alibaba PuHuiTi 3.0"
+                            font.pixelSize: 14
+                            color: updateMouseArea.containsMouse ? "#006BFF" : "#D9000000"
+                            text: qsTr("检查更新")
+
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: 150
+                                    easing.type: Easing.OutQuad
+                                }
+                            }
+                        }
+                    }
+
+                    MouseArea {
+                        id: updateMouseArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+
+                        onClicked: {
+                            contextMenu.hide()
+                            $loginManager.manualCheckForUpdates()
+                        }
+                    }
+                }
+                // 分隔线
+                Rectangle {
+                    width: parent.width - 16
+                    height: 1
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    color: "#E0E0E0"
+                }
 
                 // 清除缓存选项
                 Rectangle {
@@ -1488,7 +1563,7 @@ ApplicationWindow {
                     radius: 6
 
                     Row {
-                        id: contentArea5
+                        id: contentArea6
                         anchors.left: parent.left
                         anchors.leftMargin: 12
                         anchors.verticalCenter: parent.verticalCenter
@@ -2224,6 +2299,30 @@ ApplicationWindow {
                     }
                 }
             }
+        }
+    }
+
+    // 连接LoginManager的更新信号
+    Connections {
+        target: $loginManager
+        
+        // 当有更新可用时显示确认对话框
+        function onUpdateAvailable(version, fileName) {
+            updateConfirmDialog.show()
+        }
+
+        function onNoneUpdateAvailable() {
+            dialogMessageBox.info(qsTr("暂无可用的更新！"))
+        }
+
+        // 下载完成后的处理
+        function onUpdateDownloadCompleted() {
+            loadingDialog.updateMessage(qsTr("正在安装更新..."))
+        }
+        
+        // 安装完成后的处理
+        function onUpdateInstallationCompleted() {
+            loadingDialog.hide()
         }
     }
 }

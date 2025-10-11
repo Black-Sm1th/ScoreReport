@@ -34,6 +34,10 @@ class LoginManager : public QObject
     QUICK_PROPERTY(bool, showDialogOnTextSelection)
     QUICK_PROPERTY(bool, showHelpBubble)
     QUICK_PROPERTY(QString, currentVersion)
+    QUICK_PROPERTY(bool, hasUpdateAvailable)
+    QUICK_PROPERTY(QString, latestVersion)
+    QUICK_PROPERTY(QString, updateFileName)
+    QUICK_PROPERTY(bool, isDownloadingUpdate)
     SINGLETON_CLASS(LoginManager)
 
 public:
@@ -51,23 +55,35 @@ public:
     Q_INVOKABLE void changeMouseStatus(bool type);
     Q_INVOKABLE void clearAllCache();
     Q_INVOKABLE void saveHelpBubbleSetting(bool showHelpBubble);
+    Q_INVOKABLE void checkForUpdates();
+    Q_INVOKABLE void manualCheckForUpdates();
+    Q_INVOKABLE void downloadAndInstallUpdate();
 signals:
     void loginResult(bool success, const QString& message);
     void logoutSuccess();
     void registResult(bool success, const QString& message);
     void textSelectionDetected(const QString& text, int mouseX, int mouseY);
     void mouseEvent();
+    void updateAvailable(const QString& version, const QString& fileName);
+    void noneUpdateAvailable();
+    void updateDownloadProgress(int percentage);
+    void updateDownloadCompleted();
+    void updateInstallationCompleted();
 private slots:
     void onRegistResponse(bool success, const QString& message, const QJsonObject& data);
     void onLoginResponse(bool success, const QString& message, const QJsonObject& data);
     void onTextSelected(const QString& text);
     void onMouseEvent(GlobalMouseListener::MouseButton button, int delta, QPoint pos);
     void onTimeout();
+    void onSystemUpdateListResponse(bool success, const QString& message, const QJsonObject& data);
+    void onDownloadAppFileResponse(bool success, const QString& message, const QJsonObject& data);
 private:
     void loadUserList();
     void saveUserList();
     QVariantMap findUserInList(const QString& userId);
     void clearLogFiles();
+    void compareVersions(const QString& serverVersion);
+    bool installUpdate(const QString& downloadedFilePath);
     GlobalTextMonitor* m_selector;
     ApiManager* m_apiManager;
     QSettings* m_settings;
@@ -75,6 +91,7 @@ private:
     QTimer* m_timer;
     QString m_currentStr = "";
     QPoint currentPos;
+    bool m_isManual = false;
 };
 
 #endif // LOGINMANAGER_H 
