@@ -98,6 +98,16 @@ Rectangle {
                         backgroundColor: "#F8FAFF"
                         iconUrl: "qrc:/image/BIOSNAK.png"
                     }
+                    ScoreOptionCard {
+                        title: "知识库管理"
+                        backgroundColor: "#F7FCFB"
+                        iconUrl: "qrc:/image/CCLS.png"
+                    }
+                    ScoreOptionCard {
+                        title: "知识库问答"
+                        backgroundColor: "#F8FAFF"
+                        iconUrl: "qrc:/image/CHAT.png"
+                    }
                 }
                 
                 // 肾脏页面 (index 1)

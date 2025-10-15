@@ -291,6 +291,10 @@ ApplicationWindow {
                     $chatManager.endAnalysis(true)
                 }else if(contentRect.currentScore == 7){
                     reportView.resetValues()
+                }else if(contentRect.currentScore == 8){
+                    knowledgeView.resetValues()
+                }else if(contentRect.currentScore == 9){
+                    knowledgeChatView.resetValues()
                 }
                 contentRect.currentScore = -1
             }
@@ -866,6 +870,23 @@ ApplicationWindow {
                     id:reportView
                     visible: contentRect.currentIndex === 0 && contentRect.currentScore === 7
                     messageManager: dialogMessageBox
+                    onExitScore: {
+                        contentRect.currentScore = -1
+                    }
+                }
+                Knowledge{
+                    id:knowledgeView
+                    visible: contentRect.currentIndex === 0 && contentRect.currentScore === 8
+                    messageManager: dialogMessageBox
+                    onExitScore: {
+                        contentRect.currentScore = -1
+                    }
+                }
+                KnowledgeChat{
+                    id:knowledgeChatView
+                    visible: contentRect.currentIndex === 0 && contentRect.currentScore === 9
+                    messageManager: dialogMessageBox
+                    chatManager: $knowledgeChatManager
                     onExitScore: {
                         contentRect.currentScore = -1
                     }
