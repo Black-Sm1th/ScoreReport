@@ -39,11 +39,16 @@ QString ApiManager::getBaseUrl() const
  * - User-Agent: ScoreReport/1.0
  * - 完整的请求URL = baseUrl + endpoint
  */
-QNetworkRequest ApiManager::createRequest(const QString& endpoint) const
+QNetworkRequest ApiManager::createRequest(const QString& endpoint, bool setJsonContentType) const
 {
     QUrl url(getBaseUrl() + endpoint);
     QNetworkRequest request(url);
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    
+    // 只有在需要时才设置JSON Content-Type（文件上传不需要）
+    if (setJsonContentType) {
+        request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    }
+    
     request.setRawHeader("User-Agent", "ScoreReport/1.0");
     
     qDebug() << "[ApiManager] Creating request to:" << url.toString();
@@ -206,6 +211,52 @@ void ApiManager::streamChat(const QString& query, const QString& userId, const Q
     
     // 连接流式数据读取信号
     connect(reply, &QNetworkReply::readyRead, this, &ApiManager::onStreamDataReady);
+}
+
+/**
+ * @brief 知识库流式问答接口实现
+ * @param query 问题内容
+ * @param userId 用户ID
+ * @param language 语言
+ * @param buckets 知识库ID列表
+ * @param chatId 会话ID（可选，首次不传）
+ * 
+ * 发送知识库流式问答请求到服务器的 /admin/AI/doc/chat 端点。
+ * 请求类型标记为 "stream-knowledge-chat"，结果会通过 streamKnowledgeChatResponse 和 streamKnowledgeChatFinished 信号返回。
+ */
+void ApiManager::streamKnowledgeChat(const QString& query, const QString& userId, const QString& language, const QStringList& buckets, const QString& chatId)
+{
+    QJsonObject requestData;
+    requestData["query"] = query;
+    requestData["userId"] = userId;
+    requestData["language"] = language;
+    
+    // 转换buckets为JSON数组
+    QJsonArray bucketsArray;
+    for (const QString& bucket : buckets) {
+        bucketsArray.append(bucket);
+    }
+    requestData["buckets"] = bucketsArray;
+    
+    // chatId为可选参数，只有在不为空时才添加
+    if (!chatId.isEmpty()) {
+        requestData["chatId"] = chatId;
+    }
+    
+    QNetworkRequest request = createRequest("/admin/Ai/doc/chat");
+    request.setRawHeader("X-Request-Type", "stream-knowledge-chat");
+    
+    QByteArray body = QJsonDocument(requestData).toJson(QJsonDocument::Indented);
+    qDebug().noquote() << "[ApiManager] Stream knowledge chat request body:" << QString::fromUtf8(body);
+    
+    QNetworkReply* reply = m_networkManager->post(request, body);
+    m_activeReplies.insert(reply);
+    
+    // 保存chatId映射，用于在接收数据时识别会话
+    m_streamKnowledgeChatIds[reply] = chatId;
+    
+    // 连接流式数据读取信号
+    connect(reply, &QNetworkReply::readyRead, this, &ApiManager::onStreamKnowledgeDataReady);
 }
 
 /**
@@ -379,6 +430,219 @@ void ApiManager::getReportTemplateList()
 }
 
 /**
+ * @brief 上传文件到知识库接口实现
+ * @param filePath 要上传的文件路径
+ * @param knowledgeBaseId 知识库ID
+ * @param userId 用户ID（可选）
+ * 
+ * 发送文件上传请求到服务器的 /ai/knowledge/file/upload 端点。
+ * 使用multipart/form-data格式上传文件。
+ * 请求类型标记为 "upload-file"，结果会通过 uploadFileResponse 信号返回。
+ */
+void ApiManager::uploadFileToKnowledgeBase(const QString& filePath, const QString& knowledgeBaseId, const QString& userId)
+{
+    // 检查文件是否存在
+    QFileInfo fileInfo(filePath);
+    if (!fileInfo.exists() || !fileInfo.isFile()) {
+        qWarning() << "[ApiManager] File does not exist:" << filePath;
+        emit uploadFileResponse(false, "文件不存在或不是有效的文件", QJsonObject());
+        return;
+    }
+    
+    // 打开文件
+    QFile* file = new QFile(filePath);
+    if (!file->open(QIODevice::ReadOnly)) {
+        qWarning() << "[ApiManager] Cannot open file:" << filePath;
+        emit uploadFileResponse(false, "无法打开文件进行读取", QJsonObject());
+        file->deleteLater();
+        return;
+    }
+    
+    // 创建multipart请求
+    QHttpMultiPart* multiPart = new QHttpMultiPart(QHttpMultiPart::FormDataType);
+    
+    // 添加文件部分
+    QHttpPart filePart;
+    filePart.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("application/octet-stream"));
+    filePart.setHeader(QNetworkRequest::ContentDispositionHeader, 
+                       QVariant(QString("form-data; name=\"files\"; filename=\"%1\"").arg(fileInfo.fileName())));
+    filePart.setBodyDevice(file);
+    file->setParent(multiPart);
+    
+    // 添加知识库ID字段
+    QHttpPart knowledgeBaseIdPart;
+    knowledgeBaseIdPart.setHeader(QNetworkRequest::ContentDispositionHeader, 
+                                  QVariant("form-data; name=\"knowledgeBaseId\""));
+    knowledgeBaseIdPart.setBody(knowledgeBaseId.toUtf8());
+    
+    // 添加用户ID字段
+    QHttpPart userIdPart;
+    userIdPart.setHeader(QNetworkRequest::ContentDispositionHeader, 
+                        QVariant("form-data; name=\"userId\""));
+    userIdPart.setBody(userId.toUtf8());
+    
+    multiPart->append(filePart);
+    multiPart->append(knowledgeBaseIdPart);
+    multiPart->append(userIdPart);
+    
+    // 创建请求 - 不设置JSON Content-Type，让Qt自动设置multipart/form-data
+    QNetworkRequest request = createRequest("/ai/knowledge/file/upload", false);
+    request.setRawHeader("X-Request-Type", "upload-file");
+    
+    // 发送请求
+    QNetworkReply* reply = m_networkManager->post(request, multiPart);
+    multiPart->setParent(reply);
+    m_activeReplies.insert(reply);
+    
+    qDebug() << "[ApiManager] Uploading file:" << filePath 
+             << "to knowledge base:" << knowledgeBaseId;
+}
+
+/**
+ * @brief 创建知识库接口实现
+ * @param name 知识库名称（可选）
+ * @param description 知识库描述（可选）
+ * 
+ * 发送创建知识库请求到服务器的 /ai/knowledge/add 端点。
+ * 请求类型标记为 "create-knowledge-base"，结果会通过 createKnowledgeBaseResponse 信号返回。
+ */
+void ApiManager::createKnowledgeBase(const QString& name, const QString& description)
+{
+    QJsonObject requestData;
+    
+    // 只有非空的可选参数才添加到请求中
+    if (!name.isEmpty()) {
+        requestData["name"] = name;
+    }
+    if (!description.isEmpty()) {
+        requestData["description"] = description;
+    }
+    
+    makePostRequest("/ai/knowledge/add", requestData, "create-knowledge-base");
+    qDebug() << "[ApiManager] Creating knowledge base with name:" << name;
+}
+
+/**
+ * @brief 删除知识库接口实现
+ * @param id 知识库ID
+ * 
+ * 发送删除知识库请求到服务器的 /ai/knowledge/delete 端点。
+ * 请求类型标记为 "delete-knowledge-base"，结果会通过 deleteKnowledgeBaseResponse 信号返回。
+ */
+void ApiManager::deleteKnowledgeBase(const QString& id)
+{
+    QString endpoint = QString("/ai/knowledge/delete?id=%1").arg(id);
+    makePostRequest(endpoint, QJsonObject(), "delete-knowledge-base");
+    qDebug() << "[ApiManager] Deleting knowledge base with id:" << id;
+}
+
+/**
+ * @brief 更新知识库接口实现
+ * @param id 知识库ID（可选）
+ * @param name 知识库名称（可选）
+ * @param description 知识库描述（可选）
+ * 
+ * 发送更新知识库请求到服务器的 /ai/knowledge/update 端点。
+ * 请求类型标记为 "update-knowledge-base"，结果会通过 updateKnowledgeBaseResponse 信号返回。
+ */
+void ApiManager::updateKnowledgeBase(const QString& id, const QString& name, const QString& description)
+{
+    QJsonObject requestData;
+    
+    // 只有有效的可选参数才添加到请求中
+    if (!id.isEmpty()) {
+        requestData["id"] = id;
+    }
+    if (!name.isEmpty()) {
+        requestData["name"] = name;
+    }
+    if (!description.isEmpty()) {
+        requestData["description"] = description;
+    }
+    
+    makePostRequest("/ai/knowledge/update", requestData, "update-knowledge-base");
+    qDebug() << "[ApiManager] Updating knowledge base with id:" << id << "name:" << name;
+}
+
+/**
+ * @brief 根据ID获取知识库详情接口实现
+ * @param id 知识库ID
+ * 
+ * 发送获取知识库详情请求到服务器的 /ai/knowledge/get 端点。
+ * 请求类型标记为 "get-knowledge-base"，结果会通过 getKnowledgeBaseResponse 信号返回。
+ */
+void ApiManager::getKnowledgeBase(const QString& id)
+{
+    QString endpoint = QString("/ai/knowledge/get?id=%1").arg(id);
+    makeGetRequest(endpoint, "get-knowledge-base");
+    qDebug() << "[ApiManager] Getting knowledge base with id:" << id;
+}
+
+/**
+ * @brief 分页获取知识库列表接口实现
+ * @param current 当前页码，默认1
+ * @param pageSize 页面大小，默认10
+ * @param sortField 排序字段（可选）
+ * @param sortOrder 排序顺序，默认"descend"
+ * @param id 知识库ID筛选（可选）
+ * @param name 知识库名称筛选（可选）
+ * @param userId 用户ID筛选（可选）
+ * 
+ * 发送获取知识库列表请求到服务器的 /ai/knowledge/list/page 端点。
+ * 请求类型标记为 "get-knowledge-base-list"，结果会通过 getKnowledgeBaseListResponse 信号返回。
+ */
+void ApiManager::getKnowledgeBaseList(int current, int pageSize, const QString& sortField,
+                                     const QString& sortOrder, const QString& id, 
+                                     const QString& name, const QString& userId)
+{
+    QJsonObject requestData;
+    
+    requestData["current"] = current;
+    requestData["pageSize"] = pageSize;
+    
+    if (!sortField.isEmpty()) {
+        requestData["sortField"] = sortField;
+    }
+    
+    requestData["sortOrder"] = sortOrder.isEmpty() ? "descend" : sortOrder;
+    
+    // 只有有效的可选参数才添加到请求中
+    if (!id.isEmpty()) {
+        requestData["id"] = id;
+    }
+    if (!name.isEmpty()) {
+        requestData["name"] = name;
+    }
+    if (!userId.isEmpty()) {
+        requestData["userId"] = userId;
+    }
+    
+    makePostRequest("/ai/knowledge/list/page", requestData, "get-knowledge-base-list");
+    qDebug() << "[ApiManager] Getting knowledge base list, page:" << current << "size:" << pageSize;
+}
+
+/**
+ * @brief 批量删除知识库文件接口实现
+ * @param ids 要删除的文件ID列表
+ * 
+ * 发送批量删除知识库文件请求到服务器的 /ai/knowledge/file/delete 端点。
+ * 请求类型标记为 "delete-knowledge-base-files"，结果会通过 deleteKnowledgeBaseFilesResponse 信号返回。
+ */
+void ApiManager::deleteKnowledgeBaseFiles(const QList<QString>& ids)
+{
+    if (ids.isEmpty()) {
+        qWarning() << "[ApiManager] Cannot delete files: empty id list";
+        emit deleteKnowledgeBaseFilesResponse(false, "文件ID列表为空", QJsonObject());
+        return;
+    }
+    
+    // 构建查询字符串 - 直接使用字符串ID列表
+    QString endpoint = QString("/ai/knowledge/file/delete?ids=%1").arg(ids.join(","));
+    makePostRequest(endpoint, QJsonObject(), "delete-knowledge-base-files");
+    qDebug() << "[ApiManager] Deleting knowledge base files with ids:" << ids.join(",");
+}
+
+/**
  * @brief 获取系统更新列表接口实现
  * @param appType 应用类型参数（默认为1）
  * 
@@ -521,6 +785,157 @@ void ApiManager::onStreamDataReady()
 }
 
 /**
+ * @brief 知识库流式数据就绪槽函数实现
+ * 
+ * 当知识库流式聊天接口有新数据可读时调用此函数。
+ * 读取当前可用的数据块并通过 streamKnowledgeChatResponse 信号发出。
+ * 处理Server-Sent Events (SSE) 格式的数据。
+ */
+void ApiManager::onStreamKnowledgeDataReady()
+{
+    QNetworkReply* reply = qobject_cast<QNetworkReply*>(sender());
+    if (!reply) {
+        qWarning() << "[ApiManager] onStreamKnowledgeDataReady: Invalid sender";
+        return;
+    }
+    
+    // 获取对应的chatId
+    QString chatId = m_streamKnowledgeChatIds.value(reply, "");
+    
+    // 读取所有可用数据
+    QByteArray data = reply->readAll();
+    if (data.isEmpty()) {
+        return;
+    }
+    
+    QString newDataString = QString::fromUtf8(data);
+    qDebug() << "[ApiManager] Knowledge stream data received:" << newDataString;
+    
+    // 将新数据追加到缓冲区
+    QString& buffer = m_streamKnowledgeDataBuffers[reply];
+    buffer += newDataString;
+    
+    // 处理换行符：先将额外的换行符标记出来，然后按标准SSE格式分割
+    QString processedBuffer = buffer;
+    
+    // 将 \n\n\n\n 替换为 <<DOUBLE_NEWLINE>>\n\n (保留两个换行符)
+    processedBuffer.replace("\n\n\n\n", "<<DOUBLE_NEWLINE>>\n\n");
+    
+    // 将 \n\n\n 替换为 <<SINGLE_NEWLINE>>\n\n (保留一个换行符)  
+    processedBuffer.replace("\n\n\n", "<<SINGLE_NEWLINE>>\n\n");
+    
+    // 按标准SSE格式分割事件
+    QStringList events = processedBuffer.split("\n\n");
+    
+    // 保留最后一个可能不完整的事件在缓冲区中
+    if (!processedBuffer.endsWith("\n\n")) {
+        // 最后一个事件可能不完整，保留在缓冲区中
+        buffer = events.takeLast();
+        // 恢复原始的换行符标记到缓冲区
+        buffer.replace("<<DOUBLE_NEWLINE>>", "\n\n");
+        buffer.replace("<<SINGLE_NEWLINE>>", "\n");
+    } else {
+        // 如果以双换行符结尾，说明所有事件都是完整的
+        buffer.clear();
+    }
+    
+    // 处理完整的SSE事件
+    for (const QString& event : events) {
+        if (event.trimmed().isEmpty()) {
+            continue;
+        }
+        
+        QStringList lines = event.split('\n');
+        QString eventType = "";
+        QString content = "";
+        
+        for (const QString& line : lines) {
+            // 处理 event: 行
+            if (line.trimmed().startsWith("event:")) {
+                eventType = line.trimmed().mid(6).trimmed();
+            }
+            // 处理 data: 行（保持原始格式，不要trim）
+            else if (line.startsWith("data:")) {
+                // 从 "data:" 后面开始取所有内容，保留空格
+                content = line.mid(5);
+                
+                // 恢复额外的换行符
+                content.replace("<<DOUBLE_NEWLINE>>", "\n\n");
+                content.replace("<<SINGLE_NEWLINE>>", "\n");
+            }
+        }
+        
+        // 处理完整的SSE事件
+        if (!eventType.isEmpty() && !content.isEmpty()) {
+            if (content != "[DONE]") {
+                if (eventType == "message") {
+                    // 消息事件，直接发送文本内容（保留所有空格）
+                    qDebug() << "[ApiManager] Knowledge sending content:" << QStringLiteral("'%1'").arg(content) << "Length:" << content.length();
+                    emit streamKnowledgeChatResponse(content, chatId);
+                } else if (eventType == "complete") {
+                    // 完成事件，解析JSON数据并发送元数据
+                    QJsonDocument doc = QJsonDocument::fromJson(content.toUtf8());
+                    if (doc.isObject()) {
+                        QJsonObject obj = doc.object();
+                        
+                        // 提取retrieved_metadata
+                        if (obj.contains("retrieved_metadata")) {
+                            QJsonArray metadataArray = obj["retrieved_metadata"].toArray();
+                            QVariantList metadataList;
+                            
+                            for (const QJsonValue& value : metadataArray) {
+                                if (value.isObject()) {
+                                    QJsonObject metaObj = value.toObject();
+                                    QVariantMap metaMap;
+                                    metaMap["retriever_name"] = metaObj["retriever_name"].toString();
+                                    metaMap["url"] = metaObj["url"].toString();
+                                    metaMap["file_name"] = metaObj["file_name"].toString();
+                                    
+                                    // 处理页码数组
+                                    if (metaObj.contains("page_numbers") && metaObj["page_numbers"].isArray()) {
+                                        QJsonArray pageArray = metaObj["page_numbers"].toArray();
+                                        QVariantList pageList;
+                                        for (const QJsonValue& pageValue : pageArray) {
+                                            pageList.append(pageValue.toInt());
+                                        }
+                                        metaMap["page_numbers"] = pageList;
+                                    }
+                                    
+                                    metadataList.append(metaMap);
+                                }
+                            }
+                            
+                            // 发送元数据信号
+                            emit knowledgeChatMetadataReceived(chatId, metadataList);
+                        }
+                    }
+                    
+                    // 发送完成信号
+                    emit streamKnowledgeChatFinished(true, "知识库聊天完成", chatId);
+                    // 清理映射和缓冲区
+                    m_streamKnowledgeChatIds.remove(reply);
+                    m_streamKnowledgeDataBuffers.remove(reply);
+                    return; // 完成后退出
+                } else {
+                    // 其他事件，尝试解析JSON数据
+                    QJsonDocument doc = QJsonDocument::fromJson(content.toUtf8());
+                    if (doc.isObject()) {
+                        QJsonObject obj = doc.object();
+                        QString text = obj.value("content").toString();
+                        if (!text.isEmpty()) {
+                            emit streamKnowledgeChatResponse(text, chatId);
+                        }
+                    } else {
+                        // 如果不是JSON，直接发送文本内容（保留空格）
+                        emit streamKnowledgeChatResponse(content, chatId);
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
  * @brief 网络请求响应的统一处理函数
  * @param reply 网络回复对象
  * 
@@ -605,6 +1020,13 @@ void ApiManager::onNetworkReply(QNetworkReply* reply)
                 qWarning() << "[ApiManager] Failed to create temp file:" << tempFilePath;
                 emit downloadAppFileResponse(false, "无法创建临时文件", QJsonObject());
             }
+        } else if (requestType == "stream-knowledge-chat") {
+            // 知识库流式聊天完成，发送完成信号
+            QString chatId = m_streamKnowledgeChatIds.value(reply, "");
+            emit streamKnowledgeChatFinished(true, "知识库聊天完成", chatId);
+            // 清理chatId映射和缓冲区
+            m_streamKnowledgeChatIds.remove(reply);
+            m_streamKnowledgeDataBuffers.remove(reply);
         } else {
             // 其他请求需要解析JSON响应
             QJsonDocument doc = QJsonDocument::fromJson(responseData);
@@ -648,6 +1070,20 @@ void ApiManager::onNetworkReply(QNetworkReply* reply)
                     QJsonObject specialData;
                     specialData["data"] = responseObj.value("data").toArray();
                     emit getReportTemplateListResponse(success, message, specialData);
+                } else if (requestType == "upload-file") {
+                    emit uploadFileResponse(success, message, data);
+                } else if (requestType == "create-knowledge-base") {
+                    emit createKnowledgeBaseResponse(success, message, data);
+                } else if (requestType == "delete-knowledge-base") {
+                    emit deleteKnowledgeBaseResponse(success, message, data);
+                } else if (requestType == "update-knowledge-base") {
+                    emit updateKnowledgeBaseResponse(success, message, data);
+                } else if (requestType == "get-knowledge-base") {
+                    emit getKnowledgeBaseResponse(success, message, data);
+                } else if (requestType == "get-knowledge-base-list") {
+                    emit getKnowledgeBaseListResponse(success, message, data);
+                } else if (requestType == "delete-knowledge-base-files") {
+                    emit deleteKnowledgeBaseFilesResponse(success, message, data);
                 } else if (requestType == "get-system-update-list") {
                     // 系统更新列表接口的data字段是数组，需要特殊处理
                     QJsonObject specialData;
@@ -693,6 +1129,20 @@ void ApiManager::onNetworkReply(QNetworkReply* reply)
                 emit generateQualityReportResponse(false, errorString, QJsonObject());
             } else if (requestType == "get-report-template-list") {
                 emit getReportTemplateListResponse(false, errorString, QJsonObject());
+            } else if (requestType == "upload-file") {
+                emit uploadFileResponse(false, errorString, QJsonObject());
+            } else if (requestType == "create-knowledge-base") {
+                emit createKnowledgeBaseResponse(false, errorString, QJsonObject());
+            } else if (requestType == "delete-knowledge-base") {
+                emit deleteKnowledgeBaseResponse(false, errorString, QJsonObject());
+            } else if (requestType == "update-knowledge-base") {
+                emit updateKnowledgeBaseResponse(false, errorString, QJsonObject());
+            } else if (requestType == "get-knowledge-base") {
+                emit getKnowledgeBaseResponse(false, errorString, QJsonObject());
+            } else if (requestType == "get-knowledge-base-list") {
+                emit getKnowledgeBaseListResponse(false, errorString, QJsonObject());
+            } else if (requestType == "delete-knowledge-base-files") {
+                emit deleteKnowledgeBaseFilesResponse(false, errorString, QJsonObject());
             } else if (requestType == "get-system-update-list") {
                 emit getSystemUpdateListResponse(false, errorString, QJsonObject());
             } else if (requestType == "download-app-file") {
@@ -704,6 +1154,13 @@ void ApiManager::onNetworkReply(QNetworkReply* reply)
                 // 清理chatId映射和缓冲区
                 m_streamChatIds.remove(reply);
                 m_streamDataBuffers.remove(reply);
+            } else if (requestType == "stream-knowledge-chat") {
+                // 知识库流式聊天错误，发送错误完成信号
+                QString chatId = m_streamKnowledgeChatIds.value(reply, "");
+                emit streamKnowledgeChatFinished(false, errorString, chatId);
+                // 清理chatId映射和缓冲区
+                m_streamKnowledgeChatIds.remove(reply);
+                m_streamKnowledgeDataBuffers.remove(reply);
             } else {
                 emit networkError(errorString);
             }
@@ -766,6 +1223,9 @@ void ApiManager::abortRequestsByType(const QString& requestType)
                 if (replyType == "stream-chat") {
                     m_streamChatIds.remove(reply);
                     m_streamDataBuffers.remove(reply);
+                } else if (replyType == "stream-knowledge-chat") {
+                    m_streamKnowledgeChatIds.remove(reply);
+                    m_streamKnowledgeDataBuffers.remove(reply);
                 }
             }
         }
@@ -800,6 +1260,14 @@ void ApiManager::abortStreamChatByChatId(const QString& chatId)
                 // 清理对应的chatId映射和缓冲区
                 m_streamChatIds.remove(reply);
                 m_streamDataBuffers.remove(reply);
+            } else if (replyType == "stream-knowledge-chat" && m_streamKnowledgeChatIds.value(reply, "") == chatId) {
+                qDebug() << "[ApiManager] Aborting stream knowledge chat request:" << reply->url().toString()
+                         << "ChatId:" << chatId;
+                reply->abort();
+
+                // 清理对应的chatId映射和缓冲区
+                m_streamKnowledgeChatIds.remove(reply);
+                m_streamKnowledgeDataBuffers.remove(reply);
             }
         }
     }

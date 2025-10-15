@@ -78,5 +78,6 @@
         <file>image/update.png</file>
         <file>qml/components/LoadingDialog.qml</file>
         <file>gif/loading.gif</file>
+        <file>qml/KnowledgeChat.qml</file>
     </qresource>
 </RCC>

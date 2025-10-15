@@ -94,6 +94,9 @@
     <QtMoc Include="ReportManager.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="KnowledgeChatManager.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CommonFunc.h">
@@ -120,6 +123,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ReportManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="KnowledgeChatManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

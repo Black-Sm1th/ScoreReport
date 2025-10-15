@@ -11,9 +11,15 @@
 #include <QJsonArray>
 #include <QDebug>
 #include <QSet>
+#include <QList>
+#include <QHttpMultiPart>
+#include <QHttpPart>
+#include <QFile>
+#include <QFileInfo>
+#include <QMimeDatabase>
+#include <QMimeType>
 #include <QStandardPaths>
 #include <QDir>
-#include <QFile>
 #include <QUrlQuery>
 #include "CommonFunc.h"
 
@@ -85,6 +91,18 @@ public:
      * 发送流式问答请求到AI服务，结果通过 streamChatResponse 和 streamChatFinished 信号返回
      */
     void streamChat(const QString& query, const QString& userId, const QString& chatId = "");
+    
+    /**
+     * @brief 知识库流式问答接口
+     * @param query 问题内容
+     * @param userId 用户ID
+     * @param language 语言
+     * @param buckets 知识库ID列表
+     * @param chatId 会话ID（可选，首次不传）
+     * 
+     * 发送知识库流式问答请求到AI服务，结果通过 streamKnowledgeChatResponse 和 streamKnowledgeChatFinished 信号返回
+     */
+    void streamKnowledgeChat(const QString& query, const QString& userId, const QString& language, const QStringList& buckets, const QString& chatId = "");
     
     /**
      * @brief 删除指定的聊天记录
@@ -166,6 +184,75 @@ public:
      * 发送获取模板列表请求到服务器，结果通过 getReportTemplateListResponse 信号返回
      */
     void getReportTemplateList();
+    
+    /**
+     * @brief 上传文件到知识库
+     * @param filePath 要上传的文件路径
+     * @param knowledgeBaseId 知识库ID
+     * @param userId 用户ID
+     * 
+     * 发送文件上传请求到服务器，结果通过 uploadFileResponse 信号返回
+     */
+    void uploadFileToKnowledgeBase(const QString& filePath, const QString& knowledgeBaseId, const QString& userId);
+    
+    /**
+     * @brief 创建知识库
+     * @param name 知识库名称（可选）
+     * @param description 知识库描述（可选）
+     * 
+     * 发送创建知识库请求到服务器，结果通过 createKnowledgeBaseResponse 信号返回
+     */
+    void createKnowledgeBase(const QString& name = "", const QString& description = "");
+    
+    /**
+     * @brief 删除知识库
+     * @param id 知识库ID
+     * 
+     * 发送删除知识库请求到服务器，结果通过 deleteKnowledgeBaseResponse 信号返回
+     */
+    void deleteKnowledgeBase(const QString& id);
+    
+    /**
+     * @brief 更新知识库
+     * @param id 知识库ID（可选）
+     * @param name 知识库名称（可选）
+     * @param description 知识库描述（可选）
+     * 
+     * 发送更新知识库请求到服务器，结果通过 updateKnowledgeBaseResponse 信号返回
+     */
+    void updateKnowledgeBase(const QString& id = "", const QString& name = "", const QString& description = "");
+    
+    /**
+     * @brief 根据ID获取知识库详情（包含文件信息）
+     * @param id 知识库ID
+     * 
+     * 发送获取知识库详情请求到服务器，结果通过 getKnowledgeBaseResponse 信号返回
+     */
+    void getKnowledgeBase(const QString& id);
+    
+    /**
+     * @brief 分页获取知识库列表
+     * @param current 当前页码，默认1
+     * @param pageSize 页面大小，默认10
+     * @param sortField 排序字段（可选）
+     * @param sortOrder 排序顺序，默认"descend"
+     * @param id 知识库ID筛选（可选）
+     * @param name 知识库名称筛选（可选）
+     * @param userId 用户ID筛选（可选）
+     * 
+     * 发送获取知识库列表请求到服务器，结果通过 getKnowledgeBaseListResponse 信号返回
+     */
+    void getKnowledgeBaseList(int current = 1, int pageSize = 10000, const QString& sortField = "createTime",
+                             const QString& sortOrder = "ascend", const QString& id = "", 
+                             const QString& name = "", const QString& userId = "");
+    
+    /**
+     * @brief 批量删除知识库文件
+     * @param ids 要删除的文件ID列表
+     * 
+     * 发送批量删除知识库文件请求到服务器，结果通过 deleteKnowledgeBaseFilesResponse 信号返回
+     */
+    void deleteKnowledgeBaseFiles(const QList<QString>& ids);
     
     /**
      * @brief 获取系统更新列表
@@ -260,6 +347,34 @@ signals:
     void streamChatFinished(bool success, const QString& message, const QString& chatId);
     
     /**
+     * @brief 知识库流式聊天响应信号
+     * @param data 接收到的流式数据块
+     * @param chatId 会话ID
+     * 
+     * 当接收到知识库流式聊天数据时发出此信号，data为每次接收到的数据块
+     */
+    void streamKnowledgeChatResponse(const QString& data, const QString& chatId);
+    
+    /**
+     * @brief 知识库流式聊天完成信号
+     * @param success 是否成功完成
+     * @param message 完成消息
+     * @param chatId 会话ID
+     * 
+     * 当知识库流式聊天结束时发出此信号
+     */
+    void streamKnowledgeChatFinished(bool success, const QString& message, const QString& chatId);
+    
+    /**
+     * @brief 知识库聊天完成时的元数据信号
+     * @param chatId 会话ID
+     * @param retrievedMetadata 检索到的元数据列表
+     * 
+     * 当知识库聊天完成时，发送检索到的元数据信息
+     */
+    void knowledgeChatMetadataReceived(const QString& chatId, const QVariantList& retrievedMetadata);
+    
+    /**
      * @brief 删除聊天响应信号
      * @param success 是否删除成功
      * @param message 服务器返回的消息
@@ -324,6 +439,62 @@ signals:
     void getReportTemplateListResponse(bool success, const QString& message, const QJsonObject& data);
     
     /**
+     * @brief 文件上传响应信号
+     * @param success 是否上传成功
+     * @param message 服务器返回的消息
+     * @param data 上传结果数据
+     */
+    void uploadFileResponse(bool success, const QString& message, const QJsonObject& data);
+    
+    /**
+     * @brief 创建知识库响应信号
+     * @param success 是否创建成功
+     * @param message 服务器返回的消息
+     * @param data 创建结果数据
+     */
+    void createKnowledgeBaseResponse(bool success, const QString& message, const QJsonObject& data);
+    
+    /**
+     * @brief 删除知识库响应信号
+     * @param success 是否删除成功
+     * @param message 服务器返回的消息
+     * @param data 删除结果数据
+     */
+    void deleteKnowledgeBaseResponse(bool success, const QString& message, const QJsonObject& data);
+    
+    /**
+     * @brief 更新知识库响应信号
+     * @param success 是否更新成功
+     * @param message 服务器返回的消息
+     * @param data 更新结果数据
+     */
+    void updateKnowledgeBaseResponse(bool success, const QString& message, const QJsonObject& data);
+    
+    /**
+     * @brief 获取知识库详情响应信号
+     * @param success 是否获取成功
+     * @param message 服务器返回的消息
+     * @param data 知识库详情数据
+     */
+    void getKnowledgeBaseResponse(bool success, const QString& message, const QJsonObject& data);
+    
+    /**
+     * @brief 获取知识库列表响应信号
+     * @param success 是否获取成功
+     * @param message 服务器返回的消息
+     * @param data 知识库列表数据
+     */
+    void getKnowledgeBaseListResponse(bool success, const QString& message, const QJsonObject& data);
+    
+    /**
+     * @brief 批量删除知识库文件响应信号
+     * @param success 是否删除成功
+     * @param message 服务器返回的消息
+     * @param data 删除结果数据
+     */
+    void deleteKnowledgeBaseFilesResponse(bool success, const QString& message, const QJsonObject& data);
+    
+    /**
      * @brief 获取系统更新列表响应信号
      * @param success 是否请求成功
      * @param message 服务器返回的消息
@@ -367,6 +538,13 @@ private slots:
      * 当流式聊天接口有新数据可读时调用，处理分块接收的数据
      */
     void onStreamDataReady();
+    
+    /**
+     * @brief 知识库流式数据就绪槽函数
+     * 
+     * 当知识库流式聊天接口有新数据可读时调用，处理分块接收的数据
+     */
+    void onStreamKnowledgeDataReady();
 
 private:
     /**
@@ -378,9 +556,10 @@ private:
     /**
      * @brief 创建网络请求对象
      * @param endpoint API端点路径
+     * @param setJsonContentType 是否设置JSON Content-Type，默认true
      * @return 配置好的QNetworkRequest对象
      */
-    QNetworkRequest createRequest(const QString& endpoint) const;
+    QNetworkRequest createRequest(const QString& endpoint, bool setJsonContentType = true) const;
     
     /**
      * @brief 发送POST请求
@@ -406,8 +585,14 @@ private:
     /// @brief 跟踪流式聊天请求的chatId映射，用于在接收数据时识别会话
     QMap<QNetworkReply*, QString> m_streamChatIds;
     
+    /// @brief 跟踪知识库流式聊天请求的chatId映射，用于在接收数据时识别会话
+    QMap<QNetworkReply*, QString> m_streamKnowledgeChatIds;
+    
     /// @brief 跟踪每个流式聊天请求的不完整SSE数据缓冲区
     QMap<QNetworkReply*, QString> m_streamDataBuffers;
+    
+    /// @brief 跟踪每个知识库流式聊天请求的不完整SSE数据缓冲区
+    QMap<QNetworkReply*, QString> m_streamKnowledgeDataBuffers;
 
     // API地址常量
     const QString INTERNAL_BASE_URL = "http://192.168.1.2:9898/api";  ///< 内网API基础地址
