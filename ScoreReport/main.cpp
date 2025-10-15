@@ -203,12 +203,6 @@ int main(int argc, char *argv[])
     auto* languageManager = GET_SINGLETON(LanguageManager);
     languageManager->initializeTranslator(&engine);
 
-    auto* knowledgeManager = GET_SINGLETON(KnowledgeManager);
-    engine.rootContext()->setContextProperty("$knowledgeManager", knowledgeManager);
-
-    auto* knowledgeChatManager = new KnowledgeChatManager();
-    engine.rootContext()->setContextProperty("$knowledgeChatManager", knowledgeChatManager);
-
     // 加载字体并检查是否成功
     int fontId1 = QFontDatabase::addApplicationFont(":/fonts/AlibabaPuHuiTi-3-55-Regular.ttf");
     int fontId2 = QFontDatabase::addApplicationFont(":/fonts/AlibabaPuHuiTi-3-65-Medium.ttf");
