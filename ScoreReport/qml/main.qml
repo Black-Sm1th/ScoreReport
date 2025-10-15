@@ -801,6 +801,8 @@ ApplicationWindow {
                     onCurrentPageChanged: {
                         if(index === 6){
                             chatView.resetValue()
+                        }else if(index === 9){
+                            knowledgeChatView.resetValue()
                         }
                         contentRect.currentScore = index
                     }
