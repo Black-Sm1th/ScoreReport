@@ -28,7 +28,7 @@ signals:
 private:
     QString m_filePath;
     QString m_fileName;
-    
+
     QString readTextFile(const QString& filePath);
     QString readDocxFile(const QString& filePath);
     QString readDocFile(const QString& filePath);
@@ -46,44 +46,44 @@ class KnowledgeChatManager : public QObject
 {
     Q_OBJECT
 
-    /// @brief 消息列表，供QML绑定
-    QUICK_PROPERTY(QVariantList, messages)
+        /// @brief 消息列表，供QML绑定
+        QUICK_PROPERTY(QVariantList, messages)
 
-    /// @brief 是否正在发送消息
-    QUICK_PROPERTY(bool, isSending)
+        /// @brief 是否正在发送消息
+        QUICK_PROPERTY(bool, isSending)
 
-    /// @brief 是否显示思考中状态
-    QUICK_PROPERTY(bool, isThinking)
+        /// @brief 是否显示思考中状态
+        QUICK_PROPERTY(bool, isThinking)
 
-    /// @brief 是否有文件正在上传（读取中）
-    QUICK_PROPERTY(bool, isUploading)
+        /// @brief 是否有文件正在上传（读取中）
+        QUICK_PROPERTY(bool, isUploading)
 
-    /// @brief 当前聊天ID
-    QUICK_PROPERTY(QString, currentChatId)
+        /// @brief 当前聊天ID
+        QUICK_PROPERTY(QString, currentChatId)
 
-    /// @brief 最后一条用户消息
-    QUICK_PROPERTY(QString, lastUserMessage)
+        /// @brief 最后一条用户消息
+        QUICK_PROPERTY(QString, lastUserMessage)
 
-    /// @brief 上传的文件列表
-    QUICK_PROPERTY(QVariantList, files)
+        /// @brief 上传的文件列表
+        QUICK_PROPERTY(QVariantList, files)
 
-    /// @brief 最大文件数量
-    QUICK_PROPERTY(int, maxFileCount)
+        /// @brief 最大文件数量
+        QUICK_PROPERTY(int, maxFileCount)
 
-    /// @brief 最大文件大小（字节）
-    QUICK_PROPERTY(qint64, maxFileSize)
-    
-    /// @brief 文件读取进度信息
-    QUICK_PROPERTY(QVariantMap, fileReadProgress)
-    
-    /// @brief 知识库列表
-    QUICK_PROPERTY(QVariantList, knowledgeBaseList)
-    
-    /// @brief 选中的知识库ID列表
-    QUICK_PROPERTY(QStringList, selectedKnowledgeBases)
-    
-    /// @brief 检索到的元数据列表
-    QUICK_PROPERTY(QVariantList, retrievedMetadata)
+        /// @brief 最大文件大小（字节）
+        QUICK_PROPERTY(qint64, maxFileSize)
+
+        /// @brief 文件读取进度信息
+        QUICK_PROPERTY(QVariantMap, fileReadProgress)
+
+        /// @brief 知识库列表
+        QUICK_PROPERTY(QVariantList, knowledgeBaseList)
+
+        /// @brief 选中的知识库ID列表
+        QUICK_PROPERTY(QStringList, selectedKnowledgeBases)
+
+        /// @brief 检索到的元数据列表
+        QUICK_PROPERTY(QVariantList, retrievedMetadata)
 
 public:
     explicit KnowledgeChatManager(QObject* parent = nullptr);
@@ -120,7 +120,7 @@ private slots:
      * @param chatId 会话ID
      */
     void onStreamChatResponse(const QString& data, const QString& chatId);
-    
+
     /**
      * @brief 处理流式聊天完成
      * @param success 是否成功
@@ -128,13 +128,13 @@ private slots:
      * @param chatId 会话ID
      */
     void onStreamChatFinished(bool success, const QString& message, const QString& chatId);
-    
+
     /**
      * @brief 处理文件读取进度变化
      * @param percentage 进度百分比
      */
     void onFileReadProgress(int percentage);
-    
+
     /**
      * @brief 处理文件读取完成
      * @param filePath 文件路径
@@ -143,7 +143,7 @@ private slots:
      * @param errorMessage 错误信息
      */
     void onFileReadCompleted(const QString& filePath, const QString& content, bool success, const QString& errorMessage);
-    
+
     /**
      * @brief 处理获取知识库列表响应
      * @param success 是否成功
@@ -151,14 +151,14 @@ private slots:
      * @param data 知识库列表数据
      */
     void onKnowledgeBaseListResponse(bool success, const QString& message, const QJsonObject& data);
-    
+
     /**
      * @brief 处理知识库流式聊天响应
      * @param data 接收到的数据块
      * @param chatId 会话ID
      */
     void onStreamKnowledgeChatResponse(const QString& data, const QString& chatId);
-    
+
     /**
      * @brief 处理知识库流式聊天完成
      * @param success 是否成功
@@ -166,7 +166,7 @@ private slots:
      * @param chatId 会话ID
      */
     void onStreamKnowledgeChatFinished(bool success, const QString& message, const QString& chatId);
-    
+
     /**
      * @brief 处理知识库聊天元数据接收
      * @param chatId 会话ID
@@ -182,14 +182,14 @@ signals:
      * @param type 消息类型：success, warning, error, info
      */
     void fileOperationResult(const QString& message, const QString& type);
-    
+
     /**
      * @brief 文件读取进度变化信号
      * @param filePath 文件路径
      * @param percentage 进度百分比
      */
     void fileReadProgressChanged(const QString& filePath, int percentage);
-    
+
     /**
      * @brief 文件读取完成信号
      * @param filePath 文件路径
@@ -205,7 +205,7 @@ private:
     void removeThinkingMessage();
     void updateLastAiMessage(const QString& additionalText);
     QString buildMessageWithFiles(const QString& userMessage, const QVariantList& files);
-    
+
     // 文件管理私有方法
     bool addFile(const QString& filePath, bool showMessage);
     QString validateFileForAdding(const QString& filePath, const QString& fileName);
@@ -213,13 +213,13 @@ private:
     void cleanupFileReadTask(const QString& filePath);
     void cleanupAllFileReadTasks();
     QString getFileContent(const QString& filePath);
-    
+
     // 文件读取私有方法
     QString readDocxContent(const QString& filePath);
     QString readDocContent(const QString& filePath);
     QString readWordDocumentWithPowerShell(const QString& filePath, const QString& fallbackMessage);
     QString extractTextFromXml(const QString& xmlContent);
-    
+
     // Word进程管理私有方法
     int cleanupHangingWordProcesses();
     void startDelayedWordProcessCleanup();

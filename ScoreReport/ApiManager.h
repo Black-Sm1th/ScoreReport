@@ -20,7 +20,6 @@
 #include <QMimeType>
 #include <QStandardPaths>
 #include <QDir>
-#include <QFile>
 #include <QUrlQuery>
 #include "CommonFunc.h"
 

@@ -24,6 +24,8 @@
 #include "KnowledgeManager.h"
 #include "KnowledgeChatManager.h"
 #include "Version.h"
+#include "KnowledgeManager.h"
+#include "KnowledgeChatManager.h"
 // 全局日志文件指针和互斥锁
 static QFile* g_logFile = nullptr;
 static QTextStream* g_logStream = nullptr;
@@ -190,6 +192,12 @@ int main(int argc, char *argv[])
 
     auto* reportManager = GET_SINGLETON(ReportManager);
     engine.rootContext()->setContextProperty("$reportManager", reportManager);
+
+    auto* knowledgeManager = GET_SINGLETON(KnowledgeManager);
+    engine.rootContext()->setContextProperty("$knowledgeManager", knowledgeManager);
+
+    auto* knowledgeChatManager = new KnowledgeChatManager();
+    engine.rootContext()->setContextProperty("$knowledgeChatManager", knowledgeChatManager);
 
     // 初始化语言管理器
     auto* languageManager = GET_SINGLETON(LanguageManager);

@@ -949,7 +949,6 @@ Rectangle {
         
         onConfirmed: {
             if (fileToDelete && fileToDelete.id) {
-                console.log("确认删除文件:", fileToDelete.fileName, "ID:", fileToDelete.id)
                 $knowledgeManager.deleteKnowledgeFile(fileToDelete.id)
                 fileToDelete = null  // 清空文件信息
             }
