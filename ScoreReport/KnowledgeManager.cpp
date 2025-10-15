@@ -155,9 +155,6 @@ void KnowledgeManager::onKnowledgeBaseDetailResponse(bool success, const QString
         emit knowledgeDetailUpdated(false, message, "-1");
         return;
     }
-
-    qDebug() << "[KnowledgeManager] Received knowledge detail response";
-
     // 解析知识库详情数据
     QVariantMap knowledgeDetail;
     knowledgeDetail["id"] = data["id"].toString();  // 改为字符串格式
@@ -429,8 +426,6 @@ void KnowledgeManager::deleteKnowledgeBase(const QString& knowledgeId)
 
     // 调用ApiManager删除知识库
     GET_SINGLETON(ApiManager)->deleteKnowledgeBase(knowledgeId);
-
-    qDebug() << "[KnowledgeManager] Deleting knowledge base:" << knowledgeId;
 }
 
 /**

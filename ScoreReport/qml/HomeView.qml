@@ -237,6 +237,14 @@ Rectangle {
                     $reportManager.refreshTemplate()
                     currentPageChanged(7)
                 }
+                else if(title === "知识库管理"){
+                    $knowledgeManager.updateKnowledgeList()
+                    currentPageChanged(8)
+                }
+                else if(title === "知识库问答"){
+                    $knowledgeChatManager.loadKnowledgeBaseList()
+                    currentPageChanged(9)
+                }
                 else{
                     messageManager.warning(qsTr("该功能暂未开放"))
                 }

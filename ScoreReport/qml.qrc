@@ -80,5 +80,6 @@
         <file>gif/loading.gif</file>
         <file>qml/KnowledgeChat.qml</file>
         <file>qml/Knowledge.qml</file>
+        <file>qml/components/KnowledgeSelector.qml</file>
     </qresource>
 </RCC>
