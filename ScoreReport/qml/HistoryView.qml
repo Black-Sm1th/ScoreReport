@@ -10,6 +10,7 @@ Rectangle {
     width: parent.width
     height: Math.min(contentColumn.height, 754)
     property var messageManager: null
+    property var loadingDialog: null
     signal toScorer()
     color: "transparent"
     
@@ -26,6 +27,13 @@ Rectangle {
         target: $historyManager
         function onHistoryListChanged() {
             historyData = $historyManager.historyList || []
+        }
+        function onIsLoadingChanged(){
+            if($historyManager.isLoading){
+                loadingDialog.show()
+            }else{
+                loadingDialog.hide()
+            }
         }
     }
     
@@ -150,7 +158,7 @@ Rectangle {
                 contentHeight: Math.max(292, historyColumn.height)
                 clip: true
                 ScrollBar.vertical.policy: ScrollBar.AsNeeded
-                
+                visible: !$historyManager.isLoading
                 Column {
                     id: historyColumn
                     width: scrollView.width

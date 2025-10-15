@@ -10,6 +10,7 @@ Rectangle {
     color: "transparent"
     // 属性
     property var messageManager: null
+    property var loadingDialog: null
     property var fileToDelete: null  // 存储要删除的文件信息
     property var knowledgeToDelete: null  // 存储要删除的知识库信息
     property bool isAddingKnowledge: false  // 是否处于添加知识库模式
@@ -131,6 +132,14 @@ Rectangle {
                 knowledgeToEdit = null
             }else{
                 messageManager.error(message)
+            }
+        }
+
+        function onIsLoadingChanged(){
+            if($knowledgeManager.isLoading){
+                loadingDialog.show()
+            }else{
+                loadingDialog.hide()
             }
         }
     }
@@ -520,20 +529,20 @@ Rectangle {
                     color: "transparent"
                     visible: $knowledgeManager.isLoading
                     
-                    BusyIndicator {
-                        anchors.centerIn: parent
-                        running: $knowledgeManager.isLoading
-                    }
+                    // BusyIndicator {
+                    //     anchors.centerIn: parent
+                    //     running: $knowledgeManager.isLoading
+                    // }
                     
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                anchors.top: parent.verticalCenter
-                                anchors.topMargin: 30
-                                text: qsTr("正在加载知识库列表...")
-                                font.family: "Alibaba PuHuiTi 3.0"
-                                font.pixelSize: 14
-                                color: "#73000000"
-                            }
+                            // Text {
+                            //     anchors.horizontalCenter: parent.horizontalCenter
+                            //     anchors.top: parent.verticalCenter
+                            //     anchors.topMargin: 30
+                            //     text: qsTr("正在加载知识库列表...")
+                            //     font.family: "Alibaba PuHuiTi 3.0"
+                            //     font.pixelSize: 14
+                            //     color: "#73000000"
+                            // }
                 }
                 
                 // 空数据提示

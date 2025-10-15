@@ -811,6 +811,7 @@ ApplicationWindow {
                     id:historyView
                     visible: contentRect.currentIndex === 1
                     messageManager: dialogMessageBox
+                    loadingDialog: loadingDialog
                     onToScorer: {
                         contentRect.currentIndex = 0
                     }
@@ -880,6 +881,7 @@ ApplicationWindow {
                     id:knowledgeView
                     visible: contentRect.currentIndex === 0 && contentRect.currentScore === 8
                     messageManager: dialogMessageBox
+                    loadingDialog: loadingDialog
                     onExitScore: {
                         contentRect.currentScore = -1
                     }
