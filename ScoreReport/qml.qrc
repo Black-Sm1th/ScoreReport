@@ -69,7 +69,6 @@
         <file>image/clearCache.png</file>
         <file>image/chatBubble.png</file>
         <file>image/loginHead.png</file>
-        <file>icon/icon.ico</file>
         <file>image/update.png</file>
         <file>qml/components/LoadingDialog.qml</file>
         <file>gif/loading.gif</file>
@@ -503,5 +502,6 @@
         <file>image/appear2/162.png</file>
         <file>image/appear2/163.png</file>
         <file>image/appear2/164.png</file>
+        <file>icon/icon.ico</file>
     </qresource>
 </RCC>
