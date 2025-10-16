@@ -75,39 +75,82 @@ ApplicationWindow {
         anchors.centerIn: parent
         property int currentHoverIndex: 0
         property int currentAppearIndex: 0
-        property var hoverImages: ["qrc:/gif/hoverStyle1.gif", "qrc:/gif/hoverStyle2.gif"]
-        property var apperImages: ["qrc:/gif/appear1.gif", "qrc:/gif/appear2.gif"]
+        
+        // 动画状态：default, hover1, hover2, appear1, appear2
+        property string animationState: "appear1"
+        property int currentFrame: 0
+        
+        // 各动画的帧数
+        property var frameCount: {
+            "default": 50,
+            "hover1": 50,
+            "hover2": 50,
+            "appear1": 112,
+            "appear2": 165
+        }
+        
+        // 动画定时器
+        Timer {
+            id: frameTimer
+            interval: 50  // 20fps
+            repeat: true
+            running: true
+            onTriggered: {
+                var maxFrame = floatingWindow.frameCount[floatingWindow.animationState]
+                
+                // 先更新图片源（显示当前帧）
+                var paddedFrame = ("000" + floatingWindow.currentFrame).slice(-3)
+                floatingImage.source = "qrc:/image/" + floatingWindow.animationState + "/" + paddedFrame + ".png"
+                
+                // 然后递增帧数
+                floatingWindow.currentFrame++
+                
+                // 检查是否到达最后一帧
+                if (floatingWindow.currentFrame >= maxFrame) {
+                    // 帧播放完毕
+                    if (floatingWindow.animationState.indexOf("appear") === 0) {
+                        // appear动画播放完切换到default
+                        floatingWindow.animationState = "default"
+                        floatingWindow.currentFrame = 0
+                    } else {
+                        // hover和default循环播放
+                        floatingWindow.currentFrame = 0
+                    }
+                }
+            }
+        }
 
         function showHoverImages(){
-            if(floatingImage.source == "qrc:/gif/default.gif"){
-                floatingWindow.currentHoverIndex = (floatingWindow.currentHoverIndex + 1) % floatingWindow.hoverImages.length
-                floatingImage.source = floatingWindow.hoverImages[floatingWindow.currentHoverIndex]
+            if(floatingWindow.animationState === "default"){
+                floatingWindow.currentHoverIndex = (floatingWindow.currentHoverIndex + 1) % 2
+                floatingWindow.animationState = "hover" + (floatingWindow.currentHoverIndex + 1)
+                floatingWindow.currentFrame = 0
             }
         }
+        
         function showAppearImages(){
-            if(floatingImage.source == "qrc:/gif/default.gif"){
-                floatingWindow.currentAppearIndex = (floatingWindow.currentAppearIndex + 1) % floatingWindow.apperImages.length
-                floatingImage.source = floatingWindow.apperImages[floatingWindow.currentAppearIndex]
+            if(floatingWindow.animationState === "default"){
+                floatingWindow.currentAppearIndex = (floatingWindow.currentAppearIndex + 1) % 2
+                floatingWindow.animationState = "appear" + (floatingWindow.currentAppearIndex + 1)
+                floatingWindow.currentFrame = 0
             }
         }
+        
         function showDefaultImages(){
-            if(floatingImage.source != "qrc:/gif/default.gif"){
-                floatingImage.source = "qrc:/gif/default.gif"
+            if(floatingWindow.animationState !== "default"){
+                floatingWindow.animationState = "default"
+                floatingWindow.currentFrame = 0
             }
         }
+        
         // 悬浮窗图标/图片
-        AnimatedImage {
+        Image {
             id: floatingImage
             anchors.fill: parent
             anchors.centerIn: parent
-            source: "qrc:/gif/appear1.gif"
-            playing: true                    // 播放
+            source: "qrc:/image/appear1/000.png"
             scale: 1.1
-            onCurrentFrameChanged: {
-                if (currentFrame === frameCount - 1 && floatingWindow.apperImages.indexOf(source.toString()) > -1 ) {
-                    floatingWindow.showDefaultImages()
-                }
-            }
+            smooth: true
         }
         Timer{
             id: appearTimer
@@ -120,30 +163,6 @@ ApplicationWindow {
         Component.onCompleted: {
             appearTimer.restart()
         }
-        // AnimatedImage {
-        //     id: floatingImage
-        //     anchors.fill: parent
-        //     anchors.centerIn: parent
-        //     source: "qrc:/gif/default.gif"   // 可以是资源文件或本地路径
-        //     playing: true                    // 播放
-        //     scale: 1.1
-        // }
-
-        // Image {
-        //     id: floatingImage
-        //     anchors.fill: parent
-        //     anchors.centerIn: parent
-        //     fillMode: Image.PreserveAspectFit
-        //     source: floatingWindow.images[floatingWindow.currentIndex]
-        //     scale: 1.1
-        // }
-        // Timer {
-        //     interval: 250; running: true; repeat: true
-        //     onTriggered: {
-        //         floatingWindow.currentIndex = (floatingWindow.currentIndex + 1) % floatingWindow.images.length
-        //         floatingImage.source = floatingWindow.images[floatingWindow.currentIndex]
-        //     }
-        // }
         // 鼠标悬停效果
         states: [
             State {
@@ -882,6 +901,7 @@ ApplicationWindow {
                     id:knowledgeView
                     visible: contentRect.currentIndex === 0 && contentRect.currentScore === 8
                     messageManager: dialogMessageBox
+                    loadingDialog: loadingDialog
                     onExitScore: {
                         contentRect.currentScore = -1
                     }
