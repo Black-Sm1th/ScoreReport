@@ -667,7 +667,19 @@ Rectangle {
                                     // 创建时间
                                     Text {
                                         width: parent.width
-                                        text: qsTr("创建时间: ") + (modelData.createTime || qsTr("未知"))
+                                        text: {
+                                            if (!modelData.createTime) {
+                                                return qsTr("创建时间: ") + qsTr("未知")
+                                            }
+                                            // 将时间字符串转换为Date对象并格式化
+                                            var dateTime = new Date(modelData.createTime)
+                                            if (isNaN(dateTime.getTime())) {
+                                                return qsTr("创建时间: ") + modelData.createTime
+                                            }
+                                            // 格式化为 yyyy-MM-dd hh:mm:ss
+                                            var formatted = Qt.formatDateTime(dateTime, "yyyy-MM-dd hh:mm:ss")
+                                            return qsTr("创建时间: ") + formatted
+                                        }
                                         font.family: "Alibaba PuHuiTi 3.0"
                                         font.pixelSize: 12
                                         color: "#40000000"

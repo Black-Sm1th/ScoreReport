@@ -50,7 +50,10 @@ ApplicationWindow {
         interval: 1000
         repeat: false
         onTriggered: {
-            scoreDialog.hideDialog()
+            // 只有在右键菜单不可见的情况下才隐藏scoreDialog
+            if (!contextMenu.visible) {
+                scoreDialog.hideDialog()
+            }
         }
     }
 
@@ -239,7 +242,7 @@ ApplicationWindow {
                 if(isDragging){
                     return
                 }
-                if(scoreDialog.isEntered == false){
+                if(scoreDialog.isEntered == false && !contextMenu.visible){
                     disabledTimer.start()
                     // 鼠标离开时重启帮助定时器（仅在开启设置时）
                     if ($loginManager.showHelpBubble) {
@@ -349,7 +352,7 @@ ApplicationWindow {
                 }
                 else {
                     scoreDialog.isEntered = false
-                    if(!mouseArea.containsMouse){
+                    if(!mouseArea.containsMouse && !contextMenu.visible){
                         disabledTimer.start()
                     }
                 }
@@ -625,6 +628,21 @@ ApplicationWindow {
                 onConfirmed: {
                     loadingDialog.show(qsTr("正在下载更新..."))
                     $loginManager.downloadAndInstallUpdate()
+                }
+            }
+
+            // 清除缓存确认对话框
+            ConfirmDialog {
+                id: clearCacheConfirmDialog
+                title: qsTr("清除缓存")
+                message: qsTr("确定要清除所有缓存吗？此操作不可恢复。")
+                confirmText: qsTr("确定")
+                cancelText: qsTr("取消")
+                visible: false
+                recRadius: parent.radius
+                onConfirmed: {
+                    $loginManager.clearAllCache()
+                    dialogMessageBox.success(qsTr("缓存清除成功！"))
                 }
             }
 
@@ -1256,6 +1274,10 @@ ApplicationWindow {
         // 隐藏菜单
         function hide() {
             visible = false
+            // 右键菜单关闭时，如果scoreDialog可见且鼠标不在scoreDialog和悬浮窗上，启动关闭定时器
+            if (scoreDialog.visible && !scoreDialog.isEntered && !mouseArea.containsMouse) {
+                disabledTimer.start()
+            }
             // 重启帮助定时器（仅在开启设置时）
             if (!scoreDialog.visible && !scoringMethodDialog.visible && !chatWindow.visible && $loginManager.showHelpBubble) {
                 helpBubbleTimer.restart()
@@ -1619,7 +1641,7 @@ ApplicationWindow {
 
                         onClicked: {
                             contextMenu.hide()
-                            $loginManager.clearAllCache()
+                            clearCacheConfirmDialog.show()
                         }
                     }
                 }
@@ -1982,6 +2004,15 @@ ApplicationWindow {
             anchors.centerIn: parent
             color: "#ffffff"
             radius: 16
+            MouseArea {
+                anchors.fill: parent
+                z: -1
+                onPressed: {
+                    if (contextMenu.visible) {
+                        contextMenu.hide()
+                    }
+                }
+            }
             Column{
                 anchors.fill: parent
                 Rectangle{
