@@ -707,6 +707,18 @@ bool LoginManager::installUpdate(const QString& downloadedFilePath)
     
     qDebug() << "[LoginManager] Update file copied to:" << updateZipPath;
     
+    // 创建更新锁文件，防止用户在更新期间再次启动应用
+    QString updateLockPath = appDir + "/update.lock";
+    QFile lockFile(updateLockPath);
+    if (lockFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        QTextStream lockStream(&lockFile);
+        lockStream << QDateTime::currentDateTime().toString(Qt::ISODate);
+        lockFile.close();
+        qDebug() << "[LoginManager] Update lock file created:" << updateLockPath;
+    } else {
+        qWarning() << "[LoginManager] Failed to create update lock file";
+    }
+    
     // 创建批处理脚本来解压缩文件并重启应用
     QString batchScript = appDir + "/update_install.bat";
     QFile batchFile(batchScript);
@@ -717,6 +729,25 @@ bool LoginManager::installUpdate(const QString& downloadedFilePath)
         out << "cd /d \"" << QDir::toNativeSeparators(appDir) << "\"\n";
         out << "echo Installing update...\n";
         out << "timeout /t 2 /nobreak > nul\n"; // 等待2秒确保当前应用完全退出
+        
+        // 检查应用是否仍在运行，最多等待5秒后强制终止
+        out << "set WAIT_COUNT=0\n";
+        out << ":CHECK_PROCESS\n";
+        out << "tasklist /FI \"IMAGENAME eq " << currentAppName << "\" 2>NUL | find /I /N \"" << currentAppName << "\">NUL\n";
+        out << "if \"%ERRORLEVEL%\"==\"0\" (\n";
+        out << "    if %WAIT_COUNT% LSS 5 (\n";
+        out << "        echo Waiting for application to close... (%WAIT_COUNT%/5)\n";
+        out << "        timeout /t 1 /nobreak > nul\n";
+        out << "        set /a WAIT_COUNT+=1\n";
+        out << "        goto CHECK_PROCESS\n";
+        out << "    ) else (\n";
+        out << "        echo Application still running after 5 seconds, forcing termination...\n";
+        out << "        taskkill /F /IM \"" << currentAppName << "\" > nul 2>&1\n";
+        out << "        timeout /t 1 /nobreak > nul\n";
+        out << "        echo Application terminated.\n";
+        out << "    )\n";
+        out << ")\n";
+        out << "echo Application closed, continuing with update...\n";
         
         // 使用PowerShell解压缩文件（Windows内置）
         out << "echo Extracting update files...\n";
@@ -754,6 +785,7 @@ bool LoginManager::installUpdate(const QString& downloadedFilePath)
         out << "del update.zip\n";
         
         out << "echo Update completed successfully!\n";
+        out << "del update.lock\n"; // 删除更新锁文件
         out << "echo Restarting application...\n";
         out << "timeout /t 1 /nobreak > nul\n";
         out << "start \"\" \"" << QDir::toNativeSeparators(currentAppPath) << "\"\n";
@@ -762,6 +794,7 @@ bool LoginManager::installUpdate(const QString& downloadedFilePath)
         out << ":cleanup\n";
         out << "if exist temp_update rmdir /s /q temp_update\n";
         out << "del update.zip\n";
+        out << "del update.lock\n"; // 即使失败也要删除锁文件
         out << ":end\n";
         out << "del \"" << QDir::toNativeSeparators(batchScript) << "\"\n"; // 删除批处理文件自身
         batchFile.close();
