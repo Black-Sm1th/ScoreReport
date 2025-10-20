@@ -1,4 +1,4 @@
-#include "ReportManager.h"
+﻿#include "ReportManager.h"
 #include <QJsonDocument>
 #include <QJsonArray>
 #include <QJsonObject>

@@ -1,4 +1,4 @@
-#ifndef REPORTMANAGER_H
+﻿#ifndef REPORTMANAGER_H
 #define REPORTMANAGER_H
 
 #include <QObject>
