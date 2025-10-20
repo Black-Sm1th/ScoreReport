@@ -88,6 +88,16 @@ Rectangle {
                         backgroundColor: "#FFFAF8"
                         iconUrl: "qrc:/image/TNM.png"
                     }
+                    // ScoreOptionCard {
+                    //     title: "影像知识库问答"
+                    //     backgroundColor: "#F8FAFF"
+                    //     iconUrl: "qrc:/image/CHAT.png"
+                    // }
+                    ScoreOptionCard {
+                        title: "知识库管理"
+                        backgroundColor: "#F7FCFB"
+                        iconUrl: "qrc:/image/CCLS.png"
+                    }
                     ScoreOptionCard {
                         title: "影像知识库问答"
                         backgroundColor: "#F8FAFF"
@@ -97,16 +107,6 @@ Rectangle {
                         title: "结构化管家"
                         backgroundColor: "#F8FAFF"
                         iconUrl: "qrc:/image/BIOSNAK.png"
-                    }
-                    ScoreOptionCard {
-                        title: "知识库管理"
-                        backgroundColor: "#F7FCFB"
-                        iconUrl: "qrc:/image/CCLS.png"
-                    }
-                    ScoreOptionCard {
-                        title: "知识库问答"
-                        backgroundColor: "#F8FAFF"
-                        iconUrl: "qrc:/image/CHAT.png"
                     }
                 }
                 
@@ -224,9 +224,9 @@ Rectangle {
                         messageManager.warning(qsTr("剪贴板为空，请先复制内容"))
                     }
                 }
-                else if(title === "影像知识库问答"){
-                    currentPageChanged(6)
-                }
+                // else if(title === "影像知识库问答"){
+                //     currentPageChanged(6)
+                // }
                 else if(title === "UCLS MRS"){
                     currentPageChanged(3)
                 }
@@ -241,7 +241,7 @@ Rectangle {
                     $knowledgeManager.updateKnowledgeList()
                     currentPageChanged(8)
                 }
-                else if(title === "知识库问答"){
+                else if(title === "影像知识库问答"){
                     $knowledgeChatManager.loadKnowledgeBaseList()
                     currentPageChanged(9)
                 }

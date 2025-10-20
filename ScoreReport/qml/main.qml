@@ -309,9 +309,11 @@ ApplicationWindow {
                     uclsmrsView.resetValues()
                 }else if(contentRect.currentScore == 4){
                     uclsctsView.resetValues()
-                }else if(contentRect.currentScore == 6){
-                    $chatManager.endAnalysis(true)
-                }else if(contentRect.currentScore == 7){
+                }
+                // else if(contentRect.currentScore == 6){
+                //     $chatManager.endAnalysis(true)
+                // }
+                else if(contentRect.currentScore == 7){
                     reportView.resetValues()
                 }else if(contentRect.currentScore == 8){
                     knowledgeView.resetValues()
@@ -335,6 +337,7 @@ ApplicationWindow {
             function onLogoutSuccess(){
                 historyView.resetAllValue()
                 scoreDialog.resetAllValue()
+                $independentChatManager.clearKnowledgeBaseList()
             }
         }
 
@@ -898,15 +901,15 @@ ApplicationWindow {
                         contentRect.currentScore = -1
                     }
                 }
-                CHAT{
-                    id:chatView
-                    visible: contentRect.currentIndex === 0 && contentRect.currentScore === 6
-                    messageManager: dialogMessageBox
-                    chatManager: $chatManager
-                    onExitScore: {
-                        contentRect.currentScore = -1
-                    }
-                }
+                // CHAT{
+                //     id:chatView
+                //     visible: contentRect.currentIndex === 0 && contentRect.currentScore === 6
+                //     messageManager: dialogMessageBox
+                //     chatManager: $chatManager
+                //     onExitScore: {
+                //         contentRect.currentScore = -1
+                //     }
+                // }
                 REPORT{
                     id:reportView
                     visible: contentRect.currentIndex === 0 && contentRect.currentScore === 7

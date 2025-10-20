@@ -100,6 +100,7 @@ public:
     Q_INVOKABLE bool removeFile(int index);
     Q_INVOKABLE void clearFiles();
     Q_INVOKABLE void loadKnowledgeBaseList();
+    Q_INVOKABLE void clearKnowledgeBaseList();
 
     // 内部使用的私有方法
     QStringList getSelectedBuckets() const;

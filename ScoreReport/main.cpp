@@ -271,9 +271,9 @@ int main(int argc, char *argv[])
     auto* uclsctsScorer = GET_SINGLETON(UCLSCTSScorer);
     engine.rootContext()->setContextProperty("$uclsctsScorer", uclsctsScorer);
 
-    // 为主界面创建ChatManager实例
-    auto* chatManager = new ChatManager();
-    engine.rootContext()->setContextProperty("$chatManager", chatManager);
+    //// 为主界面创建ChatManager实例
+    //auto* chatManager = new ChatManager();
+    //engine.rootContext()->setContextProperty("$chatManager", chatManager);
 
     // 为独立chat窗口创建单独的ChatManager实例
     auto* independentChatManager = new KnowledgeChatManager();

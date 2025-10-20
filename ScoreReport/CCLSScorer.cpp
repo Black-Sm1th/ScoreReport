@@ -6,7 +6,7 @@ CCLSScorer::CCLSScorer(QObject* parent)
     : QObject(parent)
     , resultText("")
 {
-    setsourceText(QString::fromLocal8Bit("评分依据：Mayo Clinic CCLS系统（整合cn-ccLS囊变特征）\n版本时间：第2版（2023年修订）"));
+    setsourceText(QString::fromUtf8("评分依据：Mayo Clinic CCLS系统（整合cn-ccLS囊变特征）\n版本时间：第2版（2023年修订）"));
 }
 
 int CCLSScorer::calculateScore(int t2Signal, int enhancement, int microFat, int segmentalReversal, int arterialRatio, int diffusionRestriction)
@@ -79,11 +79,11 @@ bool CCLSScorer::needsOption(int t2Signal, int enhancement, int optionIndex, int
 
 void CCLSScorer::finishScore(int score, QString detailedDiagnosis)
 {
-    QString title = QString::fromLocal8Bit("CCLS评分：") + QString::number(score) + QString::fromLocal8Bit("分");
+    QString title = QString::fromUtf8("CCLS评分：") + QString::number(score) + QString::fromUtf8("分");
     QString result = "";
     resultText = title;
     if (detailedDiagnosis != "") {
-        result = QString::fromLocal8Bit("符合") + detailedDiagnosis + QString::fromLocal8Bit("典型特征");
+        result = QString::fromUtf8("符合") + detailedDiagnosis + QString::fromUtf8("典型特征");
         resultText += "\n";
         resultText += result;
     }
@@ -194,19 +194,19 @@ QString CCLSScorer::getDetailedDiagnosis(int t2Signal, int enhancement, int micr
     if (t2Signal == HighSignal) {
         if (enhancement == Obvious) { // 明显强化
             if (microFat == No && segmentalReversal == Yes) {
-                return QString::fromLocal8Bit("嗜酸细胞瘤");
+                return QString::fromUtf8("嗜酸细胞瘤");
             }
         }
         else if (enhancement == Moderate) { // 中度强化
             if (microFat == Yes) {
-                return QString::fromLocal8Bit("嫌色细胞癌");
+                return QString::fromUtf8("嫌色细胞癌");
             }
             else if (microFat == No) {
                 if (segmentalReversal == No) {
-                    return QString::fromLocal8Bit("嫌色细胞癌");
+                    return QString::fromUtf8("嫌色细胞癌");
                 }
                 else if (segmentalReversal == Yes) {
-                    return QString::fromLocal8Bit("嗜酸细胞瘤");
+                    return QString::fromUtf8("嗜酸细胞瘤");
                 }
             }
         }
@@ -216,24 +216,24 @@ QString CCLSScorer::getDetailedDiagnosis(int t2Signal, int enhancement, int micr
         if (enhancement == Obvious) { // 明显强化
             if (microFat == No) {
                 if (segmentalReversal == No) {
-                    return QString::fromLocal8Bit("嫌色细胞癌");
+                    return QString::fromUtf8("嫌色细胞癌");
                 }
                 else if (segmentalReversal == Yes) {
-                    return QString::fromLocal8Bit("嗜酸细胞瘤");
+                    return QString::fromUtf8("嗜酸细胞瘤");
                 }
             }
         }
         else if (enhancement == Moderate) { // 中度强化
             if (microFat == Yes || (microFat == No && segmentalReversal == No)) {
-                return QString::fromLocal8Bit("嫌色细胞癌");
+                return QString::fromUtf8("嫌色细胞癌");
             }
             else if (microFat == No && segmentalReversal == Yes) {
-                return QString::fromLocal8Bit("嗜酸细胞瘤");
+                return QString::fromUtf8("嗜酸细胞瘤");
             }
         }
         else if (enhancement == Mild) { // 轻度强化
             if (microFat == No) {
-                return QString::fromLocal8Bit("乳头状细胞癌");
+                return QString::fromUtf8("乳头状细胞癌");
             }
         }
     }
@@ -241,12 +241,12 @@ QString CCLSScorer::getDetailedDiagnosis(int t2Signal, int enhancement, int micr
     else if (t2Signal == LowSignal) {
         if (enhancement == Obvious) { // 明显强化
             if (arterialRatio == Yes) {
-                return QString::fromLocal8Bit("AML");
+                return QString::fromUtf8("AML");
             }
         }
         else if (enhancement == Mild) { // 轻度强化
             if (microFat == No) {
-                return QString::fromLocal8Bit("乳头状细胞癌 AML（少见）");
+                return QString::fromUtf8("乳头状细胞癌 AML（少见）");
             }
         }
     }
