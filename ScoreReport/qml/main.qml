@@ -309,9 +309,11 @@ ApplicationWindow {
                     uclsmrsView.resetValues()
                 }else if(contentRect.currentScore == 4){
                     uclsctsView.resetValues()
-                }else if(contentRect.currentScore == 6){
-                    $chatManager.endAnalysis(true)
-                }else if(contentRect.currentScore == 7){
+                }
+                // else if(contentRect.currentScore == 6){
+                //     $chatManager.endAnalysis(true)
+                // }
+                else if(contentRect.currentScore == 7){
                     reportView.resetValues()
                 }else if(contentRect.currentScore == 8){
                     knowledgeView.resetValues()
@@ -330,11 +332,13 @@ ApplicationWindow {
                     // 登录成功后自动切换到HomeView，并重置评分页面
                     contentRect.currentIndex = 0
                     contentRect.currentScore = -1
+                    $independentChatManager.loadKnowledgeBaseList()
                 }
             }
             function onLogoutSuccess(){
                 // historyView.resetAllValue()
                 scoreDialog.resetAllValue()
+                $independentChatManager.clearKnowledgeBaseList()
             }
         }
 

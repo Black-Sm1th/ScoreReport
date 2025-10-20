@@ -237,7 +237,7 @@ void KnowledgeChatManager::addThinkingMessage()
 {
     QVariantMap thinkingMessage;
     thinkingMessage["type"] = "thinking";
-    thinkingMessage["content"] = "查询中";
+    thinkingMessage["content"] = getselectedKnowledgeBases().isEmpty() ?  "思考中" : "查询中";
     thinkingMessage["timestamp"] = QDateTime::currentDateTime().toString("hh:mm");
 
     QVariantList currentMessages = getmessages();
@@ -1146,6 +1146,11 @@ void KnowledgeChatManager::loadKnowledgeBaseList()
     auto* apiManager = GET_SINGLETON(ApiManager);
     apiManager->getKnowledgeBaseList();
     qDebug() << "[KnowledgeChatManager] Loading knowledge base list";
+}
+
+void KnowledgeChatManager::clearKnowledgeBaseList()
+{
+    setknowledgeBaseList(QVariantList());
 }
 
 void KnowledgeChatManager::onKnowledgeBaseListResponse(bool success, const QString& message, const QJsonObject& data)

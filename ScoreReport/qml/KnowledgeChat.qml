@@ -68,6 +68,7 @@ Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
                 knowledgeList: chatManager.knowledgeBaseList
                 dropdownWidth: 200
+                maxDropdownHeight: chatView.height > 220 ? 250 : chatView.height - 25
                 onSelectionChanged: {
                     // 更新选中的知识库ID列表
                     var selectedIds = []
