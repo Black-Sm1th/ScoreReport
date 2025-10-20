@@ -1,4 +1,4 @@
-#include "KnowledgeManager.h"
+﻿#include "KnowledgeManager.h"
 #include "ApiManager.h"
 #include "LoginManager.h"
 #include <QJsonArray>
