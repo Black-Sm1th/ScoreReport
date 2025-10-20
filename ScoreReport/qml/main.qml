@@ -329,6 +329,7 @@ ApplicationWindow {
                     // 登录成功后自动切换到HomeView，并重置评分页面
                     contentRect.currentIndex = 0
                     contentRect.currentScore = -1
+                    $independentChatManager.loadKnowledgeBaseList()
                 }
             }
             function onLogoutSuccess(){
