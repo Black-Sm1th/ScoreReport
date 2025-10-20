@@ -9,6 +9,9 @@
 #include <QTextStream>
 #include <QStandardPaths>
 #include <QMutex>
+#include <QThread>
+#include <QSharedMemory>
+#include <QSystemSemaphore>
 #include "LoginManager.h"
 #include "CCLSScorer.h"
 #include "TNMManager.h"
@@ -142,6 +145,94 @@ int main(int argc, char *argv[])
 
     QGuiApplication app(argc, argv);
     
+    // 单实例检查 - 使用共享内存确保只能运行一个实例
+    // 使用系统信号量来处理崩溃情况
+    const QString semaphoreKey = "ScoreReportSingleInstanceSemaphore";
+    const QString sharedMemKey = "ScoreReportSingleInstanceMemory";
+    
+    // 先使用信号量来防止竞态条件
+    QSystemSemaphore semaphore(semaphoreKey, 1);
+    semaphore.acquire();
+    
+    // 在Unix系统上，共享内存在程序崩溃后不会自动释放，需要手动检测和清理
+#ifndef Q_OS_WIN
+    QSharedMemory nix_fix_shared_memory(sharedMemKey);
+    if(nix_fix_shared_memory.attach()) {
+        nix_fix_shared_memory.detach();
+    }
+#endif
+    
+    QSharedMemory* sharedMemory = new QSharedMemory(sharedMemKey);
+    bool isRunning = false;
+    
+    if (sharedMemory->attach()) {
+        // 共享内存已存在，说明已有实例在运行
+        isRunning = true;
+    } else {
+        // 创建共享内存
+        if (!sharedMemory->create(1)) {
+            qWarning() << "[Main] Failed to create shared memory:" << sharedMemory->errorString();
+            isRunning = true; // 出错时保守处理，假设已有实例运行
+        } else {
+            qInfo() << "[Main] Single instance check passed, this is the first instance";
+        }
+    }
+    
+    semaphore.release();
+    
+    if (isRunning) {
+        qWarning() << "[Main] Another instance is already running, exiting...";
+        qWarning() << "[Main] ScoreReport is already running. Please check the system tray or taskbar.";
+        delete sharedMemory;
+        return 0;
+    }
+    
+    // 检查是否有更新正在进行
+    QString appDir = QCoreApplication::applicationDirPath();
+    QString updateLockPath = appDir + "/update.lock";
+    
+    if (QFile::exists(updateLockPath)) {
+        qInfo() << "[Main] Update lock file detected";
+        
+        // 检查是否存在 update.zip，如果存在说明正在进行更新
+        QString updateZipPath = appDir + "/update.zip";
+        bool isUpdating = QFile::exists(updateZipPath);
+        
+        if (isUpdating) {
+            // 如果正在更新中，旧版本应该立即退出，避免与更新脚本产生死锁
+            qWarning() << "[Main] Update in progress (update.zip exists), this old instance should exit immediately";
+            qWarning() << "[Main] Exiting to allow update script to continue...";
+            return 0;
+        }
+        
+        // 如果没有 update.zip，可能是更新脚本已经完成但锁文件没有删除
+        // 或者更新脚本正在启动新版本，简短等待后继续
+        qInfo() << "[Main] Update zip not found, waiting briefly for update to complete...";
+        
+        // 等待锁文件被删除（最多等待10秒，避免死锁）
+        int waitCount = 0;
+        const int maxWaitCount = 20; // 10秒 (20 * 500ms)
+        
+        while (QFile::exists(updateLockPath) && waitCount < maxWaitCount) {
+            QThread::msleep(500); // 每500ms检查一次
+            waitCount++;
+            
+            // 每2秒输出一次进度
+            if (waitCount % 4 == 0) {
+                qInfo() << "[Main] Still waiting for update... (" << (waitCount / 2) << "s / 10s)";
+            }
+        }
+        
+        if (QFile::exists(updateLockPath)) {
+            // 超时后仍然存在锁文件，可能更新失败或已完成
+            qWarning() << "[Main] Update lock file still exists after timeout, removing it";
+            qWarning() << "[Main] Continuing to start the application...";
+            QFile::remove(updateLockPath);
+        } else {
+            qInfo() << "[Main] Update completed, continuing normal startup";
+        }
+    }
+    
     // 初始化日志系统
     if (!initializeLogging()) {
         qCritical() << "Failed to initialize logging system";
@@ -209,8 +300,23 @@ int main(int argc, char *argv[])
     int fontId3 = QFontDatabase::addApplicationFont(":/fonts/AlibabaPuHuiTi-3-85-Bold.ttf");
 
     engine.load(QUrl(QStringLiteral("qrc:/qml/main.qml")));
-    if (engine.rootObjects().isEmpty())
+    if (engine.rootObjects().isEmpty()) {
+        // 清理共享内存
+        if (sharedMemory) {
+            sharedMemory->detach();
+            delete sharedMemory;
+        }
         return -1;
+    }
     
-    return app.exec();
+    int result = app.exec();
+    
+    // 程序退出时清理共享内存
+    qInfo() << "[Main] Application exiting, cleaning up shared memory";
+    if (sharedMemory) {
+        sharedMemory->detach();
+        delete sharedMemory;
+    }
+    
+    return result;
 }

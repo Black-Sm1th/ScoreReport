@@ -377,7 +377,10 @@ Rectangle {
                                         anchors.fill: parent
                                         cursorShape: Qt.PointingHandCursor
                                         onClicked: {
-                                            chatManager.copyToClipboard(modelData.content)
+                                            // 将字面量的\n转换为实际的换行符后再复制
+                                            var content = modelData.content || ""
+                                            var formattedContent = content.replace(/\\n/g, "\n")
+                                            chatManager.copyToClipboard(formattedContent)
                                             messageManager.success("已复制！")
                                         }
                                         onPressed: parent.scale = 0.9
