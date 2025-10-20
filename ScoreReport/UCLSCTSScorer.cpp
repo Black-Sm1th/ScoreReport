@@ -6,7 +6,7 @@ UCLSCTSScorer::UCLSCTSScorer(QObject* parent)
     : QObject(parent)
     , resultText("")
 {
-    setsourceText(QString::fromUtf8("评分依据：UCLS CTS 系统《Medicina 2021, 57(8), 816》\n版本时间：2021 年"));
+    setsourceText(QString::fromLocal8Bit("评分依据：UCLS CTS 系统《Medicina 2021, 57(8), 816》\n版本时间：2021 年"));
 }
 
 int UCLSCTSScorer::calculateScore(int nonEnhancedAttenuation, int maxEnhancementPhase, 
@@ -96,7 +96,7 @@ bool UCLSCTSScorer::needsOption(int stepIndex, int nonEnhancedAttenuation, int m
 
 void UCLSCTSScorer::finishScore(int score)
 {
-    QString title = QString::fromUtf8("UCLS CTS评分：") + QString::number(score) + QString::fromUtf8("分");
+    QString title = QString::fromLocal8Bit("UCLS CTS评分：") + QString::number(score) + QString::fromLocal8Bit("分");
     resultText = title;
     resultText += "\n";
     resultText += getsourceText();

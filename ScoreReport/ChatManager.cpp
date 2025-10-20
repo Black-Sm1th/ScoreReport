@@ -118,7 +118,7 @@ void ChatManager::resetWithWelcomeMessage()
     clearFiles();
     
     // 添加欢迎消息
-    addAiMessage(QString::fromUtf8("您好，我是您的AI辅助助手。请您随时提出问题，我将尽最大努力为您提供有价值的信息支持。"));
+    addAiMessage(QString::fromLocal8Bit("您好，我是您的AI辅助助手。请您随时提出问题，我将尽最大努力为您提供有价值的信息支持。"));
 }
 
 void ChatManager::regenerateLastResponse()
@@ -451,7 +451,7 @@ bool ChatManager::removeFile(int index)
     currentFiles.removeAt(index);
     setfiles(currentFiles);
     
-    emit fileOperationResult(QString::fromUtf8("文件已移除！"), "warning");
+    emit fileOperationResult(QString::fromLocal8Bit("文件已移除！"), "warning");
     
     qDebug() << "[ChatManager] File removed at index:" << index;
     return true;
@@ -621,7 +621,7 @@ QString ChatManager::readWordDocumentWithPowerShell(const QString& filePath, con
     process.waitForFinished(POWERSHELL_TIMEOUT);
     
     if (process.exitCode() == 0) {
-        QString content = QString::fromUtf8(process.readAllStandardOutput()).trimmed();
+        QString content = QString::fromLocal8Bit(process.readAllStandardOutput()).trimmed();
         if (!content.isEmpty()) {
             return content;
         }
@@ -787,7 +787,7 @@ QString FileReaderThread::readWordFileWithProgress(const QString& filePath, cons
     emitProgress(90);
     
     if (process.exitCode() == 0) {
-        QString content = QString::fromUtf8(process.readAllStandardOutput()).trimmed();
+        QString content = QString::fromLocal8Bit(process.readAllStandardOutput()).trimmed();
         if (!content.isEmpty()) {
             return content;
         }
@@ -1086,8 +1086,8 @@ int ChatManager::cleanupHangingWordProcesses()
     
     // 等待最多10秒完成清理
     if (process.waitForFinished(10000)) {
-        QString output = QString::fromUtf8(process.readAllStandardOutput());
-        QString errorOutput = QString::fromUtf8(process.readAllStandardError());
+        QString output = QString::fromLocal8Bit(process.readAllStandardOutput());
+        QString errorOutput = QString::fromLocal8Bit(process.readAllStandardError());
         
         if (!output.trimmed().isEmpty()) {
             qDebug() << "[ChatManager] Word cleanup output:" << output;

@@ -2063,7 +2063,7 @@ ApplicationWindow {
                     }
                 }
                 // 使用CHAT组件，指定使用独立的ChatManager
-                CHAT {
+                KnowledgeChat {
                     id: chatWindowContent
                     messageManager: chatWindowMessageBox
                     chatManager: $independentChatManager  // 使用独立的ChatManager实例

@@ -1,4 +1,4 @@
-#include "KnowledgeChatManager.h"
+﻿#include "KnowledgeChatManager.h"
 #include "ApiManager.h"
 #include "LoginManager.h"
 #include <QDateTime>
@@ -477,7 +477,7 @@ bool KnowledgeChatManager::removeFile(int index)
     currentFiles.removeAt(index);
     setfiles(currentFiles);
 
-    emit fileOperationResult(QString::fromUtf8("文件已移除！"), "warning");
+    emit fileOperationResult(QString::fromLocal8Bit("文件已移除！"), "warning");
 
     qDebug() << "[KnowledgeChatManager] File removed at index:" << index;
     return true;
@@ -649,7 +649,7 @@ QString KnowledgeChatManager::readWordDocumentWithPowerShell(const QString& file
     process.waitForFinished(POWERSHELL_TIMEOUT);
 
     if (process.exitCode() == 0) {
-        QString content = QString::fromUtf8(process.readAllStandardOutput()).trimmed();
+        QString content = QString::fromLocal8Bit(process.readAllStandardOutput()).trimmed();
         if (!content.isEmpty()) {
             return content;
         }
@@ -817,7 +817,7 @@ QString FileReaderThread1::readWordFileWithProgress(const QString& filePath, con
     emitProgress(90);
 
     if (process.exitCode() == 0) {
-        QString content = QString::fromUtf8(process.readAllStandardOutput()).trimmed();
+        QString content = QString::fromLocal8Bit(process.readAllStandardOutput()).trimmed();
         if (!content.isEmpty()) {
             return content;
         }
@@ -1118,8 +1118,8 @@ int KnowledgeChatManager::cleanupHangingWordProcesses()
 
     // 等待最多10秒完成清理
     if (process.waitForFinished(10000)) {
-        QString output = QString::fromUtf8(process.readAllStandardOutput());
-        QString errorOutput = QString::fromUtf8(process.readAllStandardError());
+        QString output = QString::fromLocal8Bit(process.readAllStandardOutput());
+        QString errorOutput = QString::fromLocal8Bit(process.readAllStandardError());
 
         if (!output.trimmed().isEmpty()) {
             qDebug() << "[KnowledgeChatManager] Word cleanup output:" << output;

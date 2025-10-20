@@ -30,7 +30,7 @@ TNMManager::TNMManager(QObject *parent)
     setselectedCancerType("");
     currentChatId = "";
     resultText = "";
-    setsourceText(QString::fromUtf8("评分依据：AJCC/UICC联合制定\n版本时间：第八版（2021年发布，2025年适用）"));
+    setsourceText(QString::fromLocal8Bit("评分依据：AJCC/UICC联合制定\n版本时间：第八版（2021年发布，2025年适用）"));
 }
 
 bool TNMManager::checkClipboard()
@@ -200,8 +200,8 @@ void TNMManager::onTnmAiQualityScoreResponse(bool success, const QString& messag
             setNConclusion(NC);
             setMConclusion(MC);
 
-            QString title = QString::fromUtf8("TNM分期：") + getTNMConclusion();
-            QString result = QString::fromUtf8("临床分期：") + getStage() + QString::fromUtf8("\nT分期 （原发肿瘤）：\n") + getTConclusion() + QString::fromUtf8("\nN分期 （区域淋巴结）：\n") + getNConclusion() + QString::fromUtf8("\nM分期 （原发肿瘤）：\n") + getMConclusion();
+            QString title = QString::fromLocal8Bit("TNM分期：") + getTNMConclusion();
+            QString result = QString::fromLocal8Bit("临床分期：") + getStage() + QString::fromLocal8Bit("\nT分期 （原发肿瘤）：\n") + getTConclusion() + QString::fromLocal8Bit("\nN分期 （区域淋巴结）：\n") + getNConclusion() + QString::fromLocal8Bit("\nM分期 （原发肿瘤）：\n") + getMConclusion();
             resultText = title;
             resultText += "\n";
             resultText += result;
@@ -216,7 +216,7 @@ void TNMManager::onTnmAiQualityScoreResponse(bool success, const QString& messag
             QString T = detailData.value("basis").toObject().value("T").toString();
             QString N = detailData.value("basis").toObject().value("N").toString();
             QString M = detailData.value("basis").toObject().value("M").toString();
-            QString infoDetail = QString::fromUtf8("T：") + T + QString::fromUtf8("\n\nN：") + N + QString::fromUtf8("\n\nM：") + M;
+            QString infoDetail = QString::fromLocal8Bit("T：") + T + QString::fromLocal8Bit("\n\nN：") + N + QString::fromLocal8Bit("\n\nM：") + M;
             QVariantList list;
 
             for (const QJsonValue& value : tips) {

@@ -74,7 +74,7 @@ void ApiManager::makePostRequest(const QString& endpoint, const QJsonObject& dat
     }
     
     QByteArray body = QJsonDocument(data).toJson(QJsonDocument::Indented);
-    qDebug().noquote() << "[ApiManager] POST request body:" << QString::fromUtf8(body);
+    qDebug().noquote() << "[ApiManager] POST request body:" << QString::fromLocal8Bit(body);
     
     QNetworkReply* reply = m_networkManager->post(request, body);
     m_activeReplies.insert(reply);  // 跟踪活跃的请求
@@ -201,7 +201,7 @@ void ApiManager::streamChat(const QString& query, const QString& userId, const Q
     request.setRawHeader("X-Request-Type", "stream-chat");
     
     QByteArray body = QJsonDocument(requestData).toJson(QJsonDocument::Indented);
-    qDebug().noquote() << "[ApiManager] Stream chat request body:" << QString::fromUtf8(body);
+    qDebug().noquote() << "[ApiManager] Stream chat request body:" << QString::fromLocal8Bit(body);
     
     QNetworkReply* reply = m_networkManager->post(request, body);
     m_activeReplies.insert(reply);
@@ -247,7 +247,7 @@ void ApiManager::streamKnowledgeChat(const QString& query, const QString& userId
     request.setRawHeader("X-Request-Type", "stream-knowledge-chat");
     
     QByteArray body = QJsonDocument(requestData).toJson(QJsonDocument::Indented);
-    qDebug().noquote() << "[ApiManager] Stream knowledge chat request body:" << QString::fromUtf8(body);
+    qDebug().noquote() << "[ApiManager] Stream knowledge chat request body:" << QString::fromLocal8Bit(body);
     
     QNetworkReply* reply = m_networkManager->post(request, body);
     m_activeReplies.insert(reply);
@@ -694,7 +694,7 @@ void ApiManager::onStreamDataReady()
         return;
     }
     
-    QString newDataString = QString::fromUtf8(data);
+    QString newDataString = QString::fromLocal8Bit(data);
     qDebug() << "[ApiManager] Stream data received:" << newDataString;
     
     // 将新数据追加到缓冲区
@@ -808,7 +808,7 @@ void ApiManager::onStreamKnowledgeDataReady()
         return;
     }
     
-    QString newDataString = QString::fromUtf8(data);
+    QString newDataString = QString::fromLocal8Bit(data);
     qDebug() << "[ApiManager] Knowledge stream data received:" << newDataString;
     
     // 将新数据追加到缓冲区
@@ -955,7 +955,7 @@ void ApiManager::onStreamKnowledgeDataReady()
  */
 void ApiManager::onNetworkReply(QNetworkReply* reply)
 {
-    QString requestType = QString::fromUtf8(reply->request().rawHeader("X-Request-Type"));
+    QString requestType = QString::fromLocal8Bit(reply->request().rawHeader("X-Request-Type"));
     QUrl replyUrl = reply->url();
     
     qDebug() << "[ApiManager] Reply received from:" << replyUrl.toString() 
@@ -967,7 +967,7 @@ void ApiManager::onNetworkReply(QNetworkReply* reply)
     if (reply->error() == QNetworkReply::NoError) {
         // 网络请求成功，解析响应数据
         QByteArray responseData = reply->readAll();
-        qDebug().noquote() << "[ApiManager] Response data:" << QString::fromUtf8(responseData);
+        qDebug().noquote() << "[ApiManager] Response data:" << QString::fromLocal8Bit(responseData);
         
         // 对于流式聊天请求，特殊处理
         if (requestType == "stream-chat") {
@@ -1213,7 +1213,7 @@ void ApiManager::abortRequestsByType(const QString& requestType)
     
     for (QNetworkReply* reply : repliesToCheck) {
         if (reply && reply->isRunning()) {
-            QString replyType = QString::fromUtf8(reply->request().rawHeader("X-Request-Type"));
+            QString replyType = QString::fromLocal8Bit(reply->request().rawHeader("X-Request-Type"));
             if (replyType == requestType) {
                 qDebug() << "[ApiManager] Aborting request:" << reply->url().toString() 
                          << "Type:" << replyType;
@@ -1248,7 +1248,7 @@ void ApiManager::abortStreamChatByChatId(const QString& chatId)
 
     for (QNetworkReply* reply : repliesToCheck) {
         if (reply && reply->isRunning()) {
-            QString replyType = QString::fromUtf8(reply->request().rawHeader("X-Request-Type"));
+            QString replyType = QString::fromLocal8Bit(reply->request().rawHeader("X-Request-Type"));
             QString replyChatId = m_streamChatIds.value(reply, "");
 
             // 只中断匹配chatId的流式聊天请求

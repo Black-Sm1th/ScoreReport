@@ -1,4 +1,4 @@
-#include "GlobalMouseListener.h"
+﻿#include "GlobalMouseListener.h"
 
 HHOOK GlobalMouseListener::m_hook = nullptr;
 GlobalMouseListener* GlobalMouseListener::m_instance = nullptr;
