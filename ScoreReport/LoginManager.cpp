@@ -444,7 +444,7 @@ void LoginManager::clearLogFiles()
         }
     }
     
-    qDebug() << QString("[LoginManager] Log cleanup completed: %1/%2 files deleted from %3")
+    qDebug() << QStringLiteral("[LoginManager] Log cleanup completed: %1/%2 files deleted from %3")
                 .arg(deletedCount).arg(totalCount).arg(logDir);
     
     // 如果所有文件都被删除，尝试删除空的logs目录

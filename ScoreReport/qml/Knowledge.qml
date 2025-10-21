@@ -774,22 +774,22 @@ Rectangle {
                                             color: "#D9000000"
                                         }
                                         
-                        CustomButton {
-                            anchors.right: parent.right
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: qsTr("批量上传")
-                            width: 80
-                            height: 28
-                            radius: 4
-                            fontSize: 12
-                            borderWidth: 1
-                            borderColor: "#33006BFF"
-                            backgroundColor: "#1A006BFF"
-                            textColor: "#006BFF"
-                            onClicked: {
-                                fileDialog.open()
-                            }
-                        }
+                                        CustomButton {
+                                            anchors.right: parent.right
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            text: qsTr("批量上传")
+                                            width: 80
+                                            height: 28
+                                            radius: 4
+                                            fontSize: 12
+                                            borderWidth: 1
+                                            borderColor: "#33006BFF"
+                                            backgroundColor: "#1A006BFF"
+                                            textColor: "#006BFF"
+                                            onClicked: {
+                                                fileDialog.open()
+                                            }
+                                        }
                                     }
                                     
                                     // 文件列表

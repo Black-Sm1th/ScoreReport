@@ -56,7 +56,7 @@ void customMessageOutput(QtMsgType type, const QMessageLogContext &context, cons
     }
     
     // 格式化日志消息
-    QString formattedMsg = QString("[%1] [%2] %3").arg(timestamp, typeStr, msg);
+    QString formattedMsg = QStringLiteral("[%1] [%2] %3").arg(timestamp, typeStr, msg);
     
     // 输出到控制台（保持原有行为）
     fprintf(stderr, "%s\n", formattedMsg.toLocal8Bit().constData());
@@ -84,7 +84,7 @@ bool initializeLogging()
     
     // 生成日志文件名（包含时间戳）
     QString timestamp = QDateTime::currentDateTime().toString("yyyy-MM-dd_hh-mm-ss");
-    QString logFileName = QString("ScoreReport_%1.log").arg(timestamp);
+    QString logFileName = QStringLiteral("ScoreReport_%1.log").arg(timestamp);
     QString logFilePath = QDir(logDir).filePath(logFileName);
     
     // 创建日志文件
@@ -101,7 +101,7 @@ bool initializeLogging()
     g_logStream->setCodec("UTF-8");
     
     // 写入日志启动信息
-    QString startMsg = QString("========== ScoreReport Log Started at %1 ==========")
+    QString startMsg = QStringLiteral("========== ScoreReport Log Started at %1 ==========")
                        .arg(QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss"));
     *g_logStream << startMsg << Qt::endl;
     g_logStream->flush();
@@ -116,7 +116,7 @@ bool initializeLogging()
 void cleanupLogging()
 {
     if (g_logStream) {
-        QString endMsg = QString("========== ScoreReport Log Ended at %1 ==========")
+        QString endMsg = QStringLiteral("========== ScoreReport Log Ended at %1 ==========")
                          .arg(QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss"));
         *g_logStream << endMsg << Qt::endl;
         g_logStream->flush();
