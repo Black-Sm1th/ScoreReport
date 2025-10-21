@@ -910,15 +910,15 @@ ApplicationWindow {
                         contentRect.currentScore = -1
                     }
                 }
-                CHAT{
-                    id:chatView
-                    visible: contentRect.currentIndex === 0 && contentRect.currentScore === 6
-                    messageManager: dialogMessageBox
-                    chatManager: $chatManager
-                    onExitScore: {
-                        contentRect.currentScore = -1
-                    }
-                }
+                // CHAT{
+                //     id:chatView
+                //     visible: contentRect.currentIndex === 0 && contentRect.currentScore === 6
+                //     messageManager: dialogMessageBox
+                //     chatManager: $chatManager
+                //     onExitScore: {
+                //         contentRect.currentScore = -1
+                //     }
+                // }
                 Knowledge{
                     id:knowledgeView
                     visible: contentRect.currentIndex === 0 && contentRect.currentScore === 8
