@@ -201,7 +201,7 @@ void KnowledgeChatManager::endAnalysis(bool clearfile)
 
         QVariantMap interruptMessage;
         interruptMessage["type"] = "interrupt";
-        interruptMessage["content"] = "消息已中断！";
+        interruptMessage["content"] = QStringLiteral("消息已中断！");
         interruptMessage["timestamp"] = QDateTime::currentDateTime().toString("hh:mm");
         currentMessages.append(interruptMessage);
 
@@ -299,32 +299,33 @@ QString KnowledgeChatManager::buildMessageWithFiles(const QString& userMessage, 
         if (!content.isEmpty()) {
             QString extension = QFileInfo(filePath).suffix().toLower();
             if (SUPPORTED_TEXT_FORMATS.contains(extension)) {
-                fileContents << QString("【文件：%1】\n%2").arg(fileName, content);
-            } else {
+                fileContents << QStringLiteral("【文件：%1】\n%2").arg(fileName, content);
+            }
+            else {
                 fileContents << content;
             }
         }
     }
 
     return fileContents.isEmpty() ? userMessage :
-        fileContents.join("\n\n") + "\n\n【用户问题】\n" + userMessage;
+        fileContents.join("\n\n") + QStringLiteral("\n\n【用户问题】\n") + userMessage;
 }
 
 QString KnowledgeChatManager::validateFileForAdding(const QString& filePath, const QString& fileName)
 {
     // 验证文件数量限制
     if (getfiles().size() >= getmaxFileCount()) {
-        return QString("无法添加 %1：最多只能上传%2个文件").arg(fileName).arg(getmaxFileCount());
+        return QStringLiteral("无法添加 %1：最多只能上传%2个文件").arg(fileName).arg(getmaxFileCount());
     }
 
     // 验证文件格式
     if (!isValidFileFormat(filePath)) {
-        return QString("无法添加 %1：不支持的文件格式").arg(fileName);
+        return QStringLiteral("无法添加 %1：不支持的文件格式").arg(fileName);
     }
 
     // 验证文件大小
     if (!isFileSizeValid(filePath)) {
-        return QString("无法添加 %1：文件大小超过%2限制").arg(fileName).arg(formatFileSize(getmaxFileSize()));
+        return QStringLiteral("无法添加 %1：文件大小超过%2限制").arg(fileName).arg(formatFileSize(getmaxFileSize()));
     }
 
     // 检查文件是否已存在
@@ -332,7 +333,7 @@ QString KnowledgeChatManager::validateFileForAdding(const QString& filePath, con
     for (const auto& file : currentFiles) {
         QVariantMap fileMap = file.toMap();
         if (fileMap["path"].toString() == filePath) {
-            return QString("无法添加 %1：文件已存在").arg(fileName);
+            return QStringLiteral("无法添加 %1：文件已存在").arg(fileName);
         }
     }
 
@@ -375,13 +376,13 @@ void KnowledgeChatManager::onStreamChatFinished(bool success, const QString& mes
     if (!success) {
         // 处理错误情况
         removeThinkingMessage();
-        addAiMessage(QString("抱歉，发生了错误：%1").arg(message));
+        addAiMessage(QStringLiteral("抱歉，发生了错误：%1").arg(message));
     }
 
     // 处理空响应
     if (m_currentAiMessage.isEmpty()) {
         removeThinkingMessage();
-        addAiMessage("抱歉，我无法回复您的消息。");
+        addAiMessage(QStringLiteral("抱歉，我无法回复您的消息。"));
     }
 
     m_currentAiMessage.clear();
@@ -439,7 +440,7 @@ int KnowledgeChatManager::addFiles(const QStringList& filePaths)
 
         if (skipCount > 0) {
             if (!summary.isEmpty()) summary += "，";
-            summary += QString("超出文件数量限制，已忽略 %1 个文件").arg(skipCount);
+            summary += QStringLiteral("超出文件数量限制，已忽略 %1 个文件").arg(skipCount);
             msgType = "warning";
         }
 
@@ -550,10 +551,10 @@ bool KnowledgeChatManager::isFileSizeValid(const QString& filePath)
 
 QString KnowledgeChatManager::formatFileSize(qint64 bytes)
 {
-    if (bytes <= 0) return "0 字节";
+    if (bytes <= 0) return QStringLiteral("0 字节");
 
     const qint64 k = 1024;
-    const QStringList sizes = {"字节", "KB", "MB", "GB"};
+    const QStringList sizes = { QStringLiteral("字节"), "KB", "MB", "GB" };
     int i = 0;
 
     double size = bytes;
@@ -563,9 +564,10 @@ QString KnowledgeChatManager::formatFileSize(qint64 bytes)
     }
 
     if (i == 0) {
-        return QString("%1%2").arg(static_cast<int>(size)).arg(sizes[i]);
-    } else {
-        return QString("%1%2").arg(size, 0, 'f', 1).arg(sizes[i]);
+        return QStringLiteral("%1%2").arg(static_cast<int>(size)).arg(sizes[i]);
+    }
+    else {
+        return QStringLiteral("%1%2").arg(size, 0, 'f', 1).arg(sizes[i]);
     }
 }
 
@@ -609,7 +611,7 @@ QString KnowledgeChatManager::readFileContent(const QString& filePath)
     }
     else if (extension == "jpg" || extension == "jpeg" || extension == "png" ||
         extension == "bmp" || extension == "gif") {
-        return QString("[图片文件: %1]").arg(fileInfo.fileName());
+        return QStringLiteral("[图片文件: %1]").arg(fileInfo.fileName());
     }
 
     return QString(); // 不支持的格式
@@ -618,12 +620,12 @@ QString KnowledgeChatManager::readFileContent(const QString& filePath)
 
 QString KnowledgeChatManager::readDocxContent(const QString& filePath)
 {
-    return readWordDocumentWithPowerShell(filePath, "DOCX文档: %1 - 内容读取需要Microsoft Word");
+    return readWordDocumentWithPowerShell(filePath, QStringLiteral("DOCX文档: %1 - 内容读取需要Microsoft Word"));
 }
 
 QString KnowledgeChatManager::readDocContent(const QString& filePath)
 {
-    return readWordDocumentWithPowerShell(filePath, "DOC文档: %1 - 内容读取需要Microsoft Word，建议转换为DOCX格式");
+    return readWordDocumentWithPowerShell(filePath, QStringLiteral("DOC文档: %1 - 内容读取需要Microsoft Word，建议转换为DOCX格式"));
 }
 
 QString KnowledgeChatManager::readWordDocumentWithPowerShell(const QString& filePath, const QString& fallbackMessage)
@@ -652,7 +654,7 @@ QString KnowledgeChatManager::readWordDocumentWithPowerShell(const QString& file
     }
 
     qDebug() << "[KnowledgeChatManager] PowerShell method failed for" << fileInfo.suffix();
-    return QString("[%1]").arg(fallbackMessage.arg(fileInfo.fileName()));
+    return QStringLiteral("[%1]").arg(fallbackMessage.arg(fileInfo.fileName()));
 }
 
 QString KnowledgeChatManager::extractTextFromXml(const QString& xmlContent)
@@ -688,7 +690,7 @@ void FileReaderThread1::run()
 
         // 验证文件存在性
         if (!fileInfo.exists() || !fileInfo.isFile()) {
-            errorMessage = QString("文件不存在: %1").arg(m_fileName);
+            errorMessage = QStringLiteral("文件不存在: %1").arg(m_fileName);
             emit readCompleted(m_filePath, content, success, errorMessage);
             return;
         }
@@ -719,7 +721,7 @@ void FileReaderThread1::run()
             success = true;
         }
         else {
-            errorMessage = QString("不支持的文件格式: %1").arg(extension);
+            errorMessage = QStringLiteral("不支持的文件格式: %1").arg(extension);
         }
 
         if (isInterruptionRequested()) {
@@ -730,13 +732,15 @@ void FileReaderThread1::run()
         emitProgress(100);
 
         if (!success && errorMessage.isEmpty()) {
-            errorMessage = QString("读取文件失败: %1").arg(m_fileName);
+            errorMessage = QStringLiteral("读取文件失败: %1").arg(m_fileName);
         }
 
-    } catch (const std::exception& e) {
-        errorMessage = QString("读取文件时发生异常: %1").arg(e.what());
-    } catch (...) {
-        errorMessage = QString("读取文件时发生未知错误: %1").arg(m_fileName);
+    }
+    catch (const std::exception& e) {
+        errorMessage = QStringLiteral("读取文件时发生异常: %1").arg(e.what());
+    }
+    catch (...) {
+        errorMessage = QStringLiteral("读取文件时发生未知错误: %1").arg(m_fileName);
     }
 
     emit readCompleted(m_filePath, content, success, errorMessage);
@@ -765,12 +769,12 @@ QString FileReaderThread1::readTextFile(const QString& filePath)
 
 QString FileReaderThread1::readDocxFile(const QString& filePath)
 {
-    return readWordFileWithProgress(filePath, "DOCX文档: %1 - 内容读取需要Microsoft Word");
+    return readWordFileWithProgress(filePath, QStringLiteral("DOCX文档: %1 - 内容读取需要Microsoft Word"));
 }
 
 QString FileReaderThread1::readDocFile(const QString& filePath)
 {
-    return readWordFileWithProgress(filePath, "DOC文档: %1 - 内容读取需要Microsoft Word，建议转换为DOCX格式");
+    return readWordFileWithProgress(filePath, QStringLiteral("DOC文档: %1 - 内容读取需要Microsoft Word，建议转换为DOCX格式"));
 }
 
 QString FileReaderThread1::readWordFileWithProgress(const QString& filePath, const QString& fallbackMessage)
@@ -817,7 +821,7 @@ QString FileReaderThread1::readWordFileWithProgress(const QString& filePath, con
         }
     }
 
-    return QString("[%1]").arg(fallbackMessage.arg(fileInfo.fileName()));
+    return QStringLiteral("[%1]").arg(fallbackMessage.arg(fileInfo.fileName()));
 }
 
 QString FileReaderThread1::readImageFile(const QString& filePath)
@@ -828,7 +832,7 @@ QString FileReaderThread1::readImageFile(const QString& filePath)
 
     emitProgress(90);
 
-    return QString("[图片文件: %1]").arg(fileInfo.fileName());
+    return QStringLiteral("[图片文件: %1]").arg(fileInfo.fileName());
 }
 
 void FileReaderThread1::emitProgress(int percentage)
@@ -1033,7 +1037,7 @@ void KnowledgeChatManager::onFileReadCompleted(const QString& filePath, const QS
         emit fileOperationResult(errorMessage, "error");
     } else if (success) {
         QString fileName = QFileInfo(filePath).fileName();
-        emit fileOperationResult(QString("文件 %1 读取完成").arg(fileName), "success");
+        emit fileOperationResult(QStringLiteral("文件 %1 读取完成").arg(fileName), "success");
     }
 
     bool noTasksRemaining = false;
@@ -1219,13 +1223,13 @@ void KnowledgeChatManager::onStreamKnowledgeChatFinished(bool success, const QSt
     if (!success) {
         // 处理错误情况
         removeThinkingMessage();
-        addAiMessage(QString("抱歉，发生了错误：%1").arg(message));
+        addAiMessage(QStringLiteral("抱歉，发生了错误：%1").arg(message));
     }
 
     // 处理空响应
     if (m_currentAiMessage.isEmpty()) {
         removeThinkingMessage();
-        addAiMessage("抱歉，我无法回复您的消息。");
+        addAiMessage(QStringLiteral("抱歉，我无法回复您的消息。"));
     }
 
     m_currentAiMessage.clear();

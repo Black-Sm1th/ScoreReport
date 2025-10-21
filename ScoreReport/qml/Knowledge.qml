@@ -774,31 +774,32 @@ Rectangle {
                                             color: "#D9000000"
                                         }
                                         
-                        CustomButton {
-                            anchors.right: parent.right
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: qsTr("批量上传")
-                            width: 80
-                            height: 28
-                            radius: 4
-                            fontSize: 12
-                            borderWidth: 1
-                            borderColor: "#33006BFF"
-                            backgroundColor: "#1A006BFF"
-                            textColor: "#006BFF"
-                            onClicked: {
-                                fileDialog.open()
-                            }
-                        }
+                                        CustomButton {
+                                            anchors.right: parent.right
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            text: qsTr("批量上传")
+                                            width: 80
+                                            height: 28
+                                            radius: 4
+                                            fontSize: 12
+                                            borderWidth: 1
+                                            borderColor: "#33006BFF"
+                                            backgroundColor: "#1A006BFF"
+                                            textColor: "#006BFF"
+                                            onClicked: {
+                                                fileDialog.open()
+                                            }
+                                        }
                                     }
                                     
                                     // 文件列表
                                     Repeater {
                                         model: {
-                                            if (!$knowledgeManager.isLoadingDetail && 
-                                                isExpanded && 
-                                                $knowledgeManager.currentKnowledgeDetail.files) {
-                                                return $knowledgeManager.currentKnowledgeDetail.files
+                                            if (!$knowledgeManager.isLoadingDetail && isExpanded) {
+                                                var files = $knowledgeManager.currentKnowledgeDetail.files
+                                                if (files !== undefined && files !== null) {
+                                                    return files
+                                                }
                                             }
                                             return []
                                         }
@@ -913,10 +914,13 @@ Rectangle {
                                         color: "#40000000"
                                         horizontalAlignment: Text.AlignHCenter
                                         verticalAlignment: Text.AlignVCenter
-                                        visible: !$knowledgeManager.isLoadingDetail && 
-                                                isExpanded && 
-                                                $knowledgeManager.currentKnowledgeDetail.files && 
-                                                $knowledgeManager.currentKnowledgeDetail.files.length === 0
+                                        visible: {
+                                            if (!$knowledgeManager.isLoadingDetail && isExpanded) {
+                                                var files = $knowledgeManager.currentKnowledgeDetail.files
+                                                return files !== undefined && files !== null && files.length === 0
+                                            }
+                                            return false
+                                        }
                                     }
                                 }
                             }

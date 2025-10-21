@@ -77,7 +77,7 @@ void LanguageManager::loadTranslation(const QString& language)
     QGuiApplication::removeTranslator(m_translator);
     
     // 构建翻译文件路径
-    QString translationPath = QString(":/translations/ScoreReport_%1.qm").arg(language);
+    QString translationPath = QStringLiteral(":/translations/ScoreReport_%1.qm").arg(language);
     
     // 加载翻译文件
     if (m_translator->load(translationPath)) {

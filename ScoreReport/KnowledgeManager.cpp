@@ -100,7 +100,7 @@ void KnowledgeManager::onKnowledgeBaseListResponse(bool success, const QString& 
     setknowledgeList(knowledgeItems);
 
     // 发送更新完成信号
-    emit knowledgeListUpdated(true, QString("成功获取 %1 个知识库").arg(knowledgeItems.size()));
+    emit knowledgeListUpdated(true, QStringLiteral("成功获取 %1 个知识库").arg(knowledgeItems.size()));
 }
 
 /**
@@ -203,7 +203,7 @@ void KnowledgeManager::onKnowledgeBaseDetailResponse(bool success, const QString
     QString knowledgeId = data["id"].toString();  // 改为字符串格式
     // 发送更新完成信号
     emit knowledgeDetailUpdated(true,
-        QString("成功获取知识库详情，包含 %1 个文件").arg(fileList.size()),
+        QStringLiteral("成功获取知识库详情，包含 %1 个文件").arg(fileList.size()),
         knowledgeId);
 }
 
@@ -218,7 +218,7 @@ void KnowledgeManager::uploadFileToCurrentKnowledge(const QString& filePath)
     QString currentKnowledgeId = getexpandedKnowledgeId();
     if (currentKnowledgeId.isEmpty()) {
         qWarning() << "[KnowledgeManager] No knowledge base is currently expanded for file upload";
-        emit fileUploadCompleted(false, "请先选择一个知识库");
+        emit fileUploadCompleted(false, QStringLiteral("请先选择一个知识库"));
         return;
     }
 
@@ -228,7 +228,7 @@ void KnowledgeManager::uploadFileToCurrentKnowledge(const QString& filePath)
 
     if (userId.isEmpty() || userId == "-1") {
         qWarning() << "[KnowledgeManager] User not logged in or invalid user ID";
-        emit fileUploadCompleted(false, "请先登录");
+        emit fileUploadCompleted(false, QStringLiteral("请先登录"));
         return;
     }
 
@@ -249,14 +249,14 @@ void KnowledgeManager::uploadMultipleFilesToCurrentKnowledge(const QStringList& 
 {
     if (filePaths.isEmpty()) {
         qWarning() << "[KnowledgeManager] No files to upload";
-        emit batchUploadCompleted(0, 0, "没有选择文件");
+        emit batchUploadCompleted(0, 0, QStringLiteral("没有选择文件"));
         return;
     }
 
     QString currentKnowledgeId = getexpandedKnowledgeId();
     if (currentKnowledgeId.isEmpty()) {
         qWarning() << "[KnowledgeManager] No knowledge base is currently expanded for file upload";
-        emit batchUploadCompleted(0, filePaths.size(), "请先选择一个知识库");
+        emit batchUploadCompleted(0, filePaths.size(), QStringLiteral("请先选择一个知识库"));
         return;
     }
 
@@ -266,7 +266,7 @@ void KnowledgeManager::uploadMultipleFilesToCurrentKnowledge(const QStringList& 
 
     if (userId.isEmpty() || userId == "-1") {
         qWarning() << "[KnowledgeManager] User not logged in or invalid user ID";
-        emit batchUploadCompleted(0, filePaths.size(), "请先登录");
+        emit batchUploadCompleted(0, filePaths.size(), QStringLiteral("请先登录"));
         return;
     }
 
@@ -294,7 +294,7 @@ void KnowledgeManager::deleteKnowledgeFile(const QString& fileId)
     QString currentKnowledgeId = getexpandedKnowledgeId();
     if (currentKnowledgeId.isEmpty()) {
         qWarning() << "[KnowledgeManager] No knowledge base is currently expanded for file deletion";
-        emit fileDeleteCompleted(false, "请先选择一个知识库");
+        emit fileDeleteCompleted(false, QStringLiteral("请先选择一个知识库"));
         return;
     }
     // 调用ApiManager删除文件（批量删除接口，传入单个文件ID）
@@ -334,7 +334,7 @@ void KnowledgeManager::onFileUploadResponse(bool success, const QString& message
             }
 
             // 发送批量上传完成信号
-            QString batchMessage = QString("完成批量上传：成功 %1/%2 个文件")
+            QString batchMessage = QStringLiteral("完成批量上传：成功 %1/%2 个文件")
                 .arg(m_successUploadCount).arg(m_totalUploadCount);
             emit batchUploadCompleted(m_successUploadCount, m_totalUploadCount, batchMessage);
 
@@ -355,7 +355,7 @@ void KnowledgeManager::onFileUploadResponse(bool success, const QString& message
                 getKnowledgeDetail(currentKnowledgeId);
             }
 
-            emit fileUploadCompleted(true, "文件上传成功");
+            emit fileUploadCompleted(true, QStringLiteral("文件上传成功"));
             qDebug() << "[KnowledgeManager] File upload successful";
         }
         else {
@@ -382,7 +382,7 @@ void KnowledgeManager::onFileDeleteResponse(bool success, const QString& message
             getKnowledgeDetail(currentKnowledgeId);
         }
 
-        emit fileDeleteCompleted(true, "文件删除成功");
+        emit fileDeleteCompleted(true, QStringLiteral("文件删除成功"));
     }
     else {
         qWarning() << "[KnowledgeManager] File delete failed:" << message;
@@ -402,7 +402,7 @@ void KnowledgeManager::createKnowledgeBase(const QString& name, const QString& d
 {
     if (name.isEmpty()) {
         qWarning() << "[KnowledgeManager] Knowledge base name cannot be empty";
-        emit knowledgeBaseCreateCompleted(false, "知识库名称不能为空");
+        emit knowledgeBaseCreateCompleted(false, QStringLiteral("知识库名称不能为空"));
         return;
     }
 
@@ -423,7 +423,7 @@ void KnowledgeManager::deleteKnowledgeBase(const QString& knowledgeId)
 {
     if (knowledgeId.isEmpty()) {
         qWarning() << "[KnowledgeManager] Knowledge base ID cannot be empty";
-        emit knowledgeBaseDeleteCompleted(false, "知识库ID不能为空");
+        emit knowledgeBaseDeleteCompleted(false, QStringLiteral("知识库ID不能为空"));
         return;
     }
 
@@ -447,7 +447,7 @@ void KnowledgeManager::onCreateKnowledgeBaseResponse(bool success, const QString
         // 创建成功后，自动刷新知识库列表
         updateKnowledgeList();
 
-        emit knowledgeBaseCreateCompleted(true, "知识库创建成功");
+        emit knowledgeBaseCreateCompleted(true, QStringLiteral("知识库创建成功"));
         qDebug() << "[KnowledgeManager] Knowledge base created successfully";
     }
     else {
@@ -472,7 +472,7 @@ void KnowledgeManager::onDeleteKnowledgeBaseResponse(bool success, const QString
         setcurrentKnowledgeDetail(QVariantMap());
         updateKnowledgeList();
 
-        emit knowledgeBaseDeleteCompleted(true, "知识库删除成功");
+        emit knowledgeBaseDeleteCompleted(true, QStringLiteral("知识库删除成功"));
         qDebug() << "[KnowledgeManager] Knowledge base deleted successfully";
     }
     else {
@@ -494,8 +494,6 @@ void KnowledgeManager::resetAllStates()
 
     // 清空当前知识库详情
     setcurrentKnowledgeDetail(QVariantMap());
-
-    qDebug() << "[KnowledgeManager] All states have been reset";
 }
 
 /**
@@ -511,13 +509,13 @@ void KnowledgeManager::editKnowledgeBase(const QString& knowledgeId, const QStri
 {
     if (knowledgeId.isEmpty()) {
         qWarning() << "[KnowledgeManager] Knowledge base ID cannot be empty for editing";
-        emit knowledgeBaseEditCompleted(false, "知识库ID不能为空");
+        emit knowledgeBaseEditCompleted(false, QStringLiteral("知识库ID不能为空"));
         return;
     }
 
     if (name.isEmpty()) {
         qWarning() << "[KnowledgeManager] Knowledge base name cannot be empty";
-        emit knowledgeBaseEditCompleted(false, "知识库名称不能为空");
+        emit knowledgeBaseEditCompleted(false, QStringLiteral("知识库名称不能为空"));
         return;
     }
 
@@ -541,7 +539,7 @@ void KnowledgeManager::onUpdateKnowledgeBaseResponse(bool success, const QString
         // 更新成功后，自动刷新知识库列表
         updateKnowledgeList();
 
-        emit knowledgeBaseEditCompleted(true, "知识库编辑成功");
+        emit knowledgeBaseEditCompleted(true, QStringLiteral("知识库编辑成功"));
         qDebug() << "[KnowledgeManager] Knowledge base updated successfully";
     }
     else {

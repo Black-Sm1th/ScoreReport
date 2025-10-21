@@ -465,7 +465,7 @@ void ApiManager::uploadFileToKnowledgeBase(const QString& filePath, const QStrin
     QHttpPart filePart;
     filePart.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("application/octet-stream"));
     filePart.setHeader(QNetworkRequest::ContentDispositionHeader, 
-                       QVariant(QString("form-data; name=\"files\"; filename=\"%1\"").arg(fileInfo.fileName())));
+                       QVariant(QStringLiteral("form-data; name=\"files\"; filename=\"%1\"").arg(fileInfo.fileName())));
     filePart.setBodyDevice(file);
     file->setParent(multiPart);
     
