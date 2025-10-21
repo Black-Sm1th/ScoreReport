@@ -756,7 +756,7 @@ void ApiManager::onStreamDataReady()
             if (content != "[DONE]") {
                 if (eventType == "message") {
                     // 消息事件，直接发送文本内容（保留所有空格）
-                    qDebug() << "[ApiManager] Sending content:" << QStringLiteral("'%1'").arg(content) << "Length:" << content.length();
+                    qDebug() << "[ApiManager] Sending content:" << QString::fromUtf8("'%1'").arg(content) << "Length:" << content.length();
                     emit streamChatResponse(content, chatId);
                 } else if (eventType == "complete") {
                     // 完成事件，发送完成信号
@@ -870,7 +870,7 @@ void ApiManager::onStreamKnowledgeDataReady()
             if (content != "[DONE]") {
                 if (eventType == "message") {
                     // 消息事件，直接发送文本内容（保留所有空格）
-                    qDebug() << "[ApiManager] Knowledge sending content:" << QStringLiteral("'%1'").arg(content) << "Length:" << content.length();
+                    qDebug() << "[ApiManager] Knowledge sending content:" << QString::fromUtf8("'%1'").arg(content) << "Length:" << content.length();
                     emit streamKnowledgeChatResponse(content, chatId);
                 } else if (eventType == "complete") {
                     // 完成事件，解析JSON数据并发送元数据

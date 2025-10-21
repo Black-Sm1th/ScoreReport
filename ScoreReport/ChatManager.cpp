@@ -118,7 +118,7 @@ void ChatManager::resetWithWelcomeMessage()
     clearFiles();
     
     // 添加欢迎消息
-    addAiMessage(QString::fromUtf8("您好，我是您的AI辅助助手。请您随时提出问题，我将尽最大努力为您提供有价值的信息支持。"));
+    addAiMessage(QStringLiteral("您好，我是您的AI辅助助手。请您随时提出问题，我将尽最大努力为您提供有价值的信息支持。"));
 }
 
 void ChatManager::regenerateLastResponse()
@@ -451,7 +451,7 @@ bool ChatManager::removeFile(int index)
     currentFiles.removeAt(index);
     setfiles(currentFiles);
     
-    emit fileOperationResult(QString::fromUtf8("文件已移除！"), "warning");
+    emit fileOperationResult(QStringLiteral("文件已移除！"), "warning");
     
     qDebug() << "[ChatManager] File removed at index:" << index;
     return true;

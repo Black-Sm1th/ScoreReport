@@ -237,7 +237,7 @@ void KnowledgeChatManager::addThinkingMessage()
 {
     QVariantMap thinkingMessage;
     thinkingMessage["type"] = "thinking";
-    thinkingMessage["content"] = getselectedKnowledgeBases().isEmpty() ?  "思考中" : "查询中";
+    thinkingMessage["content"] = getselectedKnowledgeBases().isEmpty() ? QStringLiteral("思考中") : QStringLiteral("查询中");
     thinkingMessage["timestamp"] = QDateTime::currentDateTime().toString("hh:mm");
 
     QVariantList currentMessages = getmessages();
@@ -477,7 +477,7 @@ bool KnowledgeChatManager::removeFile(int index)
     currentFiles.removeAt(index);
     setfiles(currentFiles);
 
-    emit fileOperationResult(QString::fromUtf8("文件已移除！"), "warning");
+    emit fileOperationResult(QStringLiteral("文件已移除！"), "warning");
 
     qDebug() << "[KnowledgeChatManager] File removed at index:" << index;
     return true;
