@@ -795,10 +795,11 @@ Rectangle {
                                     // 文件列表
                                     Repeater {
                                         model: {
-                                            if (!$knowledgeManager.isLoadingDetail && 
-                                                isExpanded && 
-                                                $knowledgeManager.currentKnowledgeDetail.files) {
-                                                return $knowledgeManager.currentKnowledgeDetail.files
+                                            if (!$knowledgeManager.isLoadingDetail && isExpanded) {
+                                                var files = $knowledgeManager.currentKnowledgeDetail.files
+                                                if (files !== undefined && files !== null) {
+                                                    return files
+                                                }
                                             }
                                             return []
                                         }
@@ -913,10 +914,13 @@ Rectangle {
                                         color: "#40000000"
                                         horizontalAlignment: Text.AlignHCenter
                                         verticalAlignment: Text.AlignVCenter
-                                        visible: !$knowledgeManager.isLoadingDetail && 
-                                                isExpanded && 
-                                                $knowledgeManager.currentKnowledgeDetail.files && 
-                                                $knowledgeManager.currentKnowledgeDetail.files.length === 0
+                                        visible: {
+                                            if (!$knowledgeManager.isLoadingDetail && isExpanded) {
+                                                var files = $knowledgeManager.currentKnowledgeDetail.files
+                                                return files !== undefined && files !== null && files.length === 0
+                                            }
+                                            return false
+                                        }
                                     }
                                 }
                             }

@@ -489,8 +489,6 @@ void KnowledgeManager::resetAllStates()
 
     // 清空当前知识库详情
     setcurrentKnowledgeDetail(QVariantMap());
-
-    qDebug() << "[KnowledgeManager] All states have been reset";
 }
 
 /**
