@@ -421,7 +421,7 @@ void LoginManager::clearLogFiles()
         return;
     }
     
-    // 获取所有.log文件
+    // 获取所有.log文件（包括应用日志和更新日志）
     QStringList logFiles = dir.entryList(QStringList() << "*.log", QDir::Files);
     if (logFiles.isEmpty()) {
         qDebug() << "[LoginManager] No log files found in:" << logDir;
@@ -431,7 +431,7 @@ void LoginManager::clearLogFiles()
     int deletedCount = 0;
     int totalCount = logFiles.size();
     
-    // 删除所有日志文件
+    // 删除所有日志文件（包括ScoreReport_*.log和update_*.log）
     foreach (const QString& fileName, logFiles) {
         QString filePath = dir.filePath(fileName);
         QFile file(filePath);
@@ -576,14 +576,18 @@ void LoginManager::onSystemUpdateListResponse(bool success, const QString& messa
  */
 void LoginManager::onDownloadAppFileResponse(bool success, const QString& message, const QJsonObject& data)
 {
+    qDebug() << "[LoginManager] ========== Download App File Response Received ==========";
+    qDebug() << "[LoginManager] Success:" << success << "Message:" << message;
+    
     setisDownloadingUpdate(false);
     
     if (!success) {
-        qWarning() << "[LoginManager] Failed to download update file:" << message;
+        qWarning() << "[LoginManager] ERROR: Failed to download update file:" << message;
         return;
     }
     
     qDebug() << "[LoginManager] Update file downloaded successfully";
+    qDebug() << "[LoginManager] Response data keys:" << data.keys();
     emit updateDownloadCompleted();
     
     // 文件已经被ApiManager保存到临时位置，直接获取文件路径
@@ -591,26 +595,47 @@ void LoginManager::onDownloadAppFileResponse(bool success, const QString& messag
     QString fileName = data.value("fileName").toString();
     int fileSize = data.value("fileSize").toInt();
     
-    qDebug() << "[LoginManager] Downloaded file info - Path:" << downloadedFilePath 
-             << "Name:" << fileName << "Size:" << fileSize << "bytes";
+    qDebug() << "[LoginManager] Downloaded file info - Path:" << downloadedFilePath;
+    qDebug() << "[LoginManager] Downloaded file name:" << fileName;
+    qDebug() << "[LoginManager] Expected file size:" << fileSize << "bytes";
     
     // 验证文件是否存在且有效
-    if (downloadedFilePath.isEmpty() || !QFile::exists(downloadedFilePath)) {
-        qWarning() << "[LoginManager] Downloaded file not found:" << downloadedFilePath;
+    if (downloadedFilePath.isEmpty()) {
+        qWarning() << "[LoginManager] ERROR: Downloaded file path is empty!";
         return;
     }
+    
+    if (!QFile::exists(downloadedFilePath)) {
+        qWarning() << "[LoginManager] ERROR: Downloaded file not found at path:" << downloadedFilePath;
+        return;
+    }
+    
+    qDebug() << "[LoginManager] Downloaded file exists, verifying size...";
     
     // 验证文件大小
     QFileInfo fileInfo(downloadedFilePath);
-    if (fileInfo.size() != fileSize || fileInfo.size() == 0) {
-        qWarning() << "[LoginManager] Downloaded file size mismatch or empty. Expected:" << fileSize 
-                   << "Actual:" << fileInfo.size();
+    qDebug() << "[LoginManager] Actual file size:" << fileInfo.size() << "bytes";
+    qDebug() << "[LoginManager] File readable:" << fileInfo.isReadable();
+    qDebug() << "[LoginManager] File writable:" << fileInfo.isWritable();
+    
+    if (fileInfo.size() == 0) {
+        qWarning() << "[LoginManager] ERROR: Downloaded file is empty!";
         return;
     }
     
+    if (fileInfo.size() != fileSize) {
+        qWarning() << "[LoginManager] WARNING: File size mismatch! Expected:" << fileSize 
+                   << "Actual:" << fileInfo.size();
+        // 不返回，继续尝试安装
+    }
+    
     // 安装更新
+    qDebug() << "[LoginManager] Starting update installation...";
     if (installUpdate(downloadedFilePath)) {
+        qDebug() << "[LoginManager] Update installation initiated successfully";
         emit updateInstallationCompleted();
+    } else {
+        qWarning() << "[LoginManager] ERROR: Update installation failed!";
     }
 }
 
@@ -679,15 +704,26 @@ void LoginManager::compareVersions(const QString& serverVersion)
  */
 bool LoginManager::installUpdate(const QString& downloadedFilePath)
 {
+    qDebug() << "[LoginManager] ========== Starting Update Installation ==========";
+    qDebug() << "[LoginManager] Downloaded file path:" << downloadedFilePath;
+    
     if (downloadedFilePath.isEmpty() || !QFile::exists(downloadedFilePath)) {
-        qWarning() << "[LoginManager] Update file does not exist:" << downloadedFilePath;
+        qWarning() << "[LoginManager] ERROR: Update file does not exist:" << downloadedFilePath;
         return false;
     }
+    
+    QFileInfo downloadedFileInfo(downloadedFilePath);
+    qDebug() << "[LoginManager] Downloaded file size:" << downloadedFileInfo.size() << "bytes";
+    qDebug() << "[LoginManager] Downloaded file last modified:" << downloadedFileInfo.lastModified().toString();
     
     // 获取当前应用程序路径
     QString currentAppPath = QCoreApplication::applicationFilePath();
     QString appDir = QCoreApplication::applicationDirPath();
     QString currentAppName = QFileInfo(currentAppPath).fileName();
+    
+    qDebug() << "[LoginManager] Current application path:" << currentAppPath;
+    qDebug() << "[LoginManager] Application directory:" << appDir;
+    qDebug() << "[LoginManager] Current application name:" << currentAppName;
     
     // 将压缩包复制到应用程序目录
     QString updateZipPath = appDir + "/update.zip";
@@ -697,37 +733,73 @@ bool LoginManager::installUpdate(const QString& downloadedFilePath)
     
     // 复制压缩包到应用程序目录
     if (QFile::exists(updateZipPath)) {
-        QFile::remove(updateZipPath); // 删除已存在的更新文件
+        qDebug() << "[LoginManager] Removing existing update.zip file";
+        if (!QFile::remove(updateZipPath)) {
+            qWarning() << "[LoginManager] WARNING: Failed to remove existing update.zip";
+        } else {
+            qDebug() << "[LoginManager] Existing update.zip removed successfully";
+        }
     }
     
+    qDebug() << "[LoginManager] Copying update file to:" << updateZipPath;
     if (!QFile::copy(downloadedFilePath, updateZipPath)) {
-        qWarning() << "[LoginManager] Failed to copy update file to app directory";
+        qWarning() << "[LoginManager] ERROR: Failed to copy update file to app directory";
+        QFile::Permissions perms = downloadedFileInfo.permissions();
+        qWarning() << "[LoginManager] Source file permissions:" << perms;
         return false;
     }
     
-    qDebug() << "[LoginManager] Update file copied to:" << updateZipPath;
+    // 验证复制后的文件
+    QFileInfo copiedFileInfo(updateZipPath);
+    qDebug() << "[LoginManager] Update file copied successfully";
+    qDebug() << "[LoginManager] Copied file path:" << updateZipPath;
+    qDebug() << "[LoginManager] Copied file size:" << copiedFileInfo.size() << "bytes";
+    qDebug() << "[LoginManager] Original file size:" << downloadedFileInfo.size() << "bytes";
+    
+    if (copiedFileInfo.size() != downloadedFileInfo.size()) {
+        qWarning() << "[LoginManager] WARNING: File size mismatch after copy!";
+    }
     
     // 创建更新锁文件，防止用户在更新期间再次启动应用
     QString updateLockPath = appDir + "/update.lock";
+    qDebug() << "[LoginManager] Creating update lock file:" << updateLockPath;
     QFile lockFile(updateLockPath);
     if (lockFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
         QTextStream lockStream(&lockFile);
-        lockStream << QDateTime::currentDateTime().toString(Qt::ISODate);
+        QString lockTimestamp = QDateTime::currentDateTime().toString(Qt::ISODate);
+        lockStream << lockTimestamp;
         lockFile.close();
-        qDebug() << "[LoginManager] Update lock file created:" << updateLockPath;
+        qDebug() << "[LoginManager] Update lock file created successfully with timestamp:" << lockTimestamp;
     } else {
-        qWarning() << "[LoginManager] Failed to create update lock file";
+        qWarning() << "[LoginManager] WARNING: Failed to create update lock file";
     }
     
     // 创建批处理脚本来解压缩文件并重启应用
     QString batchScript = appDir + "/update_install.bat";
+    qDebug() << "[LoginManager] Creating batch script:" << batchScript;
     QFile batchFile(batchScript);
     
     if (batchFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
         QTextStream out(&batchFile);
         out << "@echo off\n";
         out << "cd /d \"" << QDir::toNativeSeparators(appDir) << "\"\n";
-        out << "echo Installing update...\n";
+        
+        // 创建日志文件，将所有输出重定向到日志文件（使用绝对路径和时间戳）
+        out << "set APP_DIR=%CD%\n";
+        out << "set LOG_DIR=%APP_DIR%\\AppData\\logs\n";
+        out << "if not exist \"%LOG_DIR%\" mkdir \"%LOG_DIR%\"\n";
+        
+        // 生成时间戳文件名（格式：update_2025-10-21_18-30-45.log）
+        out << "for /f \"tokens=1-3 delims=/- \" %%a in (\"%date%\") do set LOGDATE=%%a-%%b-%%c\n";
+        out << "for /f \"tokens=1-3 delims=:. \" %%a in (\"%time%\") do set LOGTIME=%%a-%%b-%%c\n";
+        out << "set LOGTIME=%LOGTIME: =0%\n";  // 前导零填充
+        out << "set LOG_FILE=%LOG_DIR%\\update_%LOGDATE%_%LOGTIME%.log\n";
+        
+        out << "echo ========== Update Process Started at %date% %time% ========== > \"%LOG_FILE%\"\n";
+        out << "echo [UPDATE] Installing update... >> \"%LOG_FILE%\" 2>&1\n";
+        out << "echo [UPDATE] Current directory: %CD% >> \"%LOG_FILE%\" 2>&1\n";
+        out << "echo [UPDATE] Target application: " << currentAppName << " >> \"%LOG_FILE%\" 2>&1\n";
+        out << "echo [UPDATE] Log file: %LOG_FILE% >> \"%LOG_FILE%\" 2>&1\n";
         out << "timeout /t 2 /nobreak > nul\n"; // 等待2秒确保当前应用完全退出
         
         // 检查应用是否仍在运行，最多等待5秒后强制终止
@@ -736,80 +808,246 @@ bool LoginManager::installUpdate(const QString& downloadedFilePath)
         out << "tasklist /FI \"IMAGENAME eq " << currentAppName << "\" 2>NUL | find /I /N \"" << currentAppName << "\">NUL\n";
         out << "if \"%ERRORLEVEL%\"==\"0\" (\n";
         out << "    if %WAIT_COUNT% LSS 5 (\n";
-        out << "        echo Waiting for application to close... (%WAIT_COUNT%/5)\n";
+        out << "        echo [UPDATE] Waiting for application to close... (%WAIT_COUNT%/5) >> \"%LOG_FILE%\" 2>&1\n";
         out << "        timeout /t 1 /nobreak > nul\n";
         out << "        set /a WAIT_COUNT+=1\n";
         out << "        goto CHECK_PROCESS\n";
         out << "    ) else (\n";
-        out << "        echo Application still running after 5 seconds, forcing termination...\n";
-        out << "        taskkill /F /IM \"" << currentAppName << "\" > nul 2>&1\n";
+        out << "        echo [UPDATE] Application still running after 5 seconds, forcing termination... >> \"%LOG_FILE%\" 2>&1\n";
+        out << "        taskkill /F /IM \"" << currentAppName << "\" >> \"%LOG_FILE%\" 2>&1\n";
         out << "        timeout /t 1 /nobreak > nul\n";
-        out << "        echo Application terminated.\n";
+        out << "        echo [UPDATE] Application terminated. >> \"%LOG_FILE%\" 2>&1\n";
         out << "    )\n";
         out << ")\n";
-        out << "echo Application closed, continuing with update...\n";
+        out << "echo [UPDATE] Application closed, continuing with update... >> \"%LOG_FILE%\" 2>&1\n";
+        
+        // 检查旧可执行文件状态并尝试删除
+        out << "echo [UPDATE] Checking old executable before update... >> \"%LOG_FILE%\" 2>&1\n";
+        out << "if exist \"" << currentAppName << "\" (\n";
+        out << "    echo [UPDATE] Old executable found: " << currentAppName << " >> \"%LOG_FILE%\" 2>&1\n";
+        out << "    dir \"" << currentAppName << "\" | find \"" << currentAppName << "\" >> \"%LOG_FILE%\" 2>&1\n";
+        out << "    echo [UPDATE] Attempting to delete old executable... >> \"%LOG_FILE%\" 2>&1\n";
+        out << "    del /F /Q \"" << currentAppName << "\" >> \"%LOG_FILE%\" 2>&1\n";
+        out << "    if exist \"" << currentAppName << "\" (\n";
+        out << "        echo [UPDATE] WARNING: Failed to delete old executable, will try to overwrite >> \"%LOG_FILE%\" 2>&1\n";
+        out << "    ) else (\n";
+        out << "        echo [UPDATE] Old executable deleted successfully >> \"%LOG_FILE%\" 2>&1\n";
+        out << "    )\n";
+        out << ") else (\n";
+        out << "    echo [UPDATE] WARNING: Old executable not found! >> \"%LOG_FILE%\" 2>&1\n";
+        out << ")\n";
         
         // 使用PowerShell解压缩文件（Windows内置）
-        out << "echo Extracting update files...\n";
-        out << "powershell -command \"& { Add-Type -AssemblyName System.IO.Compression.FileSystem; [System.IO.Compression.ZipFile]::ExtractToDirectory('update.zip', 'temp_update') }\"\n";
-        out << "if errorlevel 1 (\n";
-        out << "    echo Update extraction failed!\n";
+        out << "echo [UPDATE] Extracting update files... >> \"%LOG_FILE%\" 2>&1\n";
+        out << "echo [UPDATE] Zip file: update.zip >> \"%LOG_FILE%\" 2>&1\n";
+        out << "if not exist update.zip (\n";
+        out << "    echo [UPDATE] ERROR: update.zip not found! >> \"%LOG_FILE%\" 2>&1\n";
         out << "    pause\n";
         out << "    goto cleanup\n";
         out << ")\n";
+        out << "powershell -command \"& { Add-Type -AssemblyName System.IO.Compression.FileSystem; [System.IO.Compression.ZipFile]::ExtractToDirectory('update.zip', 'temp_update') }\" >> \"%LOG_FILE%\" 2>&1\n";
+        out << "if errorlevel 1 (\n";
+        out << "    echo [UPDATE] ERROR: Update extraction failed! >> \"%LOG_FILE%\" 2>&1\n";
+        out << "    pause\n";
+        out << "    goto cleanup\n";
+        out << ")\n";
+        out << "echo [UPDATE] Extraction completed successfully >> \"%LOG_FILE%\" 2>&1\n";
+        
+        // 等待3秒，让防病毒软件扫描完毕
+        out << "echo [UPDATE] Waiting for antivirus scan to complete... >> \"%LOG_FILE%\" 2>&1\n";
+        out << "timeout /t 3 /nobreak > nul\n";
         
         // 检查解压后的结构并移动文件
-        out << "echo Processing extracted files...\n";
+        out << "echo [UPDATE] Processing extracted files... >> \"%LOG_FILE%\" 2>&1\n";
         out << "cd temp_update\n";
+        out << "echo [UPDATE] Contents of temp_update folder: >> \"%LOG_FILE%\" 2>&1\n";
+        out << "dir /b >> \"%LOG_FILE%\" 2>&1\n";
         
         // 检查是否只有一个文件夹
         out << "for /f \"tokens=*\" %%i in ('dir /b /ad 2^>nul ^| find /c /v \"\"') do set FOLDER_COUNT=%%i\n";
         out << "for /f \"tokens=*\" %%i in ('dir /b /a-d 2^>nul ^| find /c /v \"\"') do set FILE_COUNT=%%i\n";
+        out << "echo [UPDATE] Folder count: %FOLDER_COUNT%, File count: %FILE_COUNT% >> \"%LOG_FILE%\" 2>&1\n";
         
         out << "if %FOLDER_COUNT%==1 if %FILE_COUNT%==0 (\n";
-        out << "    echo Single folder detected, moving contents...\n";
+        out << "    echo [UPDATE] Single folder detected, moving contents... >> \"%LOG_FILE%\" 2>&1\n";
         out << "    for /d %%i in (*) do (\n";
+        out << "        echo [UPDATE] Entering folder: %%i >> \"%LOG_FILE%\" 2>&1\n";
         out << "        cd \"%%i\"\n";
-        out << "        for %%f in (*) do move \"%%f\" \"..\\..\\\" >nul 2>&1\n";
-        out << "        for /d %%d in (*) do move \"%%d\" \"..\\..\\\" >nul 2>&1\n";
+        out << "        echo [UPDATE] Contents of inner folder: >> \"%LOG_FILE%\" 2>&1\n";
+        out << "        dir /b >> \"%LOG_FILE%\" 2>&1\n";
+        out << "        echo [UPDATE] Copying and replacing files in application directory... >> \"%LOG_FILE%\" 2>&1\n";
+        out << "        for %%f in (*) do (\n";
+        out << "            echo [UPDATE] Processing file: %%f >> \"%LOG_FILE%\" 2>&1\n";
+        out << "            if exist \"..\\..\\%%f\" (\n";
+        out << "                echo [UPDATE] Deleting existing file: %%f >> \"%LOG_FILE%\" 2>&1\n";
+        out << "                del /F /Q \"..\\..\\%%f\" >> \"%LOG_FILE%\" 2>&1\n";
+        out << "                if exist \"..\\..\\%%f\" (\n";
+        out << "                    echo [UPDATE] WARNING: Failed to delete %%f, retrying after 2 seconds... >> \"%LOG_FILE%\" 2>&1\n";
+        out << "                    timeout /t 2 /nobreak > nul\n";
+        out << "                    del /F /Q \"..\\..\\%%f\" >> \"%LOG_FILE%\" 2>&1\n";
+        out << "                )\n";
+        out << "            )\n";
+        out << "            copy /Y \"%%f\" \"..\\..\\\" >> \"%LOG_FILE%\" 2>&1\n";
+        out << "            if errorlevel 1 (\n";
+        out << "                echo [UPDATE] ERROR: Failed to copy file %%f, retrying after 2 seconds... >> \"%LOG_FILE%\" 2>&1\n";
+        out << "                timeout /t 2 /nobreak > nul\n";
+        out << "                copy /Y \"%%f\" \"..\\..\\\" >> \"%LOG_FILE%\" 2>&1\n";
+        out << "                if errorlevel 1 (\n";
+        out << "                    echo [UPDATE] ERROR: Failed to copy file %%f after retry >> \"%LOG_FILE%\" 2>&1\n";
+        out << "                ) else (\n";
+        out << "                    echo [UPDATE] Successfully copied %%f after retry >> \"%LOG_FILE%\" 2>&1\n";
+        out << "                )\n";
+        out << "            ) else (\n";
+        out << "                echo [UPDATE] Successfully copied: %%f >> \"%LOG_FILE%\" 2>&1\n";
+        out << "            )\n";
+        out << "        )\n";
+        out << "        echo [UPDATE] Copying and replacing directories in application directory... >> \"%LOG_FILE%\" 2>&1\n";
+        out << "        for /d %%d in (*) do (\n";
+        out << "            echo [UPDATE] Processing directory: %%d >> \"%LOG_FILE%\" 2>&1\n";
+        out << "            if exist \"..\\..\\%%d\" (\n";
+        out << "                echo [UPDATE] Deleting existing directory: %%d >> \"%LOG_FILE%\" 2>&1\n";
+        out << "                rd /S /Q \"..\\..\\%%d\" >> \"%LOG_FILE%\" 2>&1\n";
+        out << "            )\n";
+        out << "            echo [UPDATE] Copying directory: %%d >> \"%LOG_FILE%\" 2>&1\n";
+        out << "            xcopy \"%%d\" \"..\\..\\%%d\\\" /E /I /Y /Q >> \"%LOG_FILE%\" 2>&1\n";
+        out << "            if errorlevel 1 (\n";
+        out << "                echo [UPDATE] ERROR: Failed to copy directory %%d >> \"%LOG_FILE%\" 2>&1\n";
+        out << "            ) else (\n";
+        out << "                echo [UPDATE] Successfully copied: %%d >> \"%LOG_FILE%\" 2>&1\n";
+        out << "            )\n";
+        out << "        )\n";
         out << "        cd ..\n";
         out << "    )\n";
         out << ") else (\n";
-        out << "    echo Multiple items detected, moving all...\n";
-        out << "    for %%f in (*) do move \"%%f\" \"..\\\" >nul 2>&1\n";
-        out << "    for /d %%d in (*) do move \"%%d\" \"..\\\" >nul 2>&1\n";
+        out << "    echo [UPDATE] Multiple items detected, copying and replacing all... >> \"%LOG_FILE%\" 2>&1\n";
+        out << "    for %%f in (*) do (\n";
+        out << "        echo [UPDATE] Processing file: %%f >> \"%LOG_FILE%\" 2>&1\n";
+        out << "        if exist \"..\\%%f\" (\n";
+        out << "            echo [UPDATE] Deleting existing file: %%f >> \"%LOG_FILE%\" 2>&1\n";
+        out << "            del /F /Q \"..\\%%f\" >> \"%LOG_FILE%\" 2>&1\n";
+        out << "            if exist \"..\\%%f\" (\n";
+        out << "                echo [UPDATE] WARNING: Failed to delete %%f, retrying after 2 seconds... >> \"%LOG_FILE%\" 2>&1\n";
+        out << "                timeout /t 2 /nobreak > nul\n";
+        out << "                del /F /Q \"..\\%%f\" >> \"%LOG_FILE%\" 2>&1\n";
+        out << "            )\n";
+        out << "        )\n";
+        out << "        copy /Y \"%%f\" \"..\\\" >> \"%LOG_FILE%\" 2>&1\n";
+        out << "        if errorlevel 1 (\n";
+        out << "            echo [UPDATE] ERROR: Failed to copy file %%f, retrying after 2 seconds... >> \"%LOG_FILE%\" 2>&1\n";
+        out << "            timeout /t 2 /nobreak > nul\n";
+        out << "            copy /Y \"%%f\" \"..\\\" >> \"%LOG_FILE%\" 2>&1\n";
+        out << "            if errorlevel 1 (\n";
+        out << "                echo [UPDATE] ERROR: Failed to copy file %%f after retry >> \"%LOG_FILE%\" 2>&1\n";
+        out << "            ) else (\n";
+        out << "                echo [UPDATE] Successfully copied %%f after retry >> \"%LOG_FILE%\" 2>&1\n";
+        out << "            )\n";
+        out << "        ) else (\n";
+        out << "            echo [UPDATE] Successfully copied: %%f >> \"%LOG_FILE%\" 2>&1\n";
+        out << "        )\n";
+        out << "    )\n";
+        out << "    for /d %%d in (*) do (\n";
+        out << "        echo [UPDATE] Processing directory: %%d >> \"%LOG_FILE%\" 2>&1\n";
+        out << "        if exist \"..\\%%d\" (\n";
+        out << "            echo [UPDATE] Deleting existing directory: %%d >> \"%LOG_FILE%\" 2>&1\n";
+        out << "            rd /S /Q \"..\\%%d\" >> \"%LOG_FILE%\" 2>&1\n";
+        out << "        )\n";
+        out << "        echo [UPDATE] Copying directory: %%d >> \"%LOG_FILE%\" 2>&1\n";
+        out << "        xcopy \"%%d\" \"..\\%%d\\\" /E /I /Y /Q >> \"%LOG_FILE%\" 2>&1\n";
+        out << "        if errorlevel 1 (\n";
+        out << "            echo [UPDATE] ERROR: Failed to copy directory %%d >> \"%LOG_FILE%\" 2>&1\n";
+        out << "        ) else (\n";
+        out << "            echo [UPDATE] Successfully copied: %%d >> \"%LOG_FILE%\" 2>&1\n";
+        out << "        )\n";
+        out << "    )\n";
         out << ")\n";
         
         out << "cd ..\n";
-        out << "rmdir /s /q temp_update\n";
-        out << "del update.zip\n";
+        out << "echo [UPDATE] Verifying new executable... >> \"%LOG_FILE%\" 2>&1\n";
+        out << "if exist \"" << currentAppName << "\" (\n";
+        out << "    echo [UPDATE] New executable found: " << currentAppName << " >> \"%LOG_FILE%\" 2>&1\n";
+        out << "    dir \"" << currentAppName << "\" | find \"" << currentAppName << "\" >> \"%LOG_FILE%\" 2>&1\n";
+        out << ") else (\n";
+        out << "    echo [UPDATE] ERROR: New executable not found after update! >> \"%LOG_FILE%\" 2>&1\n";
+        out << "    echo [UPDATE] Current directory contents: >> \"%LOG_FILE%\" 2>&1\n";
+        out << "    dir /b >> \"%LOG_FILE%\" 2>&1\n";
+        out << "    pause\n";
+        out << ")\n";
+        out << "echo [UPDATE] Cleaning up temporary files... >> \"%LOG_FILE%\" 2>&1\n";
+        out << "rmdir /s /q temp_update >> \"%LOG_FILE%\" 2>&1\n";
+        out << "del update.zip >> \"%LOG_FILE%\" 2>&1\n";
         
-        out << "echo Update completed successfully!\n";
-        out << "del update.lock\n"; // 删除更新锁文件
-        out << "echo Restarting application...\n";
+        out << "echo [UPDATE] Update completed successfully! >> \"%LOG_FILE%\" 2>&1\n";
+        out << "del update.lock >> \"%LOG_FILE%\" 2>&1\n"; // 删除更新锁文件
+        out << "echo [UPDATE] Restarting application... >> \"%LOG_FILE%\" 2>&1\n";
         out << "timeout /t 1 /nobreak > nul\n";
-        out << "start \"\" \"" << QDir::toNativeSeparators(currentAppPath) << "\"\n";
+        out << "start \"\" \"" << QDir::toNativeSeparators(currentAppPath) << "\" >> \"%LOG_FILE%\" 2>&1\n";
+        out << "if errorlevel 1 (\n";
+        out << "    echo [UPDATE] ERROR: Failed to restart application! >> \"%LOG_FILE%\" 2>&1\n";
+        out << "    pause\n";
+        out << ") else (\n";
+        out << "    echo [UPDATE] Application restarted successfully >> \"%LOG_FILE%\" 2>&1\n";
+        out << ")\n";
         out << "goto end\n";
         
         out << ":cleanup\n";
-        out << "if exist temp_update rmdir /s /q temp_update\n";
-        out << "del update.zip\n";
-        out << "del update.lock\n"; // 即使失败也要删除锁文件
+        out << "echo [UPDATE] Cleanup: Removing temporary files... >> \"%LOG_FILE%\" 2>&1\n";
+        out << "if exist temp_update rmdir /s /q temp_update >> \"%LOG_FILE%\" 2>&1\n";
+        out << "del update.zip >> \"%LOG_FILE%\" 2>&1\n";
+        out << "del update.lock >> \"%LOG_FILE%\" 2>&1\n"; // 即使失败也要删除锁文件
         out << ":end\n";
+        out << "echo [UPDATE] Update process finished, removing batch script... >> \"%LOG_FILE%\" 2>&1\n";
+        out << "echo ========== Update Process Ended at %date% %time% ========== >> \"%LOG_FILE%\" 2>&1\n";
         out << "del \"" << QDir::toNativeSeparators(batchScript) << "\"\n"; // 删除批处理文件自身
         batchFile.close();
         
+        qDebug() << "[LoginManager] Batch script created successfully";
+        qDebug() << "[LoginManager] Batch script path:" << batchScript;
+        
+        // 日志文件路径（使用时间戳命名）
+        QString logDir = appDir + "/AppData/logs";
+        QString timestamp = QDateTime::currentDateTime().toString("yyyy-MM-dd_hh-mm-ss");
+        QString updateLogPath = logDir + "/update_" + timestamp + ".log";
+        qDebug() << "[LoginManager] Update process will be logged to:" << updateLogPath;
+        qDebug() << "[LoginManager] IMPORTANT: Check AppData/logs/update_*.log for detailed update progress and any errors";
+        
+        // 验证批处理脚本文件
+        QFileInfo batchFileInfo(batchScript);
+        if (batchFileInfo.exists()) {
+            qDebug() << "[LoginManager] Batch script file size:" << batchFileInfo.size() << "bytes";
+        } else {
+            qWarning() << "[LoginManager] ERROR: Batch script file was not created!";
+            return false;
+        }
+        
         // 启动批处理脚本并退出当前应用
-        QProcess::startDetached("cmd.exe", QStringList() << "/c" << QDir::toNativeSeparators(batchScript));
+        qDebug() << "[LoginManager] Starting batch script with cmd.exe";
+        QString batchScriptNative = QDir::toNativeSeparators(batchScript);
+        qDebug() << "[LoginManager] Native path:" << batchScriptNative;
+        
+        bool started = QProcess::startDetached("cmd.exe", QStringList() << "/c" << batchScriptNative);
+        if (started) {
+            qDebug() << "[LoginManager] Batch script started successfully";
+        } else {
+            qWarning() << "[LoginManager] ERROR: Failed to start batch script!";
+            return false;
+        }
         
         // 延迟退出应用，给批处理脚本启动的时间
+        qDebug() << "[LoginManager] Scheduling application exit in 1 second...";
         QTimer::singleShot(1000, QCoreApplication::instance(), &QCoreApplication::quit);
         
+        qDebug() << "[LoginManager] ========== Update Installation Setup Complete ==========";
         return true;
     } else {
-        qWarning() << "[LoginManager] Failed to create update script";
+        qWarning() << "[LoginManager] ERROR: Failed to create update script file";
+        qWarning() << "[LoginManager] Batch script path:" << batchScript;
         // 清理复制的文件
-        QFile::remove(updateZipPath);
+        qDebug() << "[LoginManager] Cleaning up copied update file";
+        if (QFile::remove(updateZipPath)) {
+            qDebug() << "[LoginManager] Update zip file removed";
+        } else {
+            qWarning() << "[LoginManager] WARNING: Failed to remove update zip file";
+        }
         return false;
     }
 }
