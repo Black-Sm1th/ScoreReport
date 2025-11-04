@@ -503,5 +503,6 @@
         <file>image/appear2/163.png</file>
         <file>image/appear2/164.png</file>
         <file>icon/icon.ico</file>
+        <file>qml/DiagnosisResult.qml</file>
     </qresource>
 </RCC>

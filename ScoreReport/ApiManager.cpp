@@ -759,8 +759,12 @@ void ApiManager::onStreamDataReady()
                     qDebug() << "[ApiManager] Sending content:" << QStringLiteral("'%1'").arg(content) << "Length:" << content.length();
                     emit streamChatResponse(content, chatId);
                 } else if (eventType == "complete") {
-                    // 完成事件，发送完成信号
-                    emit streamChatFinished(true, "聊天完成", chatId);
+                    QJsonDocument doc = QJsonDocument::fromJson(content.toUtf8());
+                    if (doc.isObject()) {
+                        QJsonObject obj = doc.object();
+                        QString string = obj["content"].toString();
+                        emit streamChatFinished(true, string, chatId);
+                    }
                     // 清理映射和缓冲区
                     m_streamChatIds.remove(reply);
                     m_streamDataBuffers.remove(reply);
@@ -971,9 +975,6 @@ void ApiManager::onNetworkReply(QNetworkReply* reply)
         
         // 对于流式聊天请求，特殊处理
         if (requestType == "stream-chat") {
-            // 流式聊天完成，发送完成信号
-            QString chatId = m_streamChatIds.value(reply, "");
-            emit streamChatFinished(true, "聊天完成", chatId);
             // 清理chatId映射和缓冲区
             m_streamChatIds.remove(reply);
             m_streamDataBuffers.remove(reply);

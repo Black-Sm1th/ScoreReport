@@ -936,6 +936,14 @@ ApplicationWindow {
                         contentRect.currentScore = -1
                     }
                 }
+                DiagnosisResult{
+                    id: diagnosisResult
+                    visible: contentRect.currentIndex === 0 && contentRect.currentScore === 10
+                    messageManager: dialogMessageBox
+                    onExitScore: {
+                        contentRect.currentScore = -1
+                    }
+                }
             }
         }
     }
@@ -1014,7 +1022,7 @@ ApplicationWindow {
                 }
             }
             function onMouseEvent(){
-                if(tnmBtn.containsMouse || renalBtn.containsMouse || inputArea.containsMouse){
+                if(tnmBtn.containsMouse || renalBtn.containsMouse || inputArea.containsMouse || resultBtn.containsMouse){
                     return
                 }
                 scoringMethodDialog.hideDialog()
@@ -1072,7 +1080,7 @@ ApplicationWindow {
         Rectangle {
             id: scoringMethodContent
             width: 200
-            height: 150
+            height: scoringMethodDialogCol.height + 32
             color: "white"
             radius: 16
             scale: scoringMethodDialog.opacity
@@ -1099,8 +1107,9 @@ ApplicationWindow {
             }
 
             Column {
+                id:scoringMethodDialogCol
                 anchors.centerIn: parent
-                spacing: 12
+                spacing: 8
 
                 // 标题
                 Text {
@@ -1167,7 +1176,26 @@ ApplicationWindow {
                         }
                     }
                 }
-
+                CustomButton {
+                    id:resultBtn
+                    width: 168
+                    height: 32
+                    backgroundColor: "#84E4C4"
+                    text: "生成诊断结论"
+                    onClicked: {
+                        if (contextMenu.visible) {
+                            contextMenu.hide()
+                        }
+                        scoringMethodDialog.hideDialog()
+                        scoreDialog.resetAllValue()
+                        contentRect.currentIndex = 0
+                        contentRect.currentScore = 10
+                        $diagnosisResultManager.sendMessage(scoringMethodDialog.currentText)
+                        if(!scoreDialog.visible){
+                            scoreDialog.showDialog()
+                        }
+                    }
+                }
                 SingleLineTextInput{
                     id: questionInput
                     inputWidth: 168

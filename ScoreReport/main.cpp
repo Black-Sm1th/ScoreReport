@@ -27,6 +27,7 @@
 #include "Version.h"
 #include "KnowledgeManager.h"
 #include "KnowledgeChatManager.h"
+#include "DiagnosisResultManager.h"
 // 全局日志文件指针和互斥锁
 static QFile* g_logFile = nullptr;
 static QTextStream* g_logStream = nullptr;
@@ -270,6 +271,9 @@ int main(int argc, char *argv[])
     
     auto* uclsctsScorer = GET_SINGLETON(UCLSCTSScorer);
     engine.rootContext()->setContextProperty("$uclsctsScorer", uclsctsScorer);
+
+    auto* diagnosisResultManager = GET_SINGLETON(DiagnosisResultManager);
+    engine.rootContext()->setContextProperty("$diagnosisResultManager", diagnosisResultManager);
 
     //// 为主界面创建ChatManager实例
     //auto* chatManager = new ChatManager();
