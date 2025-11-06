@@ -36,7 +36,6 @@ Rectangle {
         onTriggered: {
 
             var maxY = Math.max(0, resultColumnChild.height - scrollView.height)
-            console.log(resultColumnChild.height, scrollView.height)
             if (scrollView.contentItem) {
                 scrollView.contentItem.contentY = maxY
             }
