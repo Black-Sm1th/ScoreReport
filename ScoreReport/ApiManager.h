@@ -21,6 +21,7 @@
 #include <QStandardPaths>
 #include <QDir>
 #include <QUrlQuery>
+#include <QCoreApplication>
 #include "CommonFunc.h"
 
 /**
@@ -575,6 +576,15 @@ private:
      * @param requestType 请求类型标识，用于响应时区分不同请求
      */
     void makeGetRequest(const QString& endpoint, const QString& requestType = "");
+    
+    /**
+     * @brief 加载配置文件
+     * 
+     * 从AppData/config/config.json文件中读取网络配置，包括API地址和网络类型。
+     * 如果配置文件不存在，将自动创建默认配置文件。
+     * Windows系统路径示例: C:/Users/用户名/AppData/Local/组织名/应用名/config/config.json
+     */
+    void loadConfig();
 
     /// @brief Qt网络访问管理器，负责实际的网络请求
     QNetworkAccessManager* m_networkManager;
@@ -594,9 +604,9 @@ private:
     /// @brief 跟踪每个知识库流式聊天请求的不完整SSE数据缓冲区
     QMap<QNetworkReply*, QString> m_streamKnowledgeDataBuffers;
 
-    // API地址常量
-    const QString INTERNAL_BASE_URL = "http://192.168.1.2:9898/api";  ///< 内网API基础地址
-    const QString PUBLIC_BASE_URL = "http://111.6.178.34:24603/api";   ///< 公网API基础地址
+    // API地址配置（从config.json读取）
+    QString m_internalBaseUrl;  ///< 内网API基础地址
+    QString m_publicBaseUrl;    ///< 公网API基础地址
 };
 
 #endif // APIMANAGER_H
