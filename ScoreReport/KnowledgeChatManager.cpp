@@ -43,6 +43,7 @@ KnowledgeChatManager::KnowledgeChatManager(QObject* parent)
     , m_lastUserMessage("")
     , m_maxFileCount(DEFAULT_MAX_FILE_COUNT)
     , m_maxFileSize(DEFAULT_MAX_FILE_SIZE)
+    , m_updateTimer(new QTimer(this))
 {
     // 连接API管理器的信号
     auto* apiManager = GET_SINGLETON(ApiManager);
@@ -71,6 +72,11 @@ KnowledgeChatManager::KnowledgeChatManager(QObject* parent)
     setknowledgeBaseList(QVariantList());
     setselectedKnowledgeBases(QStringList());
     setretrievedMetadata(QVariantList());
+    
+    // 配置UI更新定时器
+    m_updateTimer->setInterval(30);  // 每30ms批量更新一次UI,平衡流畅度和性能
+    m_updateTimer->setSingleShot(true);
+    connect(m_updateTimer, &QTimer::timeout, this, &KnowledgeChatManager::flushPendingUpdates);
 }
 
 void KnowledgeChatManager::sendMessage(const QString& message)
@@ -121,6 +127,10 @@ void KnowledgeChatManager::sendMessage(const QString& message)
 
 void KnowledgeChatManager::resetWithWelcomeMessage()
 {
+    // 停止定时器并清空缓冲区
+    m_updateTimer->stop();
+    m_pendingUpdateBuffer.clear();
+    
     // 清空消息列表
     setmessages(QVariantList());
     setknowledgeBaseList(QVariantList());
@@ -184,6 +194,10 @@ void KnowledgeChatManager::endAnalysis(bool clearfile)
     // 中断当前聊天
     GET_SINGLETON(ApiManager)->abortStreamChatByChatId(m_currentChatId);
 
+    // 停止定时器并立即刷新待更新内容
+    m_updateTimer->stop();
+    flushPendingUpdates();
+
     // 取消所有文件上传（读取）任务（确保不在持锁状态下等待线程）
     if (clearfile) {
         clearFiles();
@@ -191,6 +205,7 @@ void KnowledgeChatManager::endAnalysis(bool clearfile)
 
     // 重置状态
     m_currentAiMessage.clear();
+    m_pendingUpdateBuffer.clear();
     setisSending(false);
     setisThinking(false);
 
@@ -1200,10 +1215,17 @@ void KnowledgeChatManager::onStreamKnowledgeChatResponse(const QString& data, co
         removeThinkingMessage();
         addAiMessage(data);
         m_currentAiMessage = data;
-    } else {
-        // 追加响应内容
+        m_pendingUpdateBuffer.clear();  // 清空缓冲区
+    }
+    else {
+        // 将新数据放入缓冲区
+        m_pendingUpdateBuffer += data;
         m_currentAiMessage += data;
-        updateLastAiMessage(data);
+        
+        // 启动或重启定时器(单次触发模式会自动重置)
+        if (!m_updateTimer->isActive()) {
+            m_updateTimer->start();
+        }
     }
 }
 
@@ -1215,6 +1237,10 @@ void KnowledgeChatManager::onStreamKnowledgeChatFinished(bool success, const QSt
     }
 
     qDebug() << "[KnowledgeChatManager] Knowledge chat finished, success:" << success;
+
+    // 停止定时器并立即刷新所有待更新的内容
+    m_updateTimer->stop();
+    flushPendingUpdates();
 
     // 重置状态
     setisSending(false);
@@ -1233,6 +1259,7 @@ void KnowledgeChatManager::onStreamKnowledgeChatFinished(bool success, const QSt
     }
 
     m_currentAiMessage.clear();
+    m_pendingUpdateBuffer.clear();
 }
 
 QStringList KnowledgeChatManager::getSelectedBuckets() const
@@ -1276,5 +1303,14 @@ void KnowledgeChatManager::onKnowledgeChatMetadataReceived(const QString& chatId
         qDebug() << "  [" << i << "] File:" << metaMap["file_name"].toString()
             << "Pages:" << metaMap["page_numbers"].toList()
             << "Retriever:" << metaMap["retriever_name"].toString();
+    }
+}
+
+void KnowledgeChatManager::flushPendingUpdates()
+{
+    // 如果缓冲区有待更新的内容,批量更新UI
+    if (!m_pendingUpdateBuffer.isEmpty()) {
+        updateLastAiMessage(m_pendingUpdateBuffer);
+        m_pendingUpdateBuffer.clear();
     }
 }

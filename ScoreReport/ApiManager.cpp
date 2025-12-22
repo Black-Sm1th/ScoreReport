@@ -4,14 +4,18 @@
  * @brief 构造函数
  * @param parent 父对象指针
  * 
- * 初始化网络管理器并设置默认网络环境为公网。
+ * 初始化网络管理器并从配置文件加载网络配置。
  * 连接网络管理器的finished信号到响应处理槽函数。
  */
 ApiManager::ApiManager(QObject *parent)
     : QObject(parent)
     , m_networkManager(new QNetworkAccessManager(this))
+    , m_internalBaseUrl("http://172.20.117.53:9898/api")  // 默认内网地址
+    , m_publicBaseUrl("http://111.6.178.34:24603/api")   // 默认公网地址
 {
-    setusePublicNetwork(true);  // 默认使用公网
+    // 从配置文件加载配置
+    loadConfig();
+    
     connect(m_networkManager, &QNetworkAccessManager::finished,
             this, &ApiManager::onNetworkReply);
 }
@@ -21,12 +25,13 @@ ApiManager::ApiManager(QObject *parent)
  * @return QString 返回内网或公网的API基础地址
  * 
  * 根据usePublicNetwork属性的值决定使用哪个网络环境。
- * true: 使用公网地址 (111.6.178.34:9205)
- * false: 使用内网地址 (192.168.1.2:9898)
+ * true: 使用公网地址
+ * false: 使用内网地址
+ * 地址从config.json配置文件中读取
  */
 QString ApiManager::getBaseUrl() const
 {
-    return getusePublicNetwork() ? PUBLIC_BASE_URL : INTERNAL_BASE_URL;
+    return getusePublicNetwork() ? m_publicBaseUrl : m_internalBaseUrl;
 }
 
 /**
@@ -759,8 +764,12 @@ void ApiManager::onStreamDataReady()
                     qDebug() << "[ApiManager] Sending content:" << QStringLiteral("'%1'").arg(content) << "Length:" << content.length();
                     emit streamChatResponse(content, chatId);
                 } else if (eventType == "complete") {
-                    // 完成事件，发送完成信号
-                    emit streamChatFinished(true, "聊天完成", chatId);
+                    QJsonDocument doc = QJsonDocument::fromJson(content.toUtf8());
+                    if (doc.isObject()) {
+                        QJsonObject obj = doc.object();
+                        QString string = obj["content"].toString();
+                        emit streamChatFinished(true, string, chatId);
+                    }
                     // 清理映射和缓冲区
                     m_streamChatIds.remove(reply);
                     m_streamDataBuffers.remove(reply);
@@ -869,10 +878,57 @@ void ApiManager::onStreamKnowledgeDataReady()
         if (!eventType.isEmpty() && !content.isEmpty()) {
             if (content != "[DONE]") {
                 if (eventType == "message") {
-                    // 消息事件，直接发送文本内容（保留所有空格）
-                    qDebug() << "[ApiManager] Knowledge sending content:" << QStringLiteral("'%1'").arg(content) << "Length:" << content.length();
-                    emit streamKnowledgeChatResponse(content, chatId);
+                    // 消息事件，累积到待发送缓冲区而不是立即发送
+                    qDebug() << "[ApiManager] Knowledge buffering content:" << QStringLiteral("'%1'").arg(content) << "Length:" << content.length();
+                    m_streamKnowledgePendingBuffers[reply] += content;
+                    
+                    // 如果定时器不存在，创建并启动
+                    if (!m_streamKnowledgeTimers.contains(reply)) {
+                        QTimer* timer = new QTimer(this);
+                        timer->setInterval(30);  // 每30ms批量发送一次
+                        timer->setSingleShot(true);
+                        m_streamKnowledgeTimers[reply] = timer;
+                        
+                        // 连接定时器信号，使用lambda捕获reply指针
+                        connect(timer, &QTimer::timeout, this, [this, reply]() {
+                            // 检查reply是否仍然有效
+                            if (m_streamKnowledgePendingBuffers.contains(reply)) {
+                                QString bufferedContent = m_streamKnowledgePendingBuffers[reply];
+                                if (!bufferedContent.isEmpty()) {
+                                    QString chatId = m_streamKnowledgeChatIds.value(reply, "");
+                                    qDebug() << "[ApiManager] Knowledge sending batched content, Length:" << bufferedContent.length();
+                                    emit streamKnowledgeChatResponse(bufferedContent, chatId);
+                                    m_streamKnowledgePendingBuffers[reply].clear();
+                                }
+                            }
+                        });
+                    }
+                    
+                    // 启动或重启定时器
+                    QTimer* timer = m_streamKnowledgeTimers[reply];
+                    if (!timer->isActive()) {
+                        timer->start();
+                    }
                 } else if (eventType == "complete") {
+                    // 完成事件，先立即刷新所有待发送的内容
+                    if (m_streamKnowledgeTimers.contains(reply)) {
+                        QTimer* timer = m_streamKnowledgeTimers[reply];
+                        timer->stop();
+                        
+                        // 立即发送所有缓冲的内容
+                        if (m_streamKnowledgePendingBuffers.contains(reply)) {
+                            QString bufferedContent = m_streamKnowledgePendingBuffers[reply];
+                            if (!bufferedContent.isEmpty()) {
+                                qDebug() << "[ApiManager] Knowledge flushing final content, Length:" << bufferedContent.length();
+                                emit streamKnowledgeChatResponse(bufferedContent, chatId);
+                            }
+                        }
+                        
+                        // 清理定时器
+                        timer->deleteLater();
+                        m_streamKnowledgeTimers.remove(reply);
+                    }
+                    
                     // 完成事件，解析JSON数据并发送元数据
                     QJsonDocument doc = QJsonDocument::fromJson(content.toUtf8());
                     if (doc.isObject()) {
@@ -915,6 +971,7 @@ void ApiManager::onStreamKnowledgeDataReady()
                     // 清理映射和缓冲区
                     m_streamKnowledgeChatIds.remove(reply);
                     m_streamKnowledgeDataBuffers.remove(reply);
+                    m_streamKnowledgePendingBuffers.remove(reply);
                     return; // 完成后退出
                 } else {
                     // 其他事件，尝试解析JSON数据
@@ -971,9 +1028,6 @@ void ApiManager::onNetworkReply(QNetworkReply* reply)
         
         // 对于流式聊天请求，特殊处理
         if (requestType == "stream-chat") {
-            // 流式聊天完成，发送完成信号
-            QString chatId = m_streamChatIds.value(reply, "");
-            emit streamChatFinished(true, "聊天完成", chatId);
             // 清理chatId映射和缓冲区
             m_streamChatIds.remove(reply);
             m_streamDataBuffers.remove(reply);
@@ -1268,7 +1322,100 @@ void ApiManager::abortStreamChatByChatId(const QString& chatId)
                 // 清理对应的chatId映射和缓冲区
                 m_streamKnowledgeChatIds.remove(reply);
                 m_streamKnowledgeDataBuffers.remove(reply);
+                m_streamKnowledgePendingBuffers.remove(reply);
+                
+                // 清理定时器
+                if (m_streamKnowledgeTimers.contains(reply)) {
+                    QTimer* timer = m_streamKnowledgeTimers[reply];
+                    timer->stop();
+                    timer->deleteLater();
+                    m_streamKnowledgeTimers.remove(reply);
+                }
             }
         }
+    }
+}
+
+/**
+ * @brief 加载配置文件
+ * 
+ * 从AppData/config/config.json文件中读取网络配置，包括API地址和网络类型。
+ * 如果配置文件不存在，将自动创建默认配置文件。
+ */
+void ApiManager::loadConfig()
+{
+    QString configDir = "AppData/config/";
+    QString configPath = configDir + "config.json";
+    
+    QFile configFile(configPath);
+    
+    // 如果配置文件不存在，创建默认配置
+    if (!configFile.exists()) {
+        // 确保config目录存在
+        QDir dir;
+        if (!dir.mkpath(configDir)) {
+            setusePublicNetwork(true);  // 默认使用公网
+            return;
+        }
+        
+        // 创建默认配置对象
+        QJsonObject networkObj;
+        networkObj["usePublicNetwork"] = true;
+        networkObj["internalBaseUrl"] = m_internalBaseUrl;
+        networkObj["publicBaseUrl"] = m_publicBaseUrl;
+        
+        QJsonObject rootObj;
+        rootObj["network"] = networkObj;
+        
+        // 写入配置文件
+        if (configFile.open(QIODevice::WriteOnly)) {
+            QJsonDocument doc(rootObj);
+            configFile.write(doc.toJson(QJsonDocument::Indented));
+            configFile.close();
+        } else {
+            setusePublicNetwork(true);  // 默认使用公网
+            return;
+        }
+    }
+    
+    // 读取配置文件
+    if (!configFile.open(QIODevice::ReadOnly)) {
+        setusePublicNetwork(true);  // 默认使用公网
+        return;
+    }
+    
+    QByteArray configData = configFile.readAll();
+    configFile.close();
+    
+    QJsonDocument doc = QJsonDocument::fromJson(configData);
+    if (!doc.isObject()) {
+        setusePublicNetwork(true);  // 默认使用公网
+        return;
+    }
+    
+    QJsonObject rootObj = doc.object();
+    if (!rootObj.contains("network")) {
+        setusePublicNetwork(true);  // 默认使用公网
+        return;
+    }
+    
+    QJsonObject networkObj = rootObj["network"].toObject();
+    
+    // 读取网络类型配置
+    if (networkObj.contains("usePublicNetwork")) {
+        bool usePublic = networkObj["usePublicNetwork"].toBool();
+        setusePublicNetwork(usePublic);
+    } else {
+        setusePublicNetwork(true);  // 默认使用公网
+    }
+    
+    // 读取内网地址配置
+    if (networkObj.contains("internalBaseUrl")) {
+        m_internalBaseUrl = networkObj["internalBaseUrl"].toString();
+    }
+    
+    // 读取公网地址配置
+    if (networkObj.contains("publicBaseUrl")) {
+        m_publicBaseUrl = networkObj["publicBaseUrl"].toString();
     }
 }

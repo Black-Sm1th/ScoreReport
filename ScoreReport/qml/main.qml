@@ -946,7 +946,7 @@ ApplicationWindow {
         width: scoringMethodContent.width + 40  // 内容宽度 + 边距
         height: scoringMethodContent.height + 40  // 内容高度 + 边距
         visible: false
-        flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
+        flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool
         color: "transparent"
         opacity: 0
 
@@ -971,7 +971,7 @@ ApplicationWindow {
         // 显示延迟定时器，确保位置设置完成后再显示
         Timer {
             id: showDelayTimer
-            interval: 50  // 10ms 延迟
+            interval: 100  // 10ms 延迟
             repeat: false
             onTriggered: {
                 // 暂停帮助定时器
@@ -982,8 +982,7 @@ ApplicationWindow {
                 // 现在显示对话框，位置已经是正确的了
                 scoringMethodDialog.opacity = 1
                 autoHideTimer.restart()
-                // 取消输入框的聚焦，让焦点回到主窗口
-                scoringMethodContent.forceActiveFocus()
+                scoringMethodDialog.raise()
             }
         }
 
@@ -1072,7 +1071,7 @@ ApplicationWindow {
         Rectangle {
             id: scoringMethodContent
             width: 200
-            height: 100
+            height: scoringMethodDialogCol.height + 32
             color: "white"
             radius: 16
             scale: scoringMethodDialog.opacity
@@ -1099,8 +1098,9 @@ ApplicationWindow {
             }
 
             Column {
+                id:scoringMethodDialogCol
                 anchors.centerIn: parent
-                spacing: 12
+                spacing: 8
 
                 // 标题
                 Text {
