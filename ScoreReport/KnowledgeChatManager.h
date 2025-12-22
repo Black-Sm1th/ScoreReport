@@ -224,6 +224,9 @@ private:
     // Word进程管理私有方法
     int cleanupHangingWordProcesses();
     void startDelayedWordProcessCleanup();
+    
+    // UI更新优化私有方法
+    void flushPendingUpdates();
 
     // 私有成员变量
     QString m_currentAiMessage;                                 ///< 当前正在接收的AI消息内容
@@ -231,5 +234,9 @@ private:
     QMap<QString, QString> m_fileContents;                      ///< 文件内容存储映射
     QMap<QString, FileReaderThread1*> m_activeReadTasks;         ///< 当前进行的文件读取线程映射
     QMutex m_mutex;                                             ///< 线程安全互斥锁
+    
+    // UI更新优化相关
+    QString m_pendingUpdateBuffer;                               ///< 待更新的内容缓冲区
+    QTimer* m_updateTimer;                                       ///< UI更新定时器
 };
 

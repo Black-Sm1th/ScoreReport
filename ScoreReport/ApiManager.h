@@ -22,6 +22,7 @@
 #include <QDir>
 #include <QUrlQuery>
 #include <QCoreApplication>
+#include <QTimer>
 #include "CommonFunc.h"
 
 /**
@@ -603,6 +604,12 @@ private:
     
     /// @brief 跟踪每个知识库流式聊天请求的不完整SSE数据缓冲区
     QMap<QNetworkReply*, QString> m_streamKnowledgeDataBuffers;
+    
+    /// @brief 跟踪每个知识库流式聊天请求的待发送内容缓冲区（用于批量发射信号）
+    QMap<QNetworkReply*, QString> m_streamKnowledgePendingBuffers;
+    
+    /// @brief 跟踪每个知识库流式聊天请求的批量发送定时器
+    QMap<QNetworkReply*, QTimer*> m_streamKnowledgeTimers;
 
     // API地址配置（从config.json读取）
     QString m_internalBaseUrl;  ///< 内网API基础地址

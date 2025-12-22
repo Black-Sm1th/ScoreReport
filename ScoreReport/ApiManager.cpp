@@ -878,10 +878,57 @@ void ApiManager::onStreamKnowledgeDataReady()
         if (!eventType.isEmpty() && !content.isEmpty()) {
             if (content != "[DONE]") {
                 if (eventType == "message") {
-                    // 消息事件，直接发送文本内容（保留所有空格）
-                    qDebug() << "[ApiManager] Knowledge sending content:" << QStringLiteral("'%1'").arg(content) << "Length:" << content.length();
-                    emit streamKnowledgeChatResponse(content, chatId);
+                    // 消息事件，累积到待发送缓冲区而不是立即发送
+                    qDebug() << "[ApiManager] Knowledge buffering content:" << QStringLiteral("'%1'").arg(content) << "Length:" << content.length();
+                    m_streamKnowledgePendingBuffers[reply] += content;
+                    
+                    // 如果定时器不存在，创建并启动
+                    if (!m_streamKnowledgeTimers.contains(reply)) {
+                        QTimer* timer = new QTimer(this);
+                        timer->setInterval(30);  // 每30ms批量发送一次
+                        timer->setSingleShot(true);
+                        m_streamKnowledgeTimers[reply] = timer;
+                        
+                        // 连接定时器信号，使用lambda捕获reply指针
+                        connect(timer, &QTimer::timeout, this, [this, reply]() {
+                            // 检查reply是否仍然有效
+                            if (m_streamKnowledgePendingBuffers.contains(reply)) {
+                                QString bufferedContent = m_streamKnowledgePendingBuffers[reply];
+                                if (!bufferedContent.isEmpty()) {
+                                    QString chatId = m_streamKnowledgeChatIds.value(reply, "");
+                                    qDebug() << "[ApiManager] Knowledge sending batched content, Length:" << bufferedContent.length();
+                                    emit streamKnowledgeChatResponse(bufferedContent, chatId);
+                                    m_streamKnowledgePendingBuffers[reply].clear();
+                                }
+                            }
+                        });
+                    }
+                    
+                    // 启动或重启定时器
+                    QTimer* timer = m_streamKnowledgeTimers[reply];
+                    if (!timer->isActive()) {
+                        timer->start();
+                    }
                 } else if (eventType == "complete") {
+                    // 完成事件，先立即刷新所有待发送的内容
+                    if (m_streamKnowledgeTimers.contains(reply)) {
+                        QTimer* timer = m_streamKnowledgeTimers[reply];
+                        timer->stop();
+                        
+                        // 立即发送所有缓冲的内容
+                        if (m_streamKnowledgePendingBuffers.contains(reply)) {
+                            QString bufferedContent = m_streamKnowledgePendingBuffers[reply];
+                            if (!bufferedContent.isEmpty()) {
+                                qDebug() << "[ApiManager] Knowledge flushing final content, Length:" << bufferedContent.length();
+                                emit streamKnowledgeChatResponse(bufferedContent, chatId);
+                            }
+                        }
+                        
+                        // 清理定时器
+                        timer->deleteLater();
+                        m_streamKnowledgeTimers.remove(reply);
+                    }
+                    
                     // 完成事件，解析JSON数据并发送元数据
                     QJsonDocument doc = QJsonDocument::fromJson(content.toUtf8());
                     if (doc.isObject()) {
@@ -924,6 +971,7 @@ void ApiManager::onStreamKnowledgeDataReady()
                     // 清理映射和缓冲区
                     m_streamKnowledgeChatIds.remove(reply);
                     m_streamKnowledgeDataBuffers.remove(reply);
+                    m_streamKnowledgePendingBuffers.remove(reply);
                     return; // 完成后退出
                 } else {
                     // 其他事件，尝试解析JSON数据
@@ -1274,6 +1322,15 @@ void ApiManager::abortStreamChatByChatId(const QString& chatId)
                 // 清理对应的chatId映射和缓冲区
                 m_streamKnowledgeChatIds.remove(reply);
                 m_streamKnowledgeDataBuffers.remove(reply);
+                m_streamKnowledgePendingBuffers.remove(reply);
+                
+                // 清理定时器
+                if (m_streamKnowledgeTimers.contains(reply)) {
+                    QTimer* timer = m_streamKnowledgeTimers[reply];
+                    timer->stop();
+                    timer->deleteLater();
+                    m_streamKnowledgeTimers.remove(reply);
+                }
             }
         }
     }
