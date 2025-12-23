@@ -315,7 +315,7 @@ Rectangle {
         }
         ScrollView {
             id: scrollView
-            height: 674 - titleRow.height - 16
+            height: 574 - titleRow.height - 16
             width: parent.width
             clip: true
             

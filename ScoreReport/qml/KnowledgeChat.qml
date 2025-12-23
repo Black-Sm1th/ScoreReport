@@ -22,7 +22,7 @@ Rectangle {
     // 高度计算函数
     function calculateHeight() {
         if (messagesArea.visible) {
-            return 754
+            return 654
         }
         return chatManager.files.length > 0 ? 248 + 41 : 124 + 41
     }
@@ -84,7 +84,7 @@ Rectangle {
         Rectangle {
             id: messagesArea
             width: parent.width
-            height: chatManager.files.length > 0 ? 518 - 36 - 29 : 630 - 24 - 29  // 调整以适应新的文件列表高度
+            height: chatManager.files.length > 0 ? 418 - 36 - 29 : 530 - 24 - 29  // 调整以适应新的文件列表高度
             color: "transparent"
             visible: !specialPage || chatManager.messages.length > 0
             ScrollView {

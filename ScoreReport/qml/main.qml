@@ -2184,7 +2184,7 @@ ApplicationWindow {
             // 选择要显示的消息
             if (helpBubbleContent.isFirstShow) {
                 // 第一次显示，使用默认消息
-                helpBubbleContent.currentMessage = "我是汇小曦，您的知识库小助理~看看能帮您干些啥？"
+                helpBubbleContent.currentMessage = "我是设小通，您的知识库小助理~看看能帮您干些啥？"
                 helpBubbleContent.isFirstShow = false
             } else {
                 // 非第一次显示，从helpContent中随机选择
@@ -2288,7 +2288,7 @@ ApplicationWindow {
             scale: helpBubble.bubbleScale
             anchors.centerIn: parent
             property bool isFirstShow: true
-            property string currentMessage: "我是汇小曦，您的知识库小助理~看看能帮您干些啥？"
+            property string currentMessage: "我是设小通，您的知识库小助理~看看能帮您干些啥？"
             property var helpContent: [
                 "设备科最怕的警报：不是机器宕机，是放射科老师那声‘师傅，您先别走，好像又不行了’的深情呼唤。",
                 "一台CT的年度保养费够买一辆车，区别是：车会贬值，而它会‘报错’。",
