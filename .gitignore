@@ -2,7 +2,7 @@
 # 此 .gitignore 文件已由 Microsoft(R) Visual Studio 自动创建。
 ################################################################################
 
-/.vs/ScoreReport
+/.vs
 /ScoreReport/x64/Debug
 /ScoreReport/build/Desktop_Qt_5_15_2_MSVC2019_64bit-Debug
 /ScoreReport/x64
