@@ -14,6 +14,7 @@
 #include <QSystemSemaphore>
 #include "LoginManager.h"
 #include "CCLSScorer.h"
+#include "CCLSAIScorer.h"
 #include "TNMManager.h"
 #include "ApiManager.h"
 #include "CommonFunc.h"
@@ -259,6 +260,9 @@ int main(int argc, char *argv[])
     
     auto* cclsScorer = GET_SINGLETON(CCLSScorer);
     engine.rootContext()->setContextProperty("$cclsScorer", cclsScorer);
+    
+    auto* cclsAIScorer = GET_SINGLETON(CCLSAIScorer);
+    engine.rootContext()->setContextProperty("$cclsAIScorer", cclsAIScorer);
     
     auto* tnmManager = GET_SINGLETON(TNMManager);
     engine.rootContext()->setContextProperty("$tnmManager", tnmManager);

@@ -134,14 +134,19 @@ Rectangle {
                         backgroundColor: "#F7FCFB"
                         iconUrl: "qrc:/image/CCLS.png"
                     }
+                    ScoreOptionCard {
+                        title: "CCLS AI"
+                        backgroundColor: "#F8FAFF"
+                        iconUrl: "qrc:/image/BIOSNAK.png"
+                    }
 
+                    // 第二行
                     ScoreOptionCard {
                         title: "TNM"
                         backgroundColor: "#FFFAF8"
                         iconUrl: "qrc:/image/TNM.png"
                     }
 
-                    // 第二行
                     ScoreOptionCard {
                         title: "UCLS MRS"
                         backgroundColor: "#FFFBF2"
@@ -154,11 +159,7 @@ Rectangle {
                         iconUrl: "qrc:/image/UCLS-CTS.png"
                     }
 
-                    ScoreOptionCard {
-                        title: "BIOSNAK"
-                        backgroundColor: "#F8FAFF"
-                        iconUrl: "qrc:/image/BIOSNAK.png"
-                    }
+
                 }
             }
         }
@@ -244,6 +245,9 @@ Rectangle {
                 else if(title === "影像知识库问答"){
                     $knowledgeChatManager.loadKnowledgeBaseList()
                     currentPageChanged(9)
+                }
+                else if(title === "CCLS AI"){
+                    currentPageChanged(11)
                 }
                 else{
                     messageManager.warning(qsTr("该功能暂未开放"))

@@ -34,7 +34,7 @@ Rectangle {
         { text: "TNM", value: "tnm", iconUrl: "qrc:/image/TNM.png" },
         { text: "UCLS MRS", value: "ucls mrs", iconUrl: "qrc:/image/UCLS-MRS.png" },
         { text: "UCLS CTS", value: "ucls cts", iconUrl: "qrc:/image/UCLS-CTS.png" },
-        { text: "BIOSNAK", value: "biosnak", iconUrl: "qrc:/image/BIOSNAK.png" }
+        { text: "CCLS AI", value: "biosnak", iconUrl: "qrc:/image/BIOSNAK.png" }
     ]
     
     width: dropdownWidth

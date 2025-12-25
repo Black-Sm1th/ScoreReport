@@ -97,12 +97,13 @@
       <Optimization>MaxSpeed</Optimization>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>false</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ApiManager.cpp" />
+    <ClCompile Include="CCLSAIScorer.cpp" />
     <ClCompile Include="CCLSScorer.cpp">
       <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">input</DynamicSource>
       <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Filename).moc</QtMocFileName>
@@ -151,6 +152,7 @@
     <QtMoc Include="KnowledgeChatManager.h" />
     <QtMoc Include="KnowledgeManager.h" />
     <QtMoc Include="DiagnosisResultManager.h" />
+    <QtMoc Include="CCLSAIScorer.h" />
     <ClInclude Include="Version.h" />
     <QtMoc Include="GlobalMouseListener.h" />
     <QtMoc Include="LanguageManager.h" />

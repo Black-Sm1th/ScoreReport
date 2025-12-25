@@ -319,6 +319,8 @@ ApplicationWindow {
                     knowledgeView.resetValues()
                 }else if(contentRect.currentScore == 9){
                     knowledgeChatView.resetValues()
+                }else if(contentRect.currentScore == 11){
+                    cclsaiView.resetValues()
                 }
                 contentRect.currentScore = -1
             }
@@ -939,6 +941,14 @@ ApplicationWindow {
                 DiagnosisResult{
                     id: diagnosisResult
                     visible: contentRect.currentIndex === 0 && contentRect.currentScore === 10
+                    messageManager: dialogMessageBox
+                    onExitScore: {
+                        contentRect.currentScore = -1
+                    }
+                }
+                CCLSAI{
+                    id: cclsaiView
+                    visible: contentRect.currentIndex === 0 && contentRect.currentScore === 11
                     messageManager: dialogMessageBox
                     onExitScore: {
                         contentRect.currentScore = -1

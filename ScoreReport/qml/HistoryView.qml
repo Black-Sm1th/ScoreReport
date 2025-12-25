@@ -480,7 +480,7 @@ Rectangle {
             case "TNM": return "#FFFAF8"
             case "UCLS MRS": return "#FFFBF2"
             case "UCLS CTS": return "#F8F7FF"
-            case "BIOSNAK": return "#F8FAFF"
+            case "CCLS AI": return "#F8FAFF"
             default: return "transparent"
         }
     }
@@ -493,7 +493,7 @@ Rectangle {
         case "TNM": return "qrc:/image/TNM.png"
         case "UCLS MRS": return "qrc:/image/UCLS-MRS.png"
         case "UCLS CTS": return "qrc:/image/UCLS-CTS.png"
-        case "BIOSNAK": return "qrc:/image/BIOSNAK.png"
+        case "CCLS AI": return "qrc:/image/BIOSNAK.png"
         default: return ""
         }
     }
@@ -512,8 +512,8 @@ Rectangle {
                 return $uclsmrsManager.sourceText
             case "UCLS CTS":
                 return $uclsctsScorer.sourceText
-            case "BIOSNAK":
-                return ""
+            case "CCLS AI":
+                return $cclsAIScorer.sourceText
             default:
                 return ""
         }
