@@ -243,7 +243,6 @@ void LoginManager::stopMonitoring()
     if (m_selector->isMonitoring()) {
         m_selector->stopMonitoring();
     }
-    delete m_selector;
 }
 
 void LoginManager::copyToClipboard(const QString& text)
