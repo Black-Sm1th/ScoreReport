@@ -14,6 +14,7 @@
 #include <QFileInfo>
 #include "CommonFunc.h"
 #include "GlobalTextMonitor.h"
+#include "GlobalTextSelector.h"
 #include "GlobalMouseListener.h"
 class ApiManager;
 
@@ -84,7 +85,7 @@ private:
     void clearLogFiles();
     void compareVersions(const QString& serverVersion);
     bool installUpdate(const QString& downloadedFilePath);
-    GlobalTextMonitor* m_selector;
+    GlobalTextSelector* m_selector;
     ApiManager* m_apiManager;
     QSettings* m_settings;
     GlobalMouseListener* m_mouseListener;

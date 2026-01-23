@@ -113,6 +113,7 @@
     <ClCompile Include="ChatManager.cpp" />
     <ClCompile Include="DiagnosisResultManager.cpp" />
     <ClCompile Include="GlobalMouseListener.cpp" />
+    <ClCompile Include="GlobalTextSelector.cpp" />
     <ClCompile Include="HistoryManager.cpp">
       <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">input</DynamicSource>
       <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Filename).moc</QtMocFileName>
@@ -153,6 +154,7 @@
     <QtMoc Include="KnowledgeManager.h" />
     <QtMoc Include="DiagnosisResultManager.h" />
     <QtMoc Include="CCLSAIScorer.h" />
+    <QtMoc Include="GlobalTextSelector.h" />
     <ClInclude Include="Version.h" />
     <QtMoc Include="GlobalMouseListener.h" />
     <QtMoc Include="LanguageManager.h" />
