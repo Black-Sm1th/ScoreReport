@@ -61,10 +61,7 @@ void GlobalTextSelector::startMonitoring()
         s_mouseHook = SetWindowsHookEx(WH_MOUSE_LL, MouseProc, nullptr, 0);
         if (s_mouseHook) {
             m_isMonitoring = true;
-            qDebug() << "GlobalTextSelector: 开始监控划词";
-        } else {
-            qWarning() << "GlobalTextSelector: 无法安装鼠标钩子";
-        }
+        } 
     }
 #endif
 }
@@ -81,7 +78,6 @@ void GlobalTextSelector::stopMonitoring()
         s_mouseHook = nullptr;
         s_instance = nullptr;
         m_isMonitoring = false;
-        qDebug() << "GlobalTextSelector: 停止监控划词";
     }
 #endif
 
