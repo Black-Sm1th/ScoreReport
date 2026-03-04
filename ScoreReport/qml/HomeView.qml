@@ -39,6 +39,8 @@ Rectangle {
             TabSwitcher {
                 id: tabSwitcher
                 anchors.verticalCenter: parent.verticalCenter
+                tabTitles: $loginManager.homeViewTabs
+                visible: $loginManager.homeViewTabs.length > 1
             }
         }
 
@@ -59,10 +61,10 @@ Rectangle {
             // 滑动内容区域
             Rectangle {
                 id: slidingContent
-                width: parent.width * 2  // 两个页面的宽度
+                width: parent.width * $loginManager.homeViewTabs.length
                 height: parent.height
                 color: "transparent"
-                x: tabSwitcher.currentIndex === 0 ? 0 : -parent.width
+                x: -tabSwitcher.currentIndex * parent.width
                 
                 // 滑动动画
                 Behavior on x {
@@ -72,15 +74,17 @@ Rectangle {
                     }
                 }
                 
-                // 通用页面 (index 0)
+                // 通用页面
                 Grid {
                     id: generalGrid
+                    visible: $loginManager.homeViewTabs.indexOf("通用") >= 0
                     width: contentContainer.width
                     height: parent.height
                     columns: 3
                     columnSpacing: 12
                     rowSpacing: 12
                     anchors.left: parent.left
+                    anchors.leftMargin: Math.max(0, $loginManager.homeViewTabs.indexOf("通用")) * contentContainer.width
                     anchors.verticalCenter: parent.verticalCenter
                     
                     ScoreOptionCard {
@@ -88,11 +92,6 @@ Rectangle {
                         backgroundColor: "#FFFAF8"
                         iconUrl: "qrc:/image/TNM.png"
                     }
-                    // ScoreOptionCard {
-                    //     title: "影像知识库问答"
-                    //     backgroundColor: "#F8FAFF"
-                    //     iconUrl: "qrc:/image/CHAT.png"
-                    // }
                     ScoreOptionCard {
                         title: "知识库管理"
                         backgroundColor: "#F7FCFB"
@@ -110,19 +109,19 @@ Rectangle {
                     }
                 }
                 
-                // 肾脏页面 (index 1)
+                // 肾脏页面
                 Grid {
                     id: kidneyGrid
+                    visible: $loginManager.homeViewTabs.indexOf("肾") >= 0
                     width: contentContainer.width
                     height: parent.height
                     columns: 3
                     columnSpacing: 12
                     rowSpacing: 12
                     anchors.left: parent.left
-                    anchors.leftMargin: contentContainer.width + (width - (3 * ((width - 24) / 3) + 24)) / 2  // 第二页位置 + 居中对齐
+                    anchors.leftMargin: Math.max(0, $loginManager.homeViewTabs.indexOf("肾")) * contentContainer.width
                     anchors.verticalCenter: parent.verticalCenter
 
-                    // 第一行
                     ScoreOptionCard {
                         title: "RENAL"
                         backgroundColor: "#F8FAFF"
@@ -140,7 +139,6 @@ Rectangle {
                         iconUrl: "qrc:/image/BIOSNAK.png"
                     }
 
-                    // 第二行
                     ScoreOptionCard {
                         title: "TNM"
                         backgroundColor: "#FFFAF8"
@@ -158,8 +156,6 @@ Rectangle {
                         backgroundColor: "#F8F7FF"
                         iconUrl: "qrc:/image/UCLS-CTS.png"
                     }
-
-
                 }
             }
         }

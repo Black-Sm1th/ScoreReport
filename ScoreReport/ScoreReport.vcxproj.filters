@@ -106,6 +106,12 @@
     <QtMoc Include="CCLSAIScorer.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="GlobalTextSelector.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ConfigModel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CommonFunc.h">
@@ -144,6 +150,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CCLSAIScorer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GlobalTextSelector.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ConfigModel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

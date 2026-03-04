@@ -1,5 +1,5 @@
 ﻿#include "ApiManager.h"
-
+#include "ConfigModel.h"
 /**
  * @brief 构造函数
  * @param parent 父对象指针
@@ -10,13 +10,7 @@
 ApiManager::ApiManager(QObject *parent)
     : QObject(parent)
     , m_networkManager(new QNetworkAccessManager(this))
-    , m_internalBaseUrl("http://172.20.117.53:9898/api")  // 默认内网地址
-    , m_publicBaseUrl("http://111.6.178.34:24603/api")   // 默认公网地址
-    , m_usePublicNetwork(true)
-{
-    // 从配置文件加载配置
-    loadConfig();
-    
+{    
     connect(m_networkManager, &QNetworkAccessManager::finished,
             this, &ApiManager::onNetworkReply);
 }
@@ -32,7 +26,7 @@ ApiManager::ApiManager(QObject *parent)
  */
 QString ApiManager::getBaseUrl() const
 {
-    return getusePublicNetwork() ? m_publicBaseUrl : m_internalBaseUrl;
+    return ConfigModel::getInstance()->getBaseUrl();
 }
 
 /**
@@ -1334,89 +1328,5 @@ void ApiManager::abortStreamChatByChatId(const QString& chatId)
                 }
             }
         }
-    }
-}
-
-/**
- * @brief 加载配置文件
- * 
- * 从AppData/config/config.json文件中读取网络配置，包括API地址和网络类型。
- * 如果配置文件不存在，将自动创建默认配置文件。
- */
-void ApiManager::loadConfig()
-{
-    QString configDir = "AppData/config/";
-    QString configPath = configDir + "config.json";
-    
-    QFile configFile(configPath);
-    
-    // 如果配置文件不存在，创建默认配置
-    if (!configFile.exists()) {
-        // 确保config目录存在
-        QDir dir;
-        if (!dir.mkpath(configDir)) {
-            setusePublicNetwork(true);  // 默认使用公网
-            return;
-        }
-        
-        // 创建默认配置对象
-        QJsonObject networkObj;
-        networkObj["usePublicNetwork"] = true;
-        networkObj["internalBaseUrl"] = m_internalBaseUrl;
-        networkObj["publicBaseUrl"] = m_publicBaseUrl;
-        
-        QJsonObject rootObj;
-        rootObj["network"] = networkObj;
-        
-        // 写入配置文件
-        if (configFile.open(QIODevice::WriteOnly)) {
-            QJsonDocument doc(rootObj);
-            configFile.write(doc.toJson(QJsonDocument::Indented));
-            configFile.close();
-        } else {
-            setusePublicNetwork(true);  // 默认使用公网
-            return;
-        }
-    }
-    
-    // 读取配置文件
-    if (!configFile.open(QIODevice::ReadOnly)) {
-        setusePublicNetwork(true);  // 默认使用公网
-        return;
-    }
-    
-    QByteArray configData = configFile.readAll();
-    configFile.close();
-    
-    QJsonDocument doc = QJsonDocument::fromJson(configData);
-    if (!doc.isObject()) {
-        setusePublicNetwork(true);  // 默认使用公网
-        return;
-    }
-    
-    QJsonObject rootObj = doc.object();
-    if (!rootObj.contains("network")) {
-        setusePublicNetwork(true);  // 默认使用公网
-        return;
-    }
-    
-    QJsonObject networkObj = rootObj["network"].toObject();
-    
-    // 读取网络类型配置
-    if (networkObj.contains("usePublicNetwork")) {
-        bool usePublic = networkObj["usePublicNetwork"].toBool();
-        setusePublicNetwork(usePublic);
-    } else {
-        setusePublicNetwork(true);  // 默认使用公网
-    }
-    
-    // 读取内网地址配置
-    if (networkObj.contains("internalBaseUrl")) {
-        m_internalBaseUrl = networkObj["internalBaseUrl"].toString();
-    }
-    
-    // 读取公网地址配置
-    if (networkObj.contains("publicBaseUrl")) {
-        m_publicBaseUrl = networkObj["publicBaseUrl"].toString();
     }
 }

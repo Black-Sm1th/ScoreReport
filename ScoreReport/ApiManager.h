@@ -40,10 +40,7 @@
 class ApiManager : public QObject
 {
     Q_OBJECT
-    
-    /// @brief 是否使用公网，true=公网，false=内网
-    QUICK_PROPERTY(bool, usePublicNetwork)
-    
+ 
     SINGLETON_CLASS(ApiManager)
 
 public:
@@ -577,15 +574,6 @@ private:
      * @param requestType 请求类型标识，用于响应时区分不同请求
      */
     void makeGetRequest(const QString& endpoint, const QString& requestType = "");
-    
-    /**
-     * @brief 加载配置文件
-     * 
-     * 从AppData/config/config.json文件中读取网络配置，包括API地址和网络类型。
-     * 如果配置文件不存在，将自动创建默认配置文件。
-     * Windows系统路径示例: C:/Users/用户名/AppData/Local/组织名/应用名/config/config.json
-     */
-    void loadConfig();
 
     /// @brief Qt网络访问管理器，负责实际的网络请求
     QNetworkAccessManager* m_networkManager;
@@ -610,10 +598,6 @@ private:
     
     /// @brief 跟踪每个知识库流式聊天请求的批量发送定时器
     QMap<QNetworkReply*, QTimer*> m_streamKnowledgeTimers;
-
-    // API地址配置（从config.json读取）
-    QString m_internalBaseUrl;  ///< 内网API基础地址
-    QString m_publicBaseUrl;    ///< 公网API基础地址
 };
 
 #endif // APIMANAGER_H

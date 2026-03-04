@@ -1,5 +1,6 @@
-﻿#include "LoginManager.h"
+#include "LoginManager.h"
 #include "ApiManager.h"
+#include "ConfigModel.h"
 #include <QClipboard>
 #include <QGuiApplication>
 #include <QScreen>
@@ -35,6 +36,7 @@ LoginManager::LoginManager(QObject* parent)
     setlatestVersion("");  // 最新版本为空
     setupdateFileName("");  // 更新文件名为空
     setisDownloadingUpdate(false);  // 默认不在下载更新
+    sethomeViewTabs(ConfigModel::getInstance()->gethomeViewTabs());
     m_selector = new GlobalTextSelector();
     m_mouseListener = new GlobalMouseListener();
     connect(m_selector, &GlobalTextSelector::textSelected,

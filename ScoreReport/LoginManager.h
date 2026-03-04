@@ -1,8 +1,9 @@
-﻿#ifndef LOGINMANAGER_H
+#ifndef LOGINMANAGER_H
 #define LOGINMANAGER_H
 
 #include <QObject>
 #include <QString>
+#include <QStringList>
 #include <QDebug>
 #include <QJsonObject>
 #include <QSettings>
@@ -39,6 +40,7 @@ class LoginManager : public QObject
     QUICK_PROPERTY(QString, latestVersion)
     QUICK_PROPERTY(QString, updateFileName)
     QUICK_PROPERTY(bool, isDownloadingUpdate)
+    QUICK_PROPERTY(QStringList, homeViewTabs)
     SINGLETON_CLASS(LoginManager)
 
 public:
