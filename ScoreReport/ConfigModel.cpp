@@ -9,7 +9,7 @@
 ConfigModel::ConfigModel(QObject *parent)
     : QObject(parent)
     , m_internalBaseUrl("http://172.20.117.53:9898/api")
-    , m_publicBaseUrl("http://111.6.178.34:24603/api")
+    , m_publicBaseUrl("http://111.6.178.34:9205/api")
     , m_usePublicNetwork(true)
     , m_homeViewTabs({QStringLiteral("通用"), QStringLiteral("肾")})
 {
