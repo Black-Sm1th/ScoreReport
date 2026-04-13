@@ -1,8 +1,9 @@
-﻿#ifndef LOGINMANAGER_H
+#ifndef LOGINMANAGER_H
 #define LOGINMANAGER_H
 
 #include <QObject>
 #include <QString>
+#include <QStringList>
 #include <QDebug>
 #include <QJsonObject>
 #include <QSettings>
@@ -14,6 +15,7 @@
 #include <QFileInfo>
 #include "CommonFunc.h"
 #include "GlobalTextMonitor.h"
+#include "GlobalTextSelector.h"
 #include "GlobalMouseListener.h"
 class ApiManager;
 
@@ -38,6 +40,7 @@ class LoginManager : public QObject
     QUICK_PROPERTY(QString, latestVersion)
     QUICK_PROPERTY(QString, updateFileName)
     QUICK_PROPERTY(bool, isDownloadingUpdate)
+    QUICK_PROPERTY(QStringList, homeViewTabs)
     SINGLETON_CLASS(LoginManager)
 
 public:
@@ -84,7 +87,7 @@ private:
     void clearLogFiles();
     void compareVersions(const QString& serverVersion);
     bool installUpdate(const QString& downloadedFilePath);
-    GlobalTextMonitor* m_selector;
+    GlobalTextSelector* m_selector;
     ApiManager* m_apiManager;
     QSettings* m_settings;
     GlobalMouseListener* m_mouseListener;

@@ -59,7 +59,7 @@ Rectangle {
             // 滑动内容区域
             Rectangle {
                 id: slidingContent
-                width: parent.width * 2  // 两个页面的宽度
+                width: parent.width * $loginManager.homeViewTabs.length
                 height: parent.height
                 color: "transparent"
                 x: 0
@@ -67,12 +67,14 @@ Rectangle {
                 // 通用页面 (index 0)
                 Grid {
                     id: generalGrid
+                    visible: $loginManager.homeViewTabs.indexOf("通用") >= 0
                     width: contentContainer.width
                     height: parent.height
                     columns: 3
                     columnSpacing: 12
                     rowSpacing: 12
                     anchors.left: parent.left
+                    anchors.leftMargin: Math.max(0, $loginManager.homeViewTabs.indexOf("通用")) * contentContainer.width
                     anchors.verticalCenter: parent.verticalCenter
                     
                     ScoreOptionCard {
@@ -232,6 +234,9 @@ Rectangle {
                 else if(title === "设备管理知识库问答"){
                     $knowledgeChatManager.loadKnowledgeBaseList()
                     currentPageChanged(9)
+                }
+                else if(title === "CCLS AI"){
+                    currentPageChanged(11)
                 }
                 else{
                     messageManager.warning(qsTr("该功能暂未开放"))

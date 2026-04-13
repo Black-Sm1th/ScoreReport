@@ -319,6 +319,8 @@ ApplicationWindow {
                     knowledgeView.resetValues()
                 }else if(contentRect.currentScore == 9){
                     knowledgeChatView.resetValues()
+                }else if(contentRect.currentScore == 11){
+                    cclsaiView.resetValues()
                 }
 
                 contentRect.currentScore = -1

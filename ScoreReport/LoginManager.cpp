@@ -1,5 +1,6 @@
-﻿#include "LoginManager.h"
+#include "LoginManager.h"
 #include "ApiManager.h"
+#include "ConfigModel.h"
 #include <QClipboard>
 #include <QGuiApplication>
 #include <QScreen>
@@ -35,9 +36,10 @@ LoginManager::LoginManager(QObject* parent)
     setlatestVersion("");  // 最新版本为空
     setupdateFileName("");  // 更新文件名为空
     setisDownloadingUpdate(false);  // 默认不在下载更新
-    m_selector = new GlobalTextMonitor();
+    sethomeViewTabs(ConfigModel::getInstance()->gethomeViewTabs());
+    m_selector = new GlobalTextSelector();
     m_mouseListener = new GlobalMouseListener();
-    connect(m_selector, &GlobalTextMonitor::textSelected,
+    connect(m_selector, &GlobalTextSelector::textSelected,
         this, &LoginManager::onTextSelected);
     connect(m_mouseListener, &GlobalMouseListener::mouseEvent,
         this, &LoginManager::onMouseEvent);
@@ -59,7 +61,7 @@ LoginManager::LoginManager(QObject* parent)
     // 启动时加载保存的凭据和用户列表
     loadSavedCredentials();
     loadUserList();
-    
+
     // 启动时检查更新
     QTimer::singleShot(2000, this, &LoginManager::checkForUpdates); // 延迟2秒检查更新，避免影响启动速度
 }
@@ -243,7 +245,6 @@ void LoginManager::stopMonitoring()
     if (m_selector->isMonitoring()) {
         m_selector->stopMonitoring();
     }
-    delete m_selector;
 }
 
 void LoginManager::copyToClipboard(const QString& text)
